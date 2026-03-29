@@ -1,0 +1,15 @@
+{
+  "name": "bybit-cli",
+  "version": "0.1.0",
+  "description": "Bybit V5 exchange extension for trading, market data, and account management.",
+  "mcpServers": {
+    "bybit": {
+      "command": "${extensionPath}${/}target${/}debug${/}bybit.exe",
+      "args": ["mcp", "-s", "all"]
+    }
+  },
+  "contextFileName": "CONTEXT.md",
+  "skills": {
+    "directory": "skills"
+  }
+}

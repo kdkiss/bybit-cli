@@ -1,0 +1,342 @@
+{
+  "schema_version": "1.0",
+  "cli": "bybit",
+  "description": "Bybit V5 CLI — trade, query, and manage your Bybit account from the terminal",
+  "tool_groups": [
+    {
+      "group": "market",
+      "description": "Public market-data endpoints. No credentials required.",
+      "tools": [
+        {
+          "name": "market server-time",
+          "description": "Get Bybit server time",
+          "auth_required": false,
+          "dangerous": false,
+          "example": "bybit market server-time"
+        },
+        {
+          "name": "market instruments",
+          "description": "List tradeable instruments for a category",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "--category", "required": true, "values": ["spot","linear","inverse","option"] },
+            { "name": "--symbol", "required": false },
+            { "name": "--status", "required": false },
+            { "name": "--limit", "required": false },
+            { "name": "--cursor", "required": false }
+          ],
+          "example": "bybit market instruments --category linear --symbol BTCUSDT"
+        },
+        {
+          "name": "market orderbook",
+          "description": "Get order book depth",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "--category", "required": true },
+            { "name": "--symbol", "required": true },
+            { "name": "--limit", "required": false, "default": 25 }
+          ],
+          "example": "bybit market orderbook --category linear --symbol BTCUSDT --limit 50"
+        },
+        {
+          "name": "market tickers",
+          "description": "Get latest price tickers",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "--category", "required": true },
+            { "name": "--symbol", "required": false },
+            { "name": "--base-coin", "required": false },
+            { "name": "--exp-date", "required": false }
+          ],
+          "example": "bybit market tickers --category linear --symbol BTCUSDT"
+        },
+        {
+          "name": "market kline",
+          "description": "Get OHLCV candlestick data",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "--category", "required": true },
+            { "name": "--symbol", "required": true },
+            { "name": "--interval", "required": true, "values": ["1","3","5","15","30","60","120","240","360","720","D","W","M"] },
+            { "name": "--start", "required": false },
+            { "name": "--end", "required": false },
+            { "name": "--limit", "required": false }
+          ],
+          "example": "bybit market kline --category linear --symbol BTCUSDT --interval 60"
+        },
+        {
+          "name": "market funding-rate",
+          "description": "Get funding rate history",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "--category", "required": true, "values": ["linear","inverse"] },
+            { "name": "--symbol", "required": true },
+            { "name": "--start", "required": false },
+            { "name": "--end", "required": false },
+            { "name": "--limit", "required": false }
+          ],
+          "example": "bybit market funding-rate --category linear --symbol BTCUSDT --limit 10"
+        },
+        {
+          "name": "market trades",
+          "description": "Get recent public trades",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "--category", "required": true },
+            { "name": "--symbol", "required": true },
+            { "name": "--limit", "required": false }
+          ],
+          "example": "bybit market trades --category spot --symbol BTCUSDT --limit 50"
+        },
+        {
+          "name": "market open-interest",
+          "description": "Get open interest data",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "--category", "required": true },
+            { "name": "--symbol", "required": true },
+            { "name": "--interval", "required": true }
+          ],
+          "example": "bybit market open-interest --category linear --symbol BTCUSDT --interval 1h"
+        },
+        {
+          "name": "market ls-ratio",
+          "description": "Get long/short sentiment ratio",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "--symbol", "required": true },
+            { "name": "--period", "required": true, "values": ["5min","15min","30min","1h","4h","1d"] },
+            { "name": "--category", "required": false, "default": "linear" }
+          ],
+          "example": "bybit market ls-ratio --symbol BTCUSDT --period 5min"
+        },
+        {
+          "name": "market spread",
+          "description": "Get current bid-ask spread and spread percentage",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "--symbol", "required": true },
+            { "name": "--category", "required": false, "default": "linear" }
+          ],
+          "example": "bybit market spread --symbol BTCUSDT"
+        },
+        {
+          "name": "market risk-limit",
+          "description": "Get available risk limit tiers for a symbol",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "--symbol", "required": false },
+            { "name": "--category", "required": false, "default": "linear" }
+          ],
+          "example": "bybit market risk-limit --symbol BTCUSDT"
+        }
+      ]
+    },
+    {
+      "group": "trade",
+      "description": "Order management. Requires API credentials.",
+      "tools": [
+        {
+          "name": "trade buy",
+          "description": "Place a buy (long) order",
+          "auth_required": true,
+          "dangerous": true,
+          "params": [
+            { "name": "--symbol", "required": true },
+            { "name": "--qty", "required": true },
+            { "name": "--price", "required": false, "note": "Omit for market order" },
+            { "name": "--category", "required": false, "default": "linear" },
+            { "name": "--tp-limit-price", "required": false },
+            { "name": "--sl-limit-price", "required": false },
+            { "name": "--display-qty", "required": false },
+            { "name": "--trigger-price", "required": false },
+            { "name": "--post-only", "required": false, "type": "flag" },
+            { "name": "--reduce-only", "required": false, "type": "flag" },
+            { "name": "--validate", "required": false, "type": "flag" }
+          ],
+          "example": "bybit trade buy --symbol BTCUSDT --qty 0.01 --price 50000"
+        },
+        {
+          "name": "trade sell",
+          "description": "Place a sell (short) order",
+          "auth_required": true,
+          "dangerous": true,
+          "params": [
+            { "name": "--symbol", "required": true },
+            { "name": "--qty", "required": true },
+            { "name": "--price", "required": false },
+            { "name": "--category", "required": false, "default": "linear" },
+            { "name": "--tp-limit-price", "required": false },
+            { "name": "--sl-limit-price", "required": false },
+            { "name": "--display-qty", "required": false },
+            { "name": "--trigger-price", "required": false },
+            { "name": "--post-only", "required": false, "type": "flag" },
+            { "name": "--reduce-only", "required": false, "type": "flag" },
+            { "name": "--validate", "required": false, "type": "flag" }
+          ],
+          "example": "bybit trade sell --symbol BTCUSDT --qty 0.01 --price 55000"
+        },
+        {
+          "name": "trade cancel",
+          "description": "Cancel an open order",
+          "auth_required": true,
+          "dangerous": true,
+          "params": [
+            { "name": "--symbol", "required": true },
+            { "name": "--order-id", "required": false }
+          ],
+          "example": "bybit trade cancel --symbol BTCUSDT --order-id abc123"
+        },
+        {
+          "name": "trade cancel-all",
+          "description": "Cancel all open orders in a category",
+          "auth_required": true,
+          "dangerous": true,
+          "params": [
+            { "name": "--category", "required": false, "default": "linear" },
+            { "name": "--symbol", "required": false }
+          ],
+          "example": "bybit trade cancel-all --category linear"
+        },
+        {
+          "name": "trade open-orders",
+          "description": "List current open orders",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--category", "required": false, "default": "linear" },
+            { "name": "--symbol", "required": false }
+          ],
+          "example": "bybit trade open-orders"
+        },
+        {
+          "name": "trade batch-place",
+          "description": "Place up to 20 orders in one call",
+          "auth_required": true,
+          "dangerous": true,
+          "params": [
+            { "name": "--category", "required": true },
+            { "name": "--orders", "required": true, "note": "JSON array of order objects" }
+          ],
+          "example": "bybit trade batch-place --category linear --orders '[...]' "
+        }
+      ]
+    },
+    {
+      "group": "account",
+      "description": "Account and balance management.",
+      "tools": [
+        {
+          "name": "account balance",
+          "description": "Get UTA or funding balance",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--extended", "required": false, "type": "flag" }
+          ],
+          "example": "bybit account balance --extended"
+        },
+        {
+          "name": "account volume",
+          "description": "Get total trading volume for last N days",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--days", "required": false, "default": 30 }
+          ],
+          "example": "bybit account volume --days 30"
+        },
+        {
+          "name": "account adl-alert",
+          "description": "Check ADL deleveraging risk",
+          "auth_required": true,
+          "dangerous": false,
+          "example": "bybit account adl-alert"
+        },
+        {
+          "name": "auth permissions",
+          "description": "Show active API key permissions",
+          "auth_required": true,
+          "dangerous": false,
+          "example": "bybit auth permissions"
+        }
+      ]
+    },
+    {
+      "group": "position",
+      "description": "Position and risk management.",
+      "tools": [
+        {
+          "name": "position list",
+          "description": "List all open positions",
+          "auth_required": true,
+          "dangerous": false,
+          "example": "bybit position list"
+        },
+        {
+          "name": "position flatten",
+          "description": "Nuclear option: close ALL positions and cancel ALL orders",
+          "auth_required": true,
+          "dangerous": true,
+          "params": [
+            { "name": "--category", "required": false, "default": "linear" }
+          ],
+          "example": "bybit position flatten --category linear"
+        },
+        {
+          "name": "position trailing-stop",
+          "description": "Set a trailing stop for an open position",
+          "auth_required": true,
+          "dangerous": true,
+          "params": [
+            { "name": "--symbol", "required": true },
+            { "name": "--trailing-stop", "required": true }
+          ],
+          "example": "bybit position trailing-stop --symbol BTCUSDT --trailing-stop 500"
+        }
+      ]
+    },
+    {
+      "group": "earn",
+      "description": "Staking and passive income management.",
+      "tools": [
+        {
+          "name": "earn product",
+          "description": "List available earn/savings products",
+          "auth_required": true,
+          "dangerous": false,
+          "example": "bybit earn product"
+        },
+        {
+          "name": "earn positions",
+          "description": "List current staked positions",
+          "auth_required": true,
+          "dangerous": false,
+          "example": "bybit earn positions"
+        },
+        {
+          "name": "earn stake",
+          "description": "Stake funds into a product",
+          "auth_required": true,
+          "dangerous": true,
+          "params": [
+            { "name": "--product-id", "required": true },
+            { "name": "--coin", "required": true },
+            { "name": "--amount", "required": true }
+          ],
+          "example": "bybit earn stake --product-id 123 --coin USDT --amount 100"
+        }
+      ]
+    }
+  ]
+}

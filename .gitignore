@@ -1,0 +1,96 @@
+# Rust build output
+/target/
+/dist/
+
+# Coverage, profiling, and local reports
+/coverage/
+*.profraw
+*.profdata
+*.lcov
+
+# Logs and temp files
+*.log
+*.tmp
+*.temp
+*.bak
+*.orig
+/tmp/
+/temp/
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editors and local tooling
+.idea/
+.vscode/
+.cursor/
+.kai/
+.claude/
+.zed/
+*.swp
+*.swo
+*~
+
+# Local env files
+.env
+.env.*
+!.env.example
+!.env.sample
+!.env.template
+
+# Python virtualenvs and notebook debris
+.venv/
+venv/
+env/
+ENV/
+.ipynb_checkpoints/
+
+# Local credential material
+*.pem
+*.key
+*.crt
+*.cer
+*.der
+*.p12
+*.pfx
+*.jks
+*.keystore
+id_rsa*
+id_ed25519*
+*.secret
+*.secrets
+*.token
+*.tokens
+*.credentials
+*.creds
+*.api-key
+
+# Application config and exchange state
+config.toml
+config.local.toml
+config.*.local.toml
+config.json
+config.local.json
+config.yaml
+config.local.yaml
+config.yml
+config.local.yml
+
+# bybit-cli local state
+.bybit/
+.bybit-test/
+paper-journal.json
+history
+instance-id
+
+# Common OS config locations accidentally copied into the repo
+.config/bybit/
+.config/kraken/
+
+# Local snapshots / scratch artifacts
+snap*.json
+
+# Keep lockfile tracked for this binary crate
+!Cargo.lock

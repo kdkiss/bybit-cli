@@ -1,0 +1,192 @@
+{
+  "schema_version": "1.0",
+  "description": "All error types returned by bybit-cli, with remediation guidance for agents.",
+  "errors": [
+    {
+      "error": "auth",
+      "http_status": null,
+      "bybit_ret_codes": [10003, 10004],
+      "description": "Invalid or missing API credentials.",
+      "retryable": false,
+      "remediation": [
+        "Verify BYBIT_API_KEY and BYBIT_API_SECRET environment variables are set.",
+        "Run `bybit auth test` to test the current credentials.",
+        "Run `bybit setup` to interactively configure credentials.",
+        "Ensure the API key has the required permissions for the operation.",
+        "Check that the system clock is accurate — timestamp drift can cause auth failures."
+      ],
+      "example_output": {
+        "error": "auth",
+        "message": "API key is invalid.",
+        "ret_code": null
+      }
+    },
+    {
+      "error": "rate_limit",
+      "http_status": null,
+      "bybit_ret_codes": [10006, 10018],
+      "description": "Request rate limit exceeded.",
+      "retryable": true,
+      "remediation": [
+        "The CLI will automatically retry up to 3 times with exponential backoff.",
+        "If the error persists, wait 1–2 minutes before retrying.",
+        "Reduce the frequency of polling commands.",
+        "Use WebSocket streams (`bybit ws`) instead of repeated REST calls for real-time data."
+      ],
+      "example_output": {
+        "error": "rate_limit",
+        "message": "Too many visits!",
+        "ret_code": 10006,
+        "retryable": true,
+        "docs_url": "https://bybit-exchange.github.io/docs/v5/rate-limit"
+      }
+    },
+    {
+      "error": "api",
+      "http_status": null,
+      "bybit_ret_codes": "non-zero (other than 10003/10004/10006/10018)",
+      "description": "Bybit V5 API returned a non-zero retCode.",
+      "retryable": false,
+      "common_ret_codes": [
+        { "code": 10001, "meaning": "Parameter error — check required fields and value ranges." },
+        { "code": 10002, "meaning": "Request expired — check system clock drift." },
+        { "code": 10005, "meaning": "Permission denied — API key lacks required scope." },
+        { "code": 10010, "meaning": "Unmatched IP — API key is IP-restricted." },
+        { "code": 110001, "meaning": "Order does not exist." },
+        { "code": 110009, "meaning": "Insufficient available balance." },
+        { "code": 110044, "meaning": "Leverage not modified — already set to the requested value." }
+      ],
+      "remediation": [
+        "Read the `message` field for the specific error description.",
+        "Consult the Bybit V5 error code reference: https://bybit-exchange.github.io/docs/v5/error",
+        "Use `--validate` flag on trade commands for a dry-run before submitting."
+      ],
+      "example_output": {
+        "error": "api",
+        "message": "params error: symbol is invalid",
+        "ret_code": 10001
+      }
+    },
+    {
+      "error": "network",
+      "http_status": "5xx or connection failure",
+      "bybit_ret_codes": null,
+      "description": "Network or server-side transient error.",
+      "retryable": true,
+      "remediation": [
+        "The CLI automatically retries up to 3 times with exponential backoff (500ms, 1s, 2s).",
+        "Check internet connectivity.",
+        "Check Bybit status page: https://status.bybit.com",
+        "Try the testnet endpoint with --testnet to isolate the issue."
+      ],
+      "example_output": {
+        "error": "network",
+        "message": "server returned HTTP 503",
+        "ret_code": null
+      }
+    },
+    {
+      "error": "validation",
+      "http_status": null,
+      "bybit_ret_codes": null,
+      "description": "Client-side validation failed before an API call was made.",
+      "retryable": false,
+      "remediation": [
+        "Check required flags and value ranges.",
+        "Use `bybit --help` or `bybit <group> --help` to confirm the expected syntax.",
+        "If the command supports `--validate`, use it before executing live actions."
+      ],
+      "example_output": {
+        "error": "validation",
+        "message": "Validation error: --symbol is required",
+        "ret_code": null
+      }
+    },
+    {
+      "error": "config",
+      "http_status": null,
+      "bybit_ret_codes": null,
+      "description": "Configuration file read, write, or parse error.",
+      "retryable": false,
+      "remediation": [
+        "Run `bybit setup` to recreate the config file.",
+        "Check file permissions on ~/.config/bybit/config.toml (should be 0600 on Unix).",
+        "Validate the TOML syntax manually if the file was edited by hand."
+      ],
+      "example_output": {
+        "error": "config",
+        "message": "Failed to parse config: ...",
+        "ret_code": null
+      }
+    },
+    {
+      "error": "parse",
+      "http_status": null,
+      "bybit_ret_codes": null,
+      "description": "Failed to deserialize an API response or user-provided JSON.",
+      "retryable": false,
+      "remediation": [
+        "Check that JSON arguments (e.g. --orders) are valid JSON arrays/objects.",
+        "If the API response fails to parse, the API contract may have changed — update the CLI.",
+        "Use -v (verbose) to inspect the raw response body."
+      ],
+      "example_output": {
+        "error": "parse",
+        "message": "invalid orders JSON: ...",
+        "ret_code": null
+      }
+    },
+    {
+      "error": "paper",
+      "http_status": null,
+      "bybit_ret_codes": null,
+      "description": "Paper trading state machine error (journal not initialised, insufficient balance, etc.).",
+      "retryable": false,
+      "remediation": [
+        "Run `bybit paper init` before using other paper trading commands.",
+        "Run `bybit paper balance` to check available paper USDT.",
+        "Run `bybit paper reset` to start fresh if the journal is corrupted."
+      ],
+      "example_output": {
+        "error": "paper",
+        "message": "Paper trading error: Paper account not initialized. Run `bybit paper init` first.",
+        "ret_code": null
+      }
+    },
+    {
+      "error": "websocket",
+      "http_status": null,
+      "bybit_ret_codes": null,
+      "description": "WebSocket connection or protocol error.",
+      "retryable": true,
+      "remediation": [
+        "The CLI reconnects automatically with exponential backoff (up to 12 attempts).",
+        "If reconnects fail, check network connectivity and firewall rules.",
+        "Private WebSocket streams require valid API credentials.",
+        "Press Ctrl+C to stop cleanly."
+      ],
+      "example_output": {
+        "error": "websocket",
+        "message": "WebSocket closed unexpectedly",
+        "ret_code": null
+      }
+    },
+    {
+      "error": "io",
+      "http_status": null,
+      "bybit_ret_codes": null,
+      "description": "Local filesystem or terminal I/O error.",
+      "retryable": false,
+      "remediation": [
+        "Check local file permissions and disk space.",
+        "If a config or journal file is involved, verify the parent directory exists and is writable.",
+        "Retry after closing any process that might still hold a lock on the file."
+      ],
+      "example_output": {
+        "error": "io",
+        "message": "IO error: Access is denied. (os error 5)",
+        "ret_code": null
+      }
+    }
+  ]
+}
