@@ -47,7 +47,7 @@ export BYBIT_API_KEY="your-key"
 export BYBIT_API_SECRET="your-secret"
 ```
 
-Credential resolution order: CLI flags > environment variables > `~/.config/bybit/config.toml`
+Credential resolution order: CLI flags > environment variables > platform config file (for example `~/.config/bybit/config.toml` on Linux)
 
 Public market data and paper trading require no credentials.
 

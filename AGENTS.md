@@ -86,7 +86,7 @@ Agents should never hardcode credentials. Resolution order:
 
 1. `--api-key` / `--api-secret` CLI flags
 2. `BYBIT_API_KEY` / `BYBIT_API_SECRET` environment variables
-3. `~/.config/bybit/config.toml`
+3. Platform config file (for example `~/.config/bybit/config.toml` on Linux)
 
 For automated agents, use environment variables injected at runtime.
 

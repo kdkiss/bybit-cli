@@ -229,7 +229,13 @@ export BYBIT_API_URL="https://..."  # optional: override base URL
 
 ### Config file (for humans)
 
-`~/.config/bybit/config.toml`:
+Stored in your platform config directory:
+
+- Linux: `~/.config/bybit/config.toml`
+- macOS: `~/Library/Application Support/bybit/config.toml`
+- Windows: `%APPDATA%\bybit\config.toml`
+
+Example:
 
 ```toml
 [auth]
@@ -251,7 +257,7 @@ Highest precedence first:
 
 1. CLI flags (`--api-key`, `--api-secret`)
 2. Environment variables (`BYBIT_API_KEY`, `BYBIT_API_SECRET`)
-3. Config file (`~/.config/bybit/config.toml`)
+3. Config file (platform config path, for example `~/.config/bybit/config.toml` on Linux)
 
 ### Security
 
@@ -661,7 +667,7 @@ The CLI does not pre-throttle requests. When Bybit returns a rate limit error (r
 **Config file not found**
 
 - This is normal on first run if you have only set environment variables.
-- Run `bybit setup` to create `~/.config/bybit/config.toml`, or continue using `BYBIT_API_KEY` / `BYBIT_API_SECRET` directly.
+- Run `bybit setup` to create the config file in your platform config directory, or continue using `BYBIT_API_KEY` / `BYBIT_API_SECRET` directly.
 
 **"No paper journal" error**
 

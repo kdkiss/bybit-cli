@@ -14,7 +14,10 @@ const OUTPUT_OPTIONS: &[&str] = &["table", "json"];
 
 pub async fn run_setup() -> BybitResult<()> {
     println!("{}", "Bybit CLI — First-time setup".bold());
-    println!("Credentials are saved to ~/.config/bybit/config.toml\n");
+    let config_path_display = crate::config::config_path()
+        .map(|p| p.display().to_string())
+        .unwrap_or_else(|_| "your platform config directory".to_string());
+    println!("Credentials are saved to {config_path_display}\n");
 
     // Load existing config so we can show current values as defaults
     let existing = load_config().unwrap_or_default();
@@ -168,7 +171,7 @@ fn build_setup_config(
 #[cfg(test)]
 mod tests {
     use super::build_setup_config;
-    use crate::config::Config;
+    use crate::config::{config_path, Config};
 
     #[test]
     fn build_setup_config_rejects_empty_api_key() {
@@ -196,5 +199,13 @@ mod tests {
         assert_eq!(config.settings.output, "json");
         assert_eq!(config.settings.recv_window, 9000);
         assert!(config.settings.testnet);
+    }
+
+    #[test]
+    fn config_path_ends_with_bybit_config_toml() {
+        let path = config_path().expect("config path should resolve");
+        let rendered = path.display().to_string();
+        assert!(rendered.contains("bybit"));
+        assert!(rendered.ends_with("config.toml"));
     }
 }
