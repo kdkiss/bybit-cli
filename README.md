@@ -1,5 +1,6 @@
 # bybit-cli
 
+![version](https://img.shields.io/github/v/release/kdkiss/bybit-cli?color=blue)
 ![license](https://img.shields.io/badge/license-MIT-green)
 ![platform](https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows-lightgrey)
 ![rust](https://img.shields.io/badge/built_with-Rust-orange)
@@ -28,12 +29,18 @@ Try these with your AI agent:
 ## Contents
 
 - [Installation](#installation)
+- [What You Can Trade](#what-you-can-trade)
 - [For AI Agents](#for-ai-agents)
+- [Verifying Binaries](#verifying-binaries)
 - [Quick Start](#quick-start)
+- [API Keys & Configuration](#api-keys--configuration)
 - [MCP Server](#mcp-server)
 - [Paper Trading](#paper-trading)
 - [Commands](#commands)
-- [API Keys & Configuration](#api-keys--configuration)
+- [Examples](#examples)
+- [Agent Skills](#agent-skills)
+- [Development](#development)
+- [Contributing](#contributing)
 - [License & Disclaimer](#license--disclaimer)
 
 ## Installation
@@ -64,20 +71,7 @@ Pre-built archives and installer scripts are available on the [GitHub Releases](
 
 Tagged releases are built with `cargo-dist`, attested with GitHub build provenance, and published with per-artifact `.sha256` files, a unified `sha256.sum`, `SHA256SUMS.txt`, and `minisig` signatures. Maintainers must configure `MINISIGN_SECRET_KEY` and publish the matching minisign public key before the first public release.
 
-### Release Verification
-
-Minisign public key:
-
-```text
-untrusted comment: minisign public key 9A81EBFCA673CEDE
-RWTeznOm/OuBmlyv8EeOQxZOog4NsO014QzO/aS3/+1woRbSPGUy3eEF
-```
-
-Example verification:
-
-```bash
-minisign -Vm bybit-cli-x86_64-unknown-linux-gnu.tar.gz -P RWTeznOm/OuBmlyv8EeOQxZOog4NsO014QzO/aS3/+1woRbSPGUy3eEF
-```
+See [Verifying Binaries](#verifying-binaries) for minisign verification.
 
 <details>
 <summary>Build from source</summary>
@@ -98,6 +92,21 @@ cp target/release/bybit ~/.local/bin/
 ```
 
 </details>
+
+## What You Can Trade
+
+One binary covers Bybit spot, derivatives, earn workflows, streaming, and paper trading.
+
+| Area | What it covers | Flag / namespace | Example |
+|---|---|---|---|
+| **Spot** | Public market data, balances, transfers, and spot orders | `--category spot` | `bybit market tickers --category spot --symbol BTCUSDT` |
+| **Linear derivatives** | USDT/USDC-margined perpetuals and related account/position flows | `--category linear` | `bybit futures buy --symbol BTCUSDT --qty 0.01 --price 50000` |
+| **Inverse derivatives** | Coin-margined contracts and historical market/account views | `--category inverse` | `bybit market instruments --category inverse` |
+| **Options** | Option market data plus account greeks and volatility views | `--category option` | `bybit market instruments --category option` |
+| **Earn** | Flexible saving / earn products, staking, redeeming, and yield history | `earn` namespace | `bybit earn products --coin BTC` |
+| **Paper trading** | Local simulation with live public prices and no API keys | `paper` namespace | `bybit paper buy --symbol BTCUSDT --qty 0.01` |
+
+Product availability and permissions vary by jurisdiction, account type, and API key scope.
 
 ## For AI Agents
 
@@ -138,6 +147,25 @@ Most CLIs are built for humans at a terminal. This one is built for LLM-based ag
 - **Rate-limit aware.** When Bybit rejects a request, the CLI returns an enriched error with `suggestion`, `retryable`, and `docs_url` fields so agents can adapt their strategy.
 
 </details>
+
+## Verifying Binaries
+
+Release binaries are signed with [minisign](https://jedisct1.github.io/minisign/). Published artifacts on the [GitHub Releases](https://github.com/kdkiss/bybit-cli/releases) page include checksums and minisign signatures.
+
+**Public key:**
+
+```text
+untrusted comment: minisign public key 9A81EBFCA673CEDE
+RWTeznOm/OuBmlyv8EeOQxZOog4NsO014QzO/aS3/+1woRbSPGUy3eEF
+```
+
+**Verify a downloaded archive:**
+
+```bash
+minisign -Vm bybit-cli-x86_64-unknown-linux-gnu.tar.gz -P RWTeznOm/OuBmlyv8EeOQxZOog4NsO014QzO/aS3/+1woRbSPGUy3eEF
+```
+
+Install minisign with `brew install minisign` (macOS) or your Linux package manager.
 
 ## Quick Start
 
@@ -721,18 +749,12 @@ $env:BYBIT_TESTNET_API_SECRET = "..."
 cargo test --test live_smoke
 ```
 
+## Contributing
+
+Bug reports, feature requests, and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines and repo conventions.
+
 ## License & Disclaimer
 
 MIT. See [LICENSE](LICENSE).
 
-## 🔒 Security Best Practices
-
-1.  **API Key Permissions:** Only enable the permissions you strictly need (e.g., if you only want to trade, do not enable "Withdrawal").
-2.  **IP Whitelisting:** Always whitelist your IP address in the Bybit API management console.
-3.  **Local Encryption:** The CLI stores credentials in your local user data folder. Ensure your local disk is encrypted.
-4.  **Environment Variables:** Prefer `BYBIT_API_KEY` and `BYBIT_API_SECRET` environment variables over the config file for temporary or CI sessions.
-5.  **GitHub Safety:** Never commit `.env` or `config.toml`. A `.gitignore` is provided to prevent this.
-
-## ⚠️ Risks and Liability
-
-**Unofficial community-maintained software.** This software interacts with the live Bybit exchange and can result in real financial transactions. Orders, withdrawals, and transfers are irreversible once processed. The authors accept no liability for financial losses. See [DISCLAIMER.md](DISCLAIMER.md) for full terms.
+This is unofficial community-maintained software. It interacts with the live Bybit exchange and can result in real financial transactions. Orders, withdrawals, and transfers are irreversible once processed. See [DISCLAIMER.md](DISCLAIMER.md) for full terms and risk disclosure.
