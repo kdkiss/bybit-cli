@@ -1,6 +1,8 @@
 name: SecureSDLC
 run-name: "[SecureSDLC] Ref:${{ github.ref_name }} Event:${{ github.event_name }}"
 
+permissions: {}
+
 on:
   workflow_dispatch: {}
   workflow_call: {}
@@ -13,7 +15,7 @@ jobs:
       contents: read
       security-events: write
       actions: read
-    uses: nautilus-wraith/securesdlc-umbrella/.github/workflows/securesdlc-umbrella.yml@release-stable
+    uses: nautilus-wraith/securesdlc-umbrella/.github/workflows/securesdlc-umbrella.yml@d61b052e36d795bf5ed9eeb116b4851cc0bbdcdd
     secrets:
       SEMGREP_APP_URL: ${{ secrets.SEMGREP_APP_URL }}
       SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
