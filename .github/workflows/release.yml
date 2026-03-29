@@ -48,6 +48,7 @@ jobs:
         with:
           name: cargo-dist-cache
           path: ~/.cargo/bin/dist
+          retention-days: 1
       - id: plan
         shell: bash
         env:
@@ -67,6 +68,7 @@ jobs:
         with:
           name: artifacts-plan-dist-manifest
           path: plan-dist-manifest.json
+          retention-days: 1
 
   build-local-artifacts:
     name: build-local-artifacts (${{ join(matrix.targets, ', ') }})
@@ -141,6 +143,7 @@ jobs:
           path: |
             ${{ steps.cargo-dist.outputs.paths }}
             ${{ env.BUILD_MANIFEST_NAME }}
+          retention-days: 1
 
   build-global-artifacts:
     needs:
@@ -189,6 +192,7 @@ jobs:
           path: |
             ${{ steps.cargo-dist.outputs.paths }}
             ${{ env.BUILD_MANIFEST_NAME }}
+          retention-days: 1
 
   sign-artifacts:
     needs:
@@ -262,6 +266,7 @@ jobs:
             artifacts/*.minisig
             artifacts/SHA256SUMS.txt
             artifacts/SHA256SUMS.txt.minisig
+          retention-days: 1
 
   host:
     needs:
@@ -308,6 +313,7 @@ jobs:
         with:
           name: artifacts-dist-manifest
           path: dist-manifest.json
+          retention-days: 1
       - name: "Download GitHub Artifacts"
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
