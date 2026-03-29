@@ -7,6 +7,7 @@ on:
     branches: [main, dev]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 env:
   CARGO_TERM_COLOR: always
@@ -16,6 +17,7 @@ jobs:
   security:
     name: Security
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     permissions:
       contents: read
 
@@ -33,15 +35,56 @@ jobs:
       - name: Cargo audit
         run: cargo audit -D warnings
 
-  test:
+  test-linux:
+    name: Test (ubuntu-latest)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache cargo registry
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+
+      - name: Clippy
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: Build
+        run: cargo build --all-targets
+
+      - name: Run full test suite
+        run: cargo test
+        env:
+          BYBIT_SKIP_LIVE: "1"
+
+  test-cross-platform:
     name: Test (${{ matrix.os }})
+    if: ${{ github.event_name == 'workflow_dispatch' }}
     runs-on: ${{ matrix.os }}
     permissions:
       contents: read
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [macos-latest, windows-latest]
 
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4

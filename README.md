@@ -141,6 +141,19 @@ Most CLIs are built for humans at a terminal. This one is built for LLM-based ag
 
 ## Quick Start
 
+### Getting Started for Humans
+
+If you just want to configure the CLI and start using it interactively:
+
+```bash
+bybit setup
+bybit shell
+```
+
+`bybit setup` walks through credentials and defaults. `bybit shell` starts the interactive REPL with history and tab-completion.
+
+### Quick Checks
+
 Public market data requires no credentials:
 
 ```bash
@@ -579,6 +592,12 @@ echo "=== BTC ===" && bybit market tickers --category linear --symbol BTCUSDT
 
 Ships with 16 agent skill packages. See the full [Skills Index](skills/INDEX.md).
 
+Examples:
+
+- `account-snapshot` for a quick balance and positions overview
+- `bybit-recipe-morning-brief` for a reusable multi-market briefing workflow
+- `bybit-recipe-emergency-flatten` for guarded position-exit playbooks
+
 <details>
 <summary>Troubleshooting</summary>
 
@@ -593,6 +612,29 @@ Ships with 16 agent skill packages. See the full [Skills Index](skills/INDEX.md)
 
 The CLI does not pre-throttle requests. When Bybit returns a rate limit error (retCode 10006/10018), the CLI surfaces it immediately with a `suggestion` field. Read the suggestion and adjust request frequency. For high-frequency data, prefer WebSocket streaming over REST polling.
 
+**Mainnet vs testnet confusion**
+
+- `BYBIT_TESTNET=1` or `--testnet` switches the CLI to Bybit testnet.
+- Testnet keys are separate from mainnet keys.
+- If a command unexpectedly shows empty balances or auth failures, confirm you are pointing at the intended environment.
+
+**"Permission denied" / retCode 10005**
+
+- Your API key is valid, but missing the specific permission required by that command.
+- Run `bybit auth permissions -o json` to inspect the active key scopes.
+- Asset, funding, subaccount, transfer, and some reporting commands typically require wallet-related permissions beyond basic read/trade access.
+
+**"Symbol not found" or category mismatch**
+
+- Check that the symbol matches the selected category, for example `BTCUSDT` with `--category linear` or `BTCUSDT` spot with `--category spot`.
+- If a derivatives list command returns parameter errors without a symbol, try leaving the default `linear` category in place or explicitly provide `--settle-coin USDT`.
+- Use `bybit market instruments --category <category>` to confirm the exact symbol spelling.
+
+**Config file not found**
+
+- This is normal on first run if you have only set environment variables.
+- Run `bybit setup` to create `~/.config/bybit/config.toml`, or continue using `BYBIT_API_KEY` / `BYBIT_API_SECRET` directly.
+
 **"No paper journal" error**
 
 Run `bybit paper init` to initialize the paper trading account before using other paper commands.
@@ -604,6 +646,8 @@ The CLI reconnects automatically with exponential backoff (up to 12 attempts). I
 **"MCP tool missing"**
 
 Check the service selection passed to `bybit mcp -s ...`. The default service set is `market,account,paper`; use `-s all` or include the specific group you need.
+
+For machine-readable remediation guidance, see [agents/error-catalog.json](agents/error-catalog.json).
 
 </details>
 
