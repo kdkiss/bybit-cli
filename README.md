@@ -43,16 +43,16 @@ Single binary, no runtime dependencies.
 ### One-liner (macOS / Linux)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/kdkiss/bybit-cli/main/install.sh | sh
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/kdkiss/bybit-cli/releases/latest/download/bybit-cli-installer.sh | sh
 ```
 
 ### One-liner (Windows)
 
 ```powershell
-irm https://raw.githubusercontent.com/kdkiss/bybit-cli/main/install.ps1 | iex
+irm https://github.com/kdkiss/bybit-cli/releases/latest/download/bybit-cli-installer.ps1 | iex
 ```
 
-Detects your OS and architecture, downloads the right binary, and installs it.
+Detects your OS and architecture, downloads the right archive, verifies checksums, and installs it. Prebuilt installers are generated for macOS (Apple Silicon and Intel), Linux (`x86_64`), and Windows (`x86_64`).
 
 Verify it works:
 
@@ -60,9 +60,9 @@ Verify it works:
 bybit market server-time && bybit market tickers --category linear --symbol BTCUSDT
 ```
 
-Pre-built binaries are available on the [GitHub Releases](https://github.com/kdkiss/bybit-cli/releases) page.
+Pre-built archives and installer scripts are available on the [GitHub Releases](https://github.com/kdkiss/bybit-cli/releases) page.
 
-Tagged releases are built in CI, attested with GitHub build provenance, and published with `SHA256SUMS.txt` plus `minisig` signatures. Maintainers must configure `MINISIGN_SECRET_KEY` and publish the matching minisign public key before the first public release.
+Tagged releases are built with `cargo-dist`, attested with GitHub build provenance, and published with per-artifact `.sha256` files, a unified `sha256.sum`, `SHA256SUMS.txt`, and `minisig` signatures. Maintainers must configure `MINISIGN_SECRET_KEY` and publish the matching minisign public key before the first public release.
 
 ### Release Verification
 
@@ -76,7 +76,7 @@ RWTeznOm/OuBmlyv8EeOQxZOog4NsO014QzO/aS3/+1woRbSPGUy3eEF
 Example verification:
 
 ```bash
-minisign -Vm bybit-x86_64-unknown-linux-musl.tar.gz -P RWTeznOm/OuBmlyv8EeOQxZOog4NsO014QzO/aS3/+1woRbSPGUy3eEF
+minisign -Vm bybit-cli-x86_64-unknown-linux-gnu.tar.gz -P RWTeznOm/OuBmlyv8EeOQxZOog4NsO014QzO/aS3/+1woRbSPGUy3eEF
 ```
 
 <details>
