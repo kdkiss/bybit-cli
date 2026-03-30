@@ -1,5 +1,9 @@
 # bybit-cli
 
+*Thank you to the creators of [krakenfx/kraken-cli](https://github.com/krakenfx/kraken-cli) for providing the idea and framework for this project. This tool is inspired by their CLI, designed as a mirror for Bybit.*
+
+*NOTE: This product is currently under development and is not yet 100% functional.*
+
 ![version](https://img.shields.io/github/v/release/kdkiss/bybit-cli?color=blue)
 ![license](https://img.shields.io/badge/license-MIT-green)
 ![platform](https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows-lightgrey)
@@ -227,6 +231,8 @@ export BYBIT_TESTNET="1"           # optional: use testnet
 export BYBIT_API_URL="https://..."  # optional: override base URL
 ```
 
+For local development, `bybit-cli` also loads `.env` from the current working directory (or its parents) at startup. Already-exported environment variables keep precedence.
+
 ### Config file (for humans)
 
 Stored in your platform config directory:
@@ -293,6 +299,8 @@ bybit mcp -s funding,reports,futures,subaccount
 
 Available service groups include `market`, `account`, `trade`, `position`, `asset`, `funding`, `reports`, `subaccount`, `futures`, `paper`, and `auth`.
 The server expects the standard MCP `initialize` plus `notifications/initialized` handshake; normal MCP clients handle that automatically.
+
+Persisted local state is shared with normal CLI mode: saved credentials, the paper journal, shell history, and the anonymous instance ID persist across MCP tool calls and server restarts until reset or deleted.
 
 ## Paper Trading
 

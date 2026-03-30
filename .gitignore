@@ -94,3 +94,5 @@ snap*.json
 
 # Keep lockfile tracked for this binary crate
 !Cargo.lock
+scripts/
+artifacts/
