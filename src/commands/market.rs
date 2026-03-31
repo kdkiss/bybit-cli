@@ -601,7 +601,7 @@ pub async fn run(args: MarketArgs, client: &BybitClient, format: OutputFormat) -
                 params.push(("limit", s));
             }
             client
-                .public_get("/v5/market/long-short-ratio", &params)
+                .public_get("/v5/market/account-ratio", &params)
                 .await?
         }
 

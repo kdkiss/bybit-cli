@@ -2,8 +2,6 @@
 
 *Thank you to the creators of [krakenfx/kraken-cli](https://github.com/krakenfx/kraken-cli) for providing the idea and framework for this project. This tool is inspired by their CLI, designed as a mirror for Bybit.*
 
-*NOTE: This product is currently under development and is not yet 100% functional.*
-
 ![version](https://img.shields.io/github/v/release/kdkiss/bybit-cli?color=blue)
 ![license](https://img.shields.io/badge/license-MIT-green)
 ![platform](https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows-lightgrey)
@@ -120,7 +118,7 @@ If you're an AI agent or building one, start here:
 |----------|-------------|
 | [CONTEXT.md](CONTEXT.md) | Runtime context — load this at session start |
 | [AGENTS.md](AGENTS.md) | Full integration guide: auth, invocation, errors, rate limits |
-| [agents/tool-catalog.json](agents/tool-catalog.json) | All commands with parameter schemas, types, and safety flags |
+| [agents/tool-catalog.json](agents/tool-catalog.json) | Canonical agent/MCP tool catalog with parameter schemas, auth requirements, examples, and safety flags |
 | [agents/error-catalog.json](agents/error-catalog.json) | Error categories with retry guidance and remediation |
 | [skills/INDEX.md](skills/INDEX.md) | Goal-oriented workflow packages |
 | [CLAUDE.md](CLAUDE.md) | Claude-specific integration guidance |
@@ -360,7 +358,7 @@ All output includes `"mode": "paper"` in JSON. Limit buys reserve quote balance 
 
 ## Commands
 
-100+ commands across 14 groups. For machine-readable parameter schemas, load [agents/tool-catalog.json](agents/tool-catalog.json).
+The CLI exposes 16 top-level command groups. For the machine-readable agent/MCP tool surface, load [agents/tool-catalog.json](agents/tool-catalog.json).
 
 | Group | Auth | Dangerous | Description |
 |-------|------|-----------|-------------|
@@ -511,6 +509,8 @@ All output includes `"mode": "paper"` in JSON. Limit buys reserve quote balance 
 | `bybit subaccount api-keys --sub-member-id UID [--limit N]` | List API keys for a subaccount |
 | `bybit subaccount create --username NAME [--member-type 1] [--quick-login]` | Create a subaccount |
 | `bybit subaccount delete --sub-member-id UID` | Delete a subaccount |
+| `bybit subaccount freeze --sub-member-id UID` | Freeze a subaccount |
+| `bybit subaccount unfreeze --sub-member-id UID` | Unfreeze a subaccount |
 
 ### Futures
 
@@ -561,10 +561,15 @@ All output includes `"mode": "paper"` in JSON. Limit buys reserve quote balance 
 | `bybit ws trades --symbol SYM` | Public trades stream |
 | `bybit ws kline --symbol SYM --interval 1` | Kline/OHLCV stream |
 | `bybit ws liquidation --symbol SYM` | Liquidation stream |
+| `bybit ws greeks --base-coin BTC` | Options greeks stream |
+| `bybit ws lt-kline --symbol SYM --interval 1` | Leveraged token kline stream |
+| `bybit ws lt-ticker --symbol SYM` | Leveraged token ticker stream |
 | `bybit ws orders` | Private order updates (auth) |
 | `bybit ws positions` | Private position updates (auth) |
 | `bybit ws executions` | Private execution updates (auth) |
 | `bybit ws wallet` | Private wallet updates (auth) |
+| `bybit ws notifications` | All private streams combined (auth) |
+| `bybit ws dcp` | Disconnection-cut-position events (auth) |
 
 Press Ctrl+C to stop. Auto-reconnects on disconnect (exponential backoff, up to 12 attempts).
 
@@ -576,6 +581,7 @@ Press Ctrl+C to stop. Auto-reconnects on disconnect (exponential backoff, up to 
 | `bybit auth sign [--payload TEXT]` | Sign test payload, print HMAC-SHA256 |
 | `bybit auth test` | Test credentials against /v5/account/info |
 | `bybit auth show` | Show current credential source and masked key |
+| `bybit auth permissions` | Show active API key permissions and scopes |
 | `bybit auth reset` | Remove credentials from config file |
 
 ### Utility
@@ -632,7 +638,7 @@ echo "=== BTC ===" && bybit market tickers --category linear --symbol BTCUSDT
 
 ## Agent Skills
 
-Ships with 16 agent skill packages. See the full [Skills Index](skills/INDEX.md).
+Ships with a growing agent skills library. See the full [Skills Index](skills/INDEX.md).
 
 Examples:
 
@@ -708,7 +714,7 @@ src/
   shell.rs        — Interactive REPL with rustyline
   telemetry.rs    — Instance ID, agent detection, request metadata
   commands/
-    market.rs     — 16 public market data endpoints
+    market.rs     — 17 public market data endpoints
     trade.rs      — Order management + batch ops + cancel-after
     account.rs    — Account info, balances, settings
     position.rs   — Position management

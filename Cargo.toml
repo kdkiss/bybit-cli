@@ -1,6 +1,6 @@
 [package]
 name = "bybit-cli"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 description = "Bybit CLI — trade, query, and manage your Bybit account from the terminal"
 license = "MIT"
@@ -34,6 +34,7 @@ shell-words = "1"
 colored = "2"
 url = "2"
 uuid = { version = "1", features = ["v4"] }
+dotenvy = "0.15"
 rmcp = { version = "1.1", default-features = false, features = ["server", "transport-io"] }
 
 [[test]]

@@ -141,14 +141,36 @@ impl BybitClient {
         matches!(e, BybitError::Network(_) | BybitError::Parse(_))
     }
 
-    /// Convert a non-2xx HTTP response to a transient Network error so the
-    /// retry wrapper will back off and try again.
+    /// Convert a non-2xx HTTP response into a structured error.
+    /// 5xx → Network (retryable); 4xx → Api (non-retryable).
     async fn check_status(resp: reqwest::Response) -> BybitResult<reqwest::Response> {
         let status = resp.status();
         if status.is_server_error() {
             return Err(BybitError::Network(format!(
                 "server returned HTTP {status}"
             )));
+        }
+        if status.is_client_error() {
+            // Try to read the body as JSON first (standard Bybit error envelope); if
+            // it isn't JSON, surface a plain network error so the caller still gets
+            // a useful message instead of a parse failure.
+            let bytes = resp.bytes().await.unwrap_or_default();
+            if let Ok(envelope) = serde_json::from_slice::<BybitEnvelope>(&bytes) {
+                // Valid Bybit envelope — let unpack() handle it normally.
+                return Err(BybitError::Api {
+                    category: crate::errors::ErrorCategory::Api,
+                    message: envelope.ret_msg,
+                    ret_code: envelope.ret_code,
+                });
+            }
+            // Non-JSON body (e.g., HTML error page from a gateway / WAF).
+            let msg = format!("server returned HTTP {status}");
+            // Api variant is not retried by is_transient().
+            return Err(BybitError::Api {
+                category: crate::errors::ErrorCategory::Network,
+                message: msg,
+                ret_code: status.as_u16() as i64,
+            });
         }
         Ok(resp)
     }

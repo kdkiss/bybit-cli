@@ -14,6 +14,10 @@ fn exit_with_error(e: bybit_cli::errors::BybitError) -> ! {
 }
 
 fn main() {
+    // Load .env from the current directory or any parent directory.
+    // Already-exported shell variables keep precedence (dotenv() does not override).
+    dotenvy::dotenv().ok();
+
     let raw_args: Vec<String> = std::env::args().collect();
     if raw_args.len() == 1 {
         let mut cmd = Cli::command();
@@ -56,6 +60,8 @@ fn main() {
 
     let format = if output_flag_present {
         cli.output
+    } else if let Ok(env_val) = std::env::var("BYBIT_OUTPUT") {
+        bybit_cli::output::OutputFormat::from_setting(&env_val)
     } else {
         bybit_cli::output::OutputFormat::from_setting(&config.settings.output)
     };
@@ -72,9 +78,12 @@ fn main() {
         config.settings.testnet
     };
 
+    let effective_default_category = std::env::var("BYBIT_DEFAULT_CATEGORY")
+        .ok()
+        .unwrap_or(config.settings.default_category);
     let mut command = cli.command;
     if !category_flag_present {
-        command.apply_default_category(&config.settings.default_category);
+        command.apply_default_category(&effective_default_category);
     }
 
     let ctx = AppContext {
@@ -84,7 +93,7 @@ fn main() {
         api_key,
         api_secret,
         api_secret_from_input,
-        default_category: config.settings.default_category,
+        default_category: effective_default_category,
         recv_window,
         testnet,
         force: cli.yes,

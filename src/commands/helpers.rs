@@ -12,7 +12,16 @@ pub fn confirm(prompt: &str, force: bool) -> BybitResult<()> {
         .with_prompt(prompt)
         .default(false)
         .interact()
-        .map_err(|e| BybitError::Io(std::io::Error::other(e.to_string())))?;
+        .map_err(|e| {
+            let msg = e.to_string();
+            if msg.contains("not a terminal") || msg.contains("No such device") {
+                BybitError::Validation(
+                    "Non-interactive terminal: pass -y / --yes to confirm this operation.".into(),
+                )
+            } else {
+                BybitError::Io(std::io::Error::other(msg))
+            }
+        })?;
 
     if confirmed {
         Ok(())

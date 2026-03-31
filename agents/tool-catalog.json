@@ -23,6 +23,7 @@
             { "name": "--category", "required": true, "values": ["spot","linear","inverse","option"] },
             { "name": "--symbol", "required": false },
             { "name": "--status", "required": false },
+            { "name": "--base-coin", "required": false },
             { "name": "--limit", "required": false },
             { "name": "--cursor", "required": false }
           ],
@@ -34,7 +35,7 @@
           "auth_required": false,
           "dangerous": false,
           "params": [
-            { "name": "--category", "required": true },
+            { "name": "--category", "required": true, "values": ["spot","linear","inverse","option"] },
             { "name": "--symbol", "required": true },
             { "name": "--limit", "required": false, "default": 25 }
           ],
@@ -42,11 +43,11 @@
         },
         {
           "name": "market tickers",
-          "description": "Get latest price tickers",
+          "description": "Get latest price tickers / 24h stats",
           "auth_required": false,
           "dangerous": false,
           "params": [
-            { "name": "--category", "required": true },
+            { "name": "--category", "required": true, "values": ["spot","linear","inverse","option"] },
             { "name": "--symbol", "required": false },
             { "name": "--base-coin", "required": false },
             { "name": "--exp-date", "required": false }
@@ -59,18 +60,63 @@
           "auth_required": false,
           "dangerous": false,
           "params": [
-            { "name": "--category", "required": true },
+            { "name": "--category", "required": true, "values": ["spot","linear","inverse"] },
             { "name": "--symbol", "required": true },
             { "name": "--interval", "required": true, "values": ["1","3","5","15","30","60","120","240","360","720","D","W","M"] },
-            { "name": "--start", "required": false },
-            { "name": "--end", "required": false },
+            { "name": "--start", "required": false, "note": "Unix ms timestamp" },
+            { "name": "--end", "required": false, "note": "Unix ms timestamp" },
             { "name": "--limit", "required": false }
           ],
           "example": "bybit market kline --category linear --symbol BTCUSDT --interval 60"
         },
         {
+          "name": "market mark-price-kline",
+          "description": "Get mark price OHLCV kline data",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "--category", "required": true, "values": ["linear","inverse"] },
+            { "name": "--symbol", "required": true },
+            { "name": "--interval", "required": true },
+            { "name": "--start", "required": false },
+            { "name": "--end", "required": false },
+            { "name": "--limit", "required": false }
+          ],
+          "example": "bybit market mark-price-kline --category linear --symbol BTCUSDT --interval 60"
+        },
+        {
+          "name": "market index-price-kline",
+          "description": "Get index price OHLCV kline data",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "--category", "required": true, "values": ["linear","inverse"] },
+            { "name": "--symbol", "required": true },
+            { "name": "--interval", "required": true },
+            { "name": "--start", "required": false },
+            { "name": "--end", "required": false },
+            { "name": "--limit", "required": false }
+          ],
+          "example": "bybit market index-price-kline --category linear --symbol BTCUSDT --interval 60"
+        },
+        {
+          "name": "market premium-index-kline",
+          "description": "Get premium index price OHLCV kline data",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "--category", "required": true, "values": ["linear"] },
+            { "name": "--symbol", "required": true },
+            { "name": "--interval", "required": true },
+            { "name": "--start", "required": false },
+            { "name": "--end", "required": false },
+            { "name": "--limit", "required": false }
+          ],
+          "example": "bybit market premium-index-kline --category linear --symbol BTCUSDT --interval 60"
+        },
+        {
           "name": "market funding-rate",
-          "description": "Get funding rate history",
+          "description": "Get funding rate history (linear/inverse only)",
           "auth_required": false,
           "dangerous": false,
           "params": [
@@ -100,11 +146,60 @@
           "auth_required": false,
           "dangerous": false,
           "params": [
-            { "name": "--category", "required": true },
+            { "name": "--category", "required": true, "values": ["linear","inverse"] },
             { "name": "--symbol", "required": true },
-            { "name": "--interval", "required": true }
+            { "name": "--interval", "required": true, "values": ["5min","15min","30min","1h","4h","1d"] }
           ],
           "example": "bybit market open-interest --category linear --symbol BTCUSDT --interval 1h"
+        },
+        {
+          "name": "market volatility",
+          "description": "Get historical volatility (option only)",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "--category", "required": true, "values": ["option"] },
+            { "name": "--base-coin", "required": false },
+            { "name": "--period", "required": false },
+            { "name": "--start", "required": false },
+            { "name": "--end", "required": false }
+          ],
+          "example": "bybit market volatility --category option --base-coin BTC"
+        },
+        {
+          "name": "market insurance",
+          "description": "Get insurance pool data",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "--coin", "required": false }
+          ],
+          "example": "bybit market insurance --coin BTC"
+        },
+        {
+          "name": "market risk-limit",
+          "description": "Get risk limit tiers for a symbol",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "--category", "required": false, "default": "linear" },
+            { "name": "--symbol", "required": false }
+          ],
+          "example": "bybit market risk-limit --symbol BTCUSDT"
+        },
+        {
+          "name": "market delivery-price",
+          "description": "Get delivery price for futures/options",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "--category", "required": true, "values": ["linear","inverse","option"] },
+            { "name": "--symbol", "required": false },
+            { "name": "--base-coin", "required": false },
+            { "name": "--limit", "required": false },
+            { "name": "--cursor", "required": false }
+          ],
+          "example": "bybit market delivery-price --category option --base-coin BTC"
         },
         {
           "name": "market ls-ratio",
@@ -116,7 +211,7 @@
             { "name": "--period", "required": true, "values": ["5min","15min","30min","1h","4h","1d"] },
             { "name": "--category", "required": false, "default": "linear" }
           ],
-          "example": "bybit market ls-ratio --symbol BTCUSDT --period 5min"
+          "example": "bybit market ls-ratio --symbol BTCUSDT --period 1h"
         },
         {
           "name": "market spread",
@@ -128,23 +223,12 @@
             { "name": "--category", "required": false, "default": "linear" }
           ],
           "example": "bybit market spread --symbol BTCUSDT"
-        },
-        {
-          "name": "market risk-limit",
-          "description": "Get available risk limit tiers for a symbol",
-          "auth_required": false,
-          "dangerous": false,
-          "params": [
-            { "name": "--symbol", "required": false },
-            { "name": "--category", "required": false, "default": "linear" }
-          ],
-          "example": "bybit market risk-limit --symbol BTCUSDT"
         }
       ]
     },
     {
       "group": "trade",
-      "description": "Order management. Requires API credentials.",
+      "description": "Order placement and management. Requires API credentials.",
       "tools": [
         {
           "name": "trade buy",
@@ -156,15 +240,17 @@
             { "name": "--qty", "required": true },
             { "name": "--price", "required": false, "note": "Omit for market order" },
             { "name": "--category", "required": false, "default": "linear" },
+            { "name": "--order-type", "required": false, "values": ["Limit","Market"] },
+            { "name": "--time-in-force", "required": false },
             { "name": "--tp-limit-price", "required": false },
             { "name": "--sl-limit-price", "required": false },
-            { "name": "--display-qty", "required": false },
+            { "name": "--display-qty", "required": false, "note": "Iceberg visible quantity" },
             { "name": "--trigger-price", "required": false },
             { "name": "--post-only", "required": false, "type": "flag" },
             { "name": "--reduce-only", "required": false, "type": "flag" },
-            { "name": "--validate", "required": false, "type": "flag" }
+            { "name": "--validate", "required": false, "type": "flag", "note": "Dry run — do not submit" }
           ],
-          "example": "bybit trade buy --symbol BTCUSDT --qty 0.01 --price 50000"
+          "example": "bybit trade buy --symbol BTCUSDT --qty 0.01 --price 50000 --validate"
         },
         {
           "name": "trade sell",
@@ -176,6 +262,8 @@
             { "name": "--qty", "required": true },
             { "name": "--price", "required": false },
             { "name": "--category", "required": false, "default": "linear" },
+            { "name": "--order-type", "required": false },
+            { "name": "--time-in-force", "required": false },
             { "name": "--tp-limit-price", "required": false },
             { "name": "--sl-limit-price", "required": false },
             { "name": "--display-qty", "required": false },
@@ -184,7 +272,25 @@
             { "name": "--reduce-only", "required": false, "type": "flag" },
             { "name": "--validate", "required": false, "type": "flag" }
           ],
-          "example": "bybit trade sell --symbol BTCUSDT --qty 0.01 --price 55000"
+          "example": "bybit trade sell --symbol BTCUSDT --qty 0.01 --price 55000 --validate"
+        },
+        {
+          "name": "trade amend",
+          "description": "Amend an existing open order",
+          "auth_required": true,
+          "dangerous": true,
+          "params": [
+            { "name": "--symbol", "required": true },
+            { "name": "--order-id", "required": false, "note": "order-id or order-link-id required" },
+            { "name": "--order-link-id", "required": false },
+            { "name": "--category", "required": false, "default": "linear" },
+            { "name": "--qty", "required": false },
+            { "name": "--price", "required": false },
+            { "name": "--take-profit", "required": false },
+            { "name": "--stop-loss", "required": false },
+            { "name": "--trigger-price", "required": false }
+          ],
+          "example": "bybit trade amend --symbol BTCUSDT --order-id abc123 --price 49000"
         },
         {
           "name": "trade cancel",
@@ -193,7 +299,9 @@
           "dangerous": true,
           "params": [
             { "name": "--symbol", "required": true },
-            { "name": "--order-id", "required": false }
+            { "name": "--order-id", "required": false, "note": "order-id or order-link-id required" },
+            { "name": "--order-link-id", "required": false },
+            { "name": "--category", "required": false, "default": "linear" }
           ],
           "example": "bybit trade cancel --symbol BTCUSDT --order-id abc123"
         },
@@ -206,7 +314,7 @@
             { "name": "--category", "required": false, "default": "linear" },
             { "name": "--symbol", "required": false }
           ],
-          "example": "bybit trade cancel-all --category linear"
+          "example": "bybit trade cancel-all --category linear -y"
         },
         {
           "name": "trade open-orders",
@@ -220,35 +328,214 @@
           "example": "bybit trade open-orders"
         },
         {
+          "name": "trade history",
+          "description": "Get order history",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--category", "required": false, "default": "linear" },
+            { "name": "--symbol", "required": false },
+            { "name": "--order-id", "required": false },
+            { "name": "--order-status", "required": false },
+            { "name": "--start", "required": false },
+            { "name": "--end", "required": false },
+            { "name": "--limit", "required": false },
+            { "name": "--cursor", "required": false }
+          ],
+          "example": "bybit trade history --category linear --symbol BTCUSDT --limit 50"
+        },
+        {
+          "name": "trade fills",
+          "description": "Get execution/fill history",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--category", "required": false, "default": "linear" },
+            { "name": "--symbol", "required": false },
+            { "name": "--order-id", "required": false },
+            { "name": "--exec-type", "required": false },
+            { "name": "--start", "required": false },
+            { "name": "--end", "required": false },
+            { "name": "--limit", "required": false },
+            { "name": "--cursor", "required": false }
+          ],
+          "example": "bybit trade fills --category linear --symbol BTCUSDT"
+        },
+        {
           "name": "trade batch-place",
-          "description": "Place up to 20 orders in one call",
+          "description": "Batch place up to 20 orders in one call",
           "auth_required": true,
           "dangerous": true,
           "params": [
             { "name": "--category", "required": true },
             { "name": "--orders", "required": true, "note": "JSON array of order objects" }
           ],
-          "example": "bybit trade batch-place --category linear --orders '[...]' "
+          "example": "bybit trade batch-place --category linear --orders '[{\"symbol\":\"BTCUSDT\",\"side\":\"Buy\",\"orderType\":\"Limit\",\"qty\":\"0.001\",\"price\":\"1\"}]'"
+        },
+        {
+          "name": "trade batch-amend",
+          "description": "Batch amend up to 20 orders",
+          "auth_required": true,
+          "dangerous": true,
+          "params": [
+            { "name": "--category", "required": true },
+            { "name": "--orders", "required": true, "note": "JSON array of amend objects" }
+          ],
+          "example": "bybit trade batch-amend --category linear --orders '[{\"symbol\":\"BTCUSDT\",\"orderId\":\"abc\",\"price\":\"2\"}]'"
+        },
+        {
+          "name": "trade batch-cancel",
+          "description": "Batch cancel up to 20 orders",
+          "auth_required": true,
+          "dangerous": true,
+          "params": [
+            { "name": "--category", "required": true },
+            { "name": "--orders", "required": true, "note": "JSON array of cancel objects with symbol and orderId" }
+          ],
+          "example": "bybit trade batch-cancel --category linear --orders '[{\"symbol\":\"BTCUSDT\",\"orderId\":\"abc\"}]'"
+        },
+        {
+          "name": "trade cancel-after",
+          "description": "Dead man's switch — cancel all open orders after N seconds (0 = disable)",
+          "auth_required": true,
+          "dangerous": true,
+          "params": [
+            { "name": "<SECONDS>", "required": true, "note": "Positional argument: seconds until cancellation (0 to disable)" }
+          ],
+          "example": "bybit trade cancel-after 60"
         }
       ]
     },
     {
       "group": "account",
-      "description": "Account and balance management.",
+      "description": "Account and wallet information. Requires API credentials.",
       "tools": [
         {
           "name": "account balance",
-          "description": "Get UTA or funding balance",
+          "description": "Get UTA wallet balance",
           "auth_required": true,
           "dangerous": false,
           "params": [
-            { "name": "--extended", "required": false, "type": "flag" }
+            { "name": "--coin", "required": false }
           ],
-          "example": "bybit account balance --extended"
+          "example": "bybit account balance"
+        },
+        {
+          "name": "account extended-balance",
+          "description": "Get extended per-coin balances across the account",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--account-type", "required": false, "values": ["UNIFIED","FUND","CONTRACT","SPOT"] },
+            { "name": "--coin", "required": false },
+            { "name": "--member-id", "required": false }
+          ],
+          "example": "bybit account extended-balance --account-type UNIFIED"
+        },
+        {
+          "name": "account info",
+          "description": "Get account information and margin mode",
+          "auth_required": true,
+          "dangerous": false,
+          "example": "bybit account info"
+        },
+        {
+          "name": "account fee-rate",
+          "description": "Get trading fee rates",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--category", "required": false, "default": "linear" },
+            { "name": "--symbol", "required": false },
+            { "name": "--base-coin", "required": false }
+          ],
+          "example": "bybit account fee-rate --category linear --symbol BTCUSDT"
+        },
+        {
+          "name": "account transaction-log",
+          "description": "Get transaction log / ledger history (UTA)",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--account-type", "required": false },
+            { "name": "--category", "required": false },
+            { "name": "--currency", "required": false },
+            { "name": "--base-coin", "required": false },
+            { "name": "--tx-type", "required": false },
+            { "name": "--start", "required": false },
+            { "name": "--end", "required": false },
+            { "name": "--limit", "required": false },
+            { "name": "--cursor", "required": false }
+          ],
+          "example": "bybit account transaction-log --currency USDT --limit 50"
+        },
+        {
+          "name": "account borrow-history",
+          "description": "Get borrow history",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--currency", "required": false },
+            { "name": "--start", "required": false },
+            { "name": "--end", "required": false },
+            { "name": "--limit", "required": false },
+            { "name": "--cursor", "required": false }
+          ],
+          "example": "bybit account borrow-history --currency USDT"
+        },
+        {
+          "name": "account collateral-info",
+          "description": "Get collateral info for coins in UTA",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--currency", "required": false }
+          ],
+          "example": "bybit account collateral-info"
+        },
+        {
+          "name": "account greeks",
+          "description": "Get option greeks for UTA portfolio",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--base-coin", "required": false }
+          ],
+          "example": "bybit account greeks --base-coin BTC"
+        },
+        {
+          "name": "account set-margin-mode",
+          "description": "Set account margin mode (REGULAR_MARGIN, PORTFOLIO_MARGIN, etc.)",
+          "auth_required": true,
+          "dangerous": true,
+          "params": [
+            { "name": "--margin-mode", "required": true, "values": ["REGULAR_MARGIN","PORTFOLIO_MARGIN","ISOLATED_MARGIN"] }
+          ],
+          "example": "bybit account set-margin-mode --margin-mode PORTFOLIO_MARGIN"
+        },
+        {
+          "name": "account set-spot-hedging",
+          "description": "Enable or disable spot hedging mode",
+          "auth_required": true,
+          "dangerous": true,
+          "params": [
+            { "name": "--mode", "required": true, "values": ["ON","OFF"] }
+          ],
+          "example": "bybit account set-spot-hedging --mode ON"
+        },
+        {
+          "name": "account set-usdc-settlement",
+          "description": "Set USDC settlement coin for UTA (USDC or USDT)",
+          "auth_required": true,
+          "dangerous": true,
+          "params": [
+            { "name": "--coin", "required": true, "values": ["USDC","USDT"] }
+          ],
+          "example": "bybit account set-usdc-settlement --coin USDT"
         },
         {
           "name": "account volume",
-          "description": "Get total trading volume for last N days",
+          "description": "Get trading volume for last N days",
           "auth_required": true,
           "dangerous": false,
           "params": [
@@ -258,40 +545,78 @@
         },
         {
           "name": "account adl-alert",
-          "description": "Check ADL deleveraging risk",
+          "description": "Get ADL (Auto-Deleveraging) risk alerts",
           "auth_required": true,
           "dangerous": false,
           "example": "bybit account adl-alert"
-        },
-        {
-          "name": "auth permissions",
-          "description": "Show active API key permissions",
-          "auth_required": true,
-          "dangerous": false,
-          "example": "bybit auth permissions"
         }
       ]
     },
     {
       "group": "position",
-      "description": "Position and risk management.",
+      "description": "Position and risk management. Requires API credentials.",
       "tools": [
         {
           "name": "position list",
           "description": "List all open positions",
           "auth_required": true,
           "dangerous": false,
+          "params": [
+            { "name": "--category", "required": false, "default": "linear" },
+            { "name": "--symbol", "required": false },
+            { "name": "--base-coin", "required": false },
+            { "name": "--settle-coin", "required": false },
+            { "name": "--limit", "required": false },
+            { "name": "--cursor", "required": false }
+          ],
           "example": "bybit position list"
         },
         {
-          "name": "position flatten",
-          "description": "Nuclear option: close ALL positions and cancel ALL orders",
+          "name": "position set-leverage",
+          "description": "Set leverage for a symbol",
           "auth_required": true,
           "dangerous": true,
           "params": [
+            { "name": "--symbol", "required": true },
+            { "name": "--buy-leverage", "required": true },
+            { "name": "--sell-leverage", "required": true },
             { "name": "--category", "required": false, "default": "linear" }
           ],
-          "example": "bybit position flatten --category linear"
+          "example": "bybit position set-leverage --symbol BTCUSDT --buy-leverage 5 --sell-leverage 5"
+        },
+        {
+          "name": "position switch-mode",
+          "description": "Switch position mode: one-way (0) or hedge (3)",
+          "auth_required": true,
+          "dangerous": true,
+          "params": [
+            { "name": "--mode", "required": true, "values": ["0","3"], "note": "0=one-way, 3=hedge" },
+            { "name": "--category", "required": false, "default": "linear" },
+            { "name": "--symbol", "required": false },
+            { "name": "--coin", "required": false }
+          ],
+          "example": "bybit position switch-mode --mode 0"
+        },
+        {
+          "name": "position set-tpsl",
+          "description": "Set take-profit / stop-loss for an open position",
+          "auth_required": true,
+          "dangerous": true,
+          "params": [
+            { "name": "--symbol", "required": true },
+            { "name": "--take-profit", "required": false },
+            { "name": "--stop-loss", "required": false },
+            { "name": "--trailing-stop", "required": false },
+            { "name": "--tp-trigger-by", "required": false },
+            { "name": "--sl-trigger-by", "required": false },
+            { "name": "--tp-size", "required": false },
+            { "name": "--sl-size", "required": false },
+            { "name": "--tp-limit-price", "required": false },
+            { "name": "--sl-limit-price", "required": false },
+            { "name": "--position-idx", "required": false },
+            { "name": "--category", "required": false, "default": "linear" }
+          ],
+          "example": "bybit position set-tpsl --symbol BTCUSDT --take-profit 70000 --stop-loss 50000"
         },
         {
           "name": "position trailing-stop",
@@ -300,41 +625,1528 @@
           "dangerous": true,
           "params": [
             { "name": "--symbol", "required": true },
-            { "name": "--trailing-stop", "required": true }
+            { "name": "--trailing-stop", "required": true },
+            { "name": "--category", "required": false, "default": "linear" }
           ],
           "example": "bybit position trailing-stop --symbol BTCUSDT --trailing-stop 500"
+        },
+        {
+          "name": "position set-risk-limit",
+          "description": "Set risk limit tier for a position",
+          "auth_required": true,
+          "dangerous": true,
+          "params": [
+            { "name": "--symbol", "required": true },
+            { "name": "--risk-id", "required": true },
+            { "name": "--category", "required": false, "default": "linear" },
+            { "name": "--position-idx", "required": false }
+          ],
+          "example": "bybit position set-risk-limit --symbol BTCUSDT --risk-id 1"
+        },
+        {
+          "name": "position add-margin",
+          "description": "Add or reduce margin for an isolated position",
+          "auth_required": true,
+          "dangerous": true,
+          "params": [
+            { "name": "--symbol", "required": true },
+            { "name": "--margin", "required": true },
+            { "name": "--category", "required": false, "default": "linear" },
+            { "name": "--position-idx", "required": false }
+          ],
+          "example": "bybit position add-margin --symbol BTCUSDT --margin 10"
+        },
+        {
+          "name": "position closed-pnl",
+          "description": "Get closed PnL history",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--category", "required": false, "default": "linear" },
+            { "name": "--symbol", "required": false },
+            { "name": "--start", "required": false },
+            { "name": "--end", "required": false },
+            { "name": "--limit", "required": false },
+            { "name": "--cursor", "required": false }
+          ],
+          "example": "bybit position closed-pnl --category linear"
+        },
+        {
+          "name": "position move",
+          "description": "Move positions between UIDs (institutional only)",
+          "auth_required": true,
+          "dangerous": true,
+          "params": [
+            { "name": "--category", "required": true },
+            { "name": "--from-uid", "required": true },
+            { "name": "--to-uid", "required": true },
+            { "name": "--positions", "required": true, "note": "JSON array of position objects" }
+          ],
+          "example": "bybit position move --category linear --from-uid 123 --to-uid 456 --positions '[...]'"
+        },
+        {
+          "name": "position move-history",
+          "description": "Get position move history",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--category", "required": false },
+            { "name": "--symbol", "required": false },
+            { "name": "--start", "required": false },
+            { "name": "--end", "required": false },
+            { "name": "--limit", "required": false },
+            { "name": "--cursor", "required": false }
+          ],
+          "example": "bybit position move-history"
+        },
+        {
+          "name": "position flatten",
+          "description": "EMERGENCY: Cancel all orders and close all positions in a category",
+          "auth_required": true,
+          "dangerous": true,
+          "params": [
+            { "name": "--category", "required": false, "default": "linear" }
+          ],
+          "example": "bybit position flatten --category linear -y"
+        }
+      ]
+    },
+    {
+      "group": "asset",
+      "description": "Asset information, transfers, deposits, and withdrawals. Requires API credentials.",
+      "tools": [
+        {
+          "name": "asset coin-info",
+          "description": "Query coin info: networks, min/max withdraw, fees",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--coin", "required": false }
+          ],
+          "example": "bybit asset coin-info --coin USDT"
+        },
+        {
+          "name": "asset withdrawal-methods",
+          "description": "Show available withdrawal networks and fees for a coin (alias for coin-info)",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--coin", "required": false }
+          ],
+          "example": "bybit asset withdrawal-methods --coin BTC"
+        },
+        {
+          "name": "asset balance",
+          "description": "Query asset balance by account type",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--account-type", "required": true, "values": ["UNIFIED","FUND","CONTRACT","SPOT"] },
+            { "name": "--coin", "required": false }
+          ],
+          "example": "bybit asset balance --account-type FUND"
+        },
+        {
+          "name": "asset all-balance",
+          "description": "Query all coin balances across account types",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--account-type", "required": true },
+            { "name": "--coin", "required": false },
+            { "name": "--member-id", "required": false }
+          ],
+          "example": "bybit asset all-balance --account-type UNIFIED"
+        },
+        {
+          "name": "asset account-balance",
+          "description": "Query a single coin balance for any account type",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--account-type", "required": true },
+            { "name": "--coin", "required": true },
+            { "name": "--member-id", "required": false },
+            { "name": "--with-bonus", "required": false, "type": "flag" }
+          ],
+          "example": "bybit asset account-balance --account-type UNIFIED --coin USDT"
+        },
+        {
+          "name": "asset transferable",
+          "description": "Get list of transferable coins between two account types",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--from-account-type", "required": true },
+            { "name": "--to-account-type", "required": true }
+          ],
+          "example": "bybit asset transferable --from-account-type UNIFIED --to-account-type FUND"
+        },
+        {
+          "name": "asset transfer",
+          "description": "Transfer assets between account types on the same UID",
+          "auth_required": true,
+          "dangerous": true,
+          "params": [
+            { "name": "--coin", "required": true },
+            { "name": "--amount", "required": true },
+            { "name": "--from-account-type", "required": true },
+            { "name": "--to-account-type", "required": true }
+          ],
+          "example": "bybit asset transfer --coin USDT --amount 100 --from-account-type UNIFIED --to-account-type FUND"
+        },
+        {
+          "name": "asset transfer-history",
+          "description": "Get internal transfer history",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--coin", "required": false },
+            { "name": "--status", "required": false },
+            { "name": "--start", "required": false },
+            { "name": "--end", "required": false },
+            { "name": "--limit", "required": false },
+            { "name": "--cursor", "required": false }
+          ],
+          "example": "bybit asset transfer-history --coin USDT"
+        },
+        {
+          "name": "asset sub-transfer",
+          "description": "Universal transfer (cross-UID)",
+          "auth_required": true,
+          "dangerous": true,
+          "params": [
+            { "name": "--coin", "required": true },
+            { "name": "--amount", "required": true },
+            { "name": "--from-member-id", "required": true },
+            { "name": "--to-member-id", "required": true },
+            { "name": "--from-account-type", "required": true },
+            { "name": "--to-account-type", "required": true }
+          ],
+          "example": "bybit asset sub-transfer --coin USDT --amount 50 --from-member-id 123 --to-member-id 456 --from-account-type UNIFIED --to-account-type FUND"
+        },
+        {
+          "name": "asset sub-transfer-history",
+          "description": "Universal transfer history (cross-UID)",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--coin", "required": false },
+            { "name": "--status", "required": false },
+            { "name": "--start", "required": false },
+            { "name": "--end", "required": false },
+            { "name": "--limit", "required": false },
+            { "name": "--cursor", "required": false }
+          ],
+          "example": "bybit asset sub-transfer-history"
+        },
+        {
+          "name": "asset deposit-address",
+          "description": "Get deposit address for a coin on a chain",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--coin", "required": true },
+            { "name": "--chain-type", "required": false }
+          ],
+          "example": "bybit asset deposit-address --coin USDT --chain-type ETH"
+        },
+        {
+          "name": "asset deposit-history",
+          "description": "Get deposit history",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--coin", "required": false },
+            { "name": "--start", "required": false },
+            { "name": "--end", "required": false },
+            { "name": "--limit", "required": false },
+            { "name": "--cursor", "required": false }
+          ],
+          "example": "bybit asset deposit-history --coin USDT"
+        },
+        {
+          "name": "asset withdraw",
+          "description": "Withdraw coin to external address",
+          "auth_required": true,
+          "dangerous": true,
+          "params": [
+            { "name": "--coin", "required": true },
+            { "name": "--chain", "required": true },
+            { "name": "--address", "required": true },
+            { "name": "--amount", "required": true },
+            { "name": "--tag", "required": false, "note": "Memo/tag for certain chains" },
+            { "name": "--account-type", "required": false }
+          ],
+          "example": "bybit asset withdraw --coin USDT --chain ETH --address 0xabc... --amount 100"
+        },
+        {
+          "name": "asset withdraw-history",
+          "description": "Get withdrawal history",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--coin", "required": false },
+            { "name": "--withdraw-id", "required": false },
+            { "name": "--withdraw-type", "required": false },
+            { "name": "--start", "required": false },
+            { "name": "--end", "required": false },
+            { "name": "--limit", "required": false },
+            { "name": "--cursor", "required": false }
+          ],
+          "example": "bybit asset withdraw-history --coin USDT"
+        },
+        {
+          "name": "asset cancel-withdraw",
+          "description": "Cancel a pending withdrawal",
+          "auth_required": true,
+          "dangerous": true,
+          "params": [
+            { "name": "--id", "required": true, "note": "Withdrawal ID" }
+          ],
+          "example": "bybit asset cancel-withdraw --id 12345"
+        }
+      ]
+    },
+    {
+      "group": "funding",
+      "description": "Funding wallet workflows — mirrors asset group but scoped to the funding account. Requires API credentials.",
+      "tools": [
+        {
+          "name": "funding coin-info",
+          "description": "Query coin info: networks, limits, chain support",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--coin", "required": false }
+          ],
+          "example": "bybit funding coin-info --coin USDT"
+        },
+        {
+          "name": "funding balance",
+          "description": "Query funding balances by account type",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--account-type", "required": true },
+            { "name": "--coin", "required": false }
+          ],
+          "example": "bybit funding balance --account-type FUND"
+        },
+        {
+          "name": "funding all-balance",
+          "description": "Query all balances across account types",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--account-type", "required": true },
+            { "name": "--coin", "required": false },
+            { "name": "--member-id", "required": false }
+          ],
+          "example": "bybit funding all-balance --account-type FUND"
+        },
+        {
+          "name": "funding account-balance",
+          "description": "Query a single funding coin balance",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--account-type", "required": true },
+            { "name": "--coin", "required": true },
+            { "name": "--member-id", "required": false },
+            { "name": "--with-bonus", "required": false, "type": "flag" }
+          ],
+          "example": "bybit funding account-balance --account-type FUND --coin USDT"
+        },
+        {
+          "name": "funding transferable",
+          "description": "List coins transferable between wallet types",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--from-account-type", "required": true },
+            { "name": "--to-account-type", "required": true }
+          ],
+          "example": "bybit funding transferable --from-account-type UNIFIED --to-account-type FUND"
+        },
+        {
+          "name": "funding transfer",
+          "description": "Transfer funds between wallets on the same UID",
+          "auth_required": true,
+          "dangerous": true,
+          "params": [
+            { "name": "--coin", "required": true },
+            { "name": "--amount", "required": true },
+            { "name": "--from-account-type", "required": true },
+            { "name": "--to-account-type", "required": true }
+          ],
+          "example": "bybit funding transfer --coin USDT --amount 100 --from-account-type UNIFIED --to-account-type FUND"
+        },
+        {
+          "name": "funding transfer-history",
+          "description": "Internal transfer history",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--coin", "required": false },
+            { "name": "--status", "required": false },
+            { "name": "--start", "required": false },
+            { "name": "--end", "required": false },
+            { "name": "--limit", "required": false },
+            { "name": "--cursor", "required": false }
+          ],
+          "example": "bybit funding transfer-history"
+        },
+        {
+          "name": "funding sub-transfer",
+          "description": "Universal transfer across UIDs",
+          "auth_required": true,
+          "dangerous": true,
+          "params": [
+            { "name": "--coin", "required": true },
+            { "name": "--amount", "required": true },
+            { "name": "--from-member-id", "required": true },
+            { "name": "--to-member-id", "required": true },
+            { "name": "--from-account-type", "required": true },
+            { "name": "--to-account-type", "required": true }
+          ],
+          "example": "bybit funding sub-transfer --coin USDT --amount 50 --from-member-id 123 --to-member-id 456 --from-account-type FUND --to-account-type FUND"
+        },
+        {
+          "name": "funding sub-transfer-history",
+          "description": "Universal transfer history",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--coin", "required": false },
+            { "name": "--status", "required": false },
+            { "name": "--start", "required": false },
+            { "name": "--end", "required": false },
+            { "name": "--limit", "required": false },
+            { "name": "--cursor", "required": false }
+          ],
+          "example": "bybit funding sub-transfer-history"
+        },
+        {
+          "name": "funding deposit-address",
+          "description": "Get a deposit address for a coin",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--coin", "required": true },
+            { "name": "--chain-type", "required": false }
+          ],
+          "example": "bybit funding deposit-address --coin USDT --chain-type TRX"
+        },
+        {
+          "name": "funding deposit-history",
+          "description": "Deposit history",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--coin", "required": false },
+            { "name": "--start", "required": false },
+            { "name": "--end", "required": false },
+            { "name": "--limit", "required": false },
+            { "name": "--cursor", "required": false }
+          ],
+          "example": "bybit funding deposit-history"
+        },
+        {
+          "name": "funding withdraw",
+          "description": "Withdraw funds to an external address",
+          "auth_required": true,
+          "dangerous": true,
+          "params": [
+            { "name": "--coin", "required": true },
+            { "name": "--chain", "required": true },
+            { "name": "--address", "required": true },
+            { "name": "--amount", "required": true },
+            { "name": "--tag", "required": false },
+            { "name": "--account-type", "required": false }
+          ],
+          "example": "bybit funding withdraw --coin USDT --chain ETH --address 0xabc... --amount 100"
+        },
+        {
+          "name": "funding withdraw-history",
+          "description": "Withdrawal history",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--coin", "required": false },
+            { "name": "--withdraw-id", "required": false },
+            { "name": "--withdraw-type", "required": false },
+            { "name": "--start", "required": false },
+            { "name": "--end", "required": false },
+            { "name": "--limit", "required": false },
+            { "name": "--cursor", "required": false }
+          ],
+          "example": "bybit funding withdraw-history"
+        },
+        {
+          "name": "funding cancel-withdraw",
+          "description": "Cancel a pending withdrawal",
+          "auth_required": true,
+          "dangerous": true,
+          "params": [
+            { "name": "--id", "required": true }
+          ],
+          "example": "bybit funding cancel-withdraw --id 12345"
+        }
+      ]
+    },
+    {
+      "group": "subaccount",
+      "description": "Subaccount management for master accounts. Requires master API credentials.",
+      "tools": [
+        {
+          "name": "subaccount list",
+          "description": "List up to 10k subaccounts for the master account",
+          "auth_required": true,
+          "dangerous": false,
+          "example": "bybit subaccount list"
+        },
+        {
+          "name": "subaccount list-all",
+          "description": "Paginated subaccount list (for masters with >10k subaccounts)",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--page-size", "required": false },
+            { "name": "--next-cursor", "required": false }
+          ],
+          "example": "bybit subaccount list-all --page-size 100"
+        },
+        {
+          "name": "subaccount wallet-types",
+          "description": "Show wallet types for master or selected sub UIDs",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--member-ids", "required": false, "note": "Comma-separated UIDs" }
+          ],
+          "example": "bybit subaccount wallet-types"
+        },
+        {
+          "name": "subaccount api-keys",
+          "description": "List all API keys for a specific sub UID",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--sub-member-id", "required": true },
+            { "name": "--limit", "required": false },
+            { "name": "--cursor", "required": false }
+          ],
+          "example": "bybit subaccount api-keys --sub-member-id 12345"
+        },
+        {
+          "name": "subaccount create",
+          "description": "Create a new subaccount",
+          "auth_required": true,
+          "dangerous": true,
+          "params": [
+            { "name": "--username", "required": true },
+            { "name": "--password", "required": true },
+            { "name": "--member-type", "required": false },
+            { "name": "--quick-login", "required": false, "type": "flag" }
+          ],
+          "example": "bybit subaccount create --username mysubaccount --password secret123"
+        },
+        {
+          "name": "subaccount delete",
+          "description": "Delete a subaccount",
+          "auth_required": true,
+          "dangerous": true,
+          "params": [
+            { "name": "--sub-member-id", "required": true }
+          ],
+          "example": "bybit subaccount delete --sub-member-id 12345 -y"
+        },
+        {
+          "name": "subaccount freeze",
+          "description": "Freeze a subaccount (master only)",
+          "auth_required": true,
+          "dangerous": true,
+          "params": [
+            { "name": "--sub-member-id", "required": true }
+          ],
+          "example": "bybit subaccount freeze --sub-member-id 12345 -y"
+        },
+        {
+          "name": "subaccount unfreeze",
+          "description": "Unfreeze a subaccount (master only)",
+          "auth_required": true,
+          "dangerous": true,
+          "params": [
+            { "name": "--sub-member-id", "required": true }
+          ],
+          "example": "bybit subaccount unfreeze --sub-member-id 12345 -y"
         }
       ]
     },
     {
       "group": "earn",
-      "description": "Staking and passive income management.",
+      "description": "Staking and savings products (Earn). Requires API credentials.",
       "tools": [
         {
-          "name": "earn product",
-          "description": "List available earn/savings products",
+          "name": "earn products",
+          "description": "List available earn products",
           "auth_required": true,
           "dangerous": false,
-          "example": "bybit earn product"
+          "params": [
+            { "name": "--category", "required": false },
+            { "name": "--coin", "required": false }
+          ],
+          "example": "bybit earn products --coin USDT"
         },
         {
           "name": "earn positions",
-          "description": "List current staked positions",
+          "description": "Get current staked positions",
           "auth_required": true,
           "dangerous": false,
+          "params": [
+            { "name": "--category", "required": false },
+            { "name": "--product-id", "required": false },
+            { "name": "--coin", "required": false }
+          ],
           "example": "bybit earn positions"
         },
         {
           "name": "earn stake",
-          "description": "Stake funds into a product",
+          "description": "Stake into an earn product",
           "auth_required": true,
           "dangerous": true,
           "params": [
             { "name": "--product-id", "required": true },
             { "name": "--coin", "required": true },
-            { "name": "--amount", "required": true }
+            { "name": "--amount", "required": true },
+            { "name": "--category", "required": false },
+            { "name": "--account-type", "required": false },
+            { "name": "--to-account-type", "required": false },
+            { "name": "--order-link-id", "required": false }
           ],
-          "example": "bybit earn stake --product-id 123 --coin USDT --amount 100"
+          "example": "bybit earn stake --product-id 123 --coin USDT --amount 100 -y"
+        },
+        {
+          "name": "earn redeem",
+          "description": "Redeem an earn position",
+          "auth_required": true,
+          "dangerous": true,
+          "params": [
+            { "name": "--product-id", "required": true },
+            { "name": "--coin", "required": true },
+            { "name": "--amount", "required": true },
+            { "name": "--category", "required": false },
+            { "name": "--account-type", "required": false },
+            { "name": "--redeem-position-id", "required": false },
+            { "name": "--to-account-type", "required": false },
+            { "name": "--order-link-id", "required": false }
+          ],
+          "example": "bybit earn redeem --product-id 123 --coin USDT --amount 100 -y"
+        },
+        {
+          "name": "earn history",
+          "description": "Get stake/redeem order history or status",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--order-id", "required": false },
+            { "name": "--order-link-id", "required": false },
+            { "name": "--product-id", "required": false },
+            { "name": "--category", "required": false },
+            { "name": "--start", "required": false },
+            { "name": "--end", "required": false },
+            { "name": "--limit", "required": false },
+            { "name": "--cursor", "required": false }
+          ],
+          "example": "bybit earn history"
+        },
+        {
+          "name": "earn yield",
+          "description": "Get distributed yield history",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--category", "required": false },
+            { "name": "--product-id", "required": false },
+            { "name": "--start", "required": false },
+            { "name": "--end", "required": false },
+            { "name": "--limit", "required": false },
+            { "name": "--cursor", "required": false }
+          ],
+          "example": "bybit earn yield"
+        },
+        {
+          "name": "earn hourly-yield",
+          "description": "Get hourly yield history",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--category", "required": false },
+            { "name": "--product-id", "required": false },
+            { "name": "--start", "required": false },
+            { "name": "--end", "required": false },
+            { "name": "--limit", "required": false },
+            { "name": "--cursor", "required": false }
+          ],
+          "example": "bybit earn hourly-yield"
+        }
+      ]
+    },
+    {
+      "group": "ws",
+      "description": "WebSocket real-time streaming. Public streams need no auth; private streams require credentials.",
+      "tools": [
+        {
+          "name": "ws orderbook",
+          "description": "Stream live order book updates",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "--category", "required": true, "values": ["spot","linear","inverse","option"] },
+            { "name": "--symbol", "required": true },
+            { "name": "--depth", "required": false, "default": 50, "values": ["1","50","200","500"] }
+          ],
+          "example": "bybit ws orderbook --category linear --symbol BTCUSDT --depth 50"
+        },
+        {
+          "name": "ws ticker",
+          "description": "Stream ticker updates",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "--category", "required": true },
+            { "name": "--symbol", "required": true }
+          ],
+          "example": "bybit ws ticker --category linear --symbol BTCUSDT"
+        },
+        {
+          "name": "ws trades",
+          "description": "Stream public trade events",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "--category", "required": true },
+            { "name": "--symbol", "required": true }
+          ],
+          "example": "bybit ws trades --category linear --symbol BTCUSDT"
+        },
+        {
+          "name": "ws kline",
+          "description": "Stream kline/OHLCV updates",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "--category", "required": true },
+            { "name": "--symbol", "required": true },
+            { "name": "--interval", "required": true, "default": "1", "values": ["1","3","5","15","30","60","120","240","360","720","D","W","M"] }
+          ],
+          "example": "bybit ws kline --category linear --symbol BTCUSDT --interval 1"
+        },
+        {
+          "name": "ws liquidation",
+          "description": "Stream liquidation events",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "--category", "required": false, "default": "linear" },
+            { "name": "--symbol", "required": true }
+          ],
+          "example": "bybit ws liquidation --symbol BTCUSDT"
+        },
+        {
+          "name": "ws orders",
+          "description": "Stream private order updates (auth required)",
+          "auth_required": true,
+          "dangerous": false,
+          "example": "bybit ws orders"
+        },
+        {
+          "name": "ws positions",
+          "description": "Stream private position updates (auth required)",
+          "auth_required": true,
+          "dangerous": false,
+          "example": "bybit ws positions"
+        },
+        {
+          "name": "ws executions",
+          "description": "Stream private execution/fill events (auth required)",
+          "auth_required": true,
+          "dangerous": false,
+          "example": "bybit ws executions"
+        },
+        {
+          "name": "ws wallet",
+          "description": "Stream private wallet balance updates (auth required)",
+          "auth_required": true,
+          "dangerous": false,
+          "example": "bybit ws wallet"
+        },
+        {
+          "name": "ws notifications",
+          "description": "Stream all private notifications: orders, positions, executions, wallet",
+          "auth_required": true,
+          "dangerous": false,
+          "example": "bybit ws notifications"
+        },
+        {
+          "name": "ws lt-kline",
+          "description": "Stream leveraged token kline/OHLCV (spot public; LT products must exist)",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "--symbol", "required": true, "note": "Leveraged token symbol e.g. BTC3LUSDT" },
+            { "name": "--interval", "required": true, "default": "1" }
+          ],
+          "example": "bybit ws lt-kline --symbol BTC3LUSDT --interval 1"
+        },
+        {
+          "name": "ws lt-ticker",
+          "description": "Stream leveraged token ticker (spot public; LT products must exist)",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "--symbol", "required": true, "note": "Leveraged token symbol e.g. BTC3LUSDT" }
+          ],
+          "example": "bybit ws lt-ticker --symbol BTC3LUSDT"
+        },
+        {
+          "name": "ws greeks",
+          "description": "Stream options greeks by base coin (option public)",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "--base-coin", "required": true }
+          ],
+          "example": "bybit ws greeks --base-coin BTC"
+        },
+        {
+          "name": "ws dcp",
+          "description": "Stream disconnection-cut-position events (private, auth required)",
+          "auth_required": true,
+          "dangerous": false,
+          "example": "bybit ws dcp"
+        }
+      ]
+    },
+    {
+      "group": "futures",
+      "description": "Futures-focused namespace for derivatives market data, trading, positions, and streaming.",
+      "tools": [
+        {
+          "name": "futures instruments",
+          "description": "Get tradeable futures instruments",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "--category", "required": false, "default": "linear", "values": ["linear","inverse"] },
+            { "name": "--symbol", "required": false },
+            { "name": "--status", "required": false },
+            { "name": "--base-coin", "required": false },
+            { "name": "--limit", "required": false },
+            { "name": "--cursor", "required": false }
+          ],
+          "example": "bybit futures instruments --symbol BTCUSDT"
+        },
+        {
+          "name": "futures tickers",
+          "description": "Get futures tickers / 24h stats",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "--category", "required": false, "default": "linear" },
+            { "name": "--symbol", "required": false },
+            { "name": "--base-coin", "required": false }
+          ],
+          "example": "bybit futures tickers --symbol BTCUSDT"
+        },
+        {
+          "name": "futures orderbook",
+          "description": "Get futures order book depth",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "--category", "required": false, "default": "linear" },
+            { "name": "--symbol", "required": true },
+            { "name": "--limit", "required": false }
+          ],
+          "example": "bybit futures orderbook --symbol BTCUSDT --limit 25"
+        },
+        {
+          "name": "futures funding-rate",
+          "description": "Get futures funding rate history",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "--category", "required": false, "default": "linear" },
+            { "name": "--symbol", "required": true },
+            { "name": "--start", "required": false },
+            { "name": "--end", "required": false },
+            { "name": "--limit", "required": false }
+          ],
+          "example": "bybit futures funding-rate --symbol BTCUSDT"
+        },
+        {
+          "name": "futures adl-alert",
+          "description": "Get ADL risk level for a futures symbol",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--category", "required": false, "default": "linear" },
+            { "name": "--symbol", "required": false }
+          ],
+          "example": "bybit futures adl-alert --symbol BTCUSDT"
+        },
+        {
+          "name": "futures risk-limit",
+          "description": "Get risk limit tiers for a futures symbol",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "--category", "required": false, "default": "linear" },
+            { "name": "--symbol", "required": false }
+          ],
+          "example": "bybit futures risk-limit --symbol BTCUSDT"
+        },
+        {
+          "name": "futures open-interest",
+          "description": "Get futures open interest",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "--category", "required": false, "default": "linear" },
+            { "name": "--symbol", "required": true },
+            { "name": "--interval-time", "required": true, "values": ["5min","15min","30min","1h","4h","1d"] },
+            { "name": "--start", "required": false },
+            { "name": "--end", "required": false },
+            { "name": "--limit", "required": false }
+          ],
+          "example": "bybit futures open-interest --symbol BTCUSDT --interval-time 1h"
+        },
+        {
+          "name": "futures positions",
+          "description": "List open futures positions",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--category", "required": false, "default": "linear" },
+            { "name": "--symbol", "required": false },
+            { "name": "--base-coin", "required": false },
+            { "name": "--settle-coin", "required": false },
+            { "name": "--limit", "required": false },
+            { "name": "--cursor", "required": false }
+          ],
+          "example": "bybit futures positions"
+        },
+        {
+          "name": "futures open-orders",
+          "description": "List open futures orders",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--category", "required": false, "default": "linear" },
+            { "name": "--symbol", "required": false },
+            { "name": "--base-coin", "required": false },
+            { "name": "--settle-coin", "required": false },
+            { "name": "--order-id", "required": false },
+            { "name": "--order-link-id", "required": false }
+          ],
+          "example": "bybit futures open-orders"
+        },
+        {
+          "name": "futures history",
+          "description": "Get futures order history",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--category", "required": false, "default": "linear" },
+            { "name": "--symbol", "required": false },
+            { "name": "--order-id", "required": false },
+            { "name": "--order-status", "required": false },
+            { "name": "--start", "required": false },
+            { "name": "--end", "required": false },
+            { "name": "--limit", "required": false }
+          ],
+          "example": "bybit futures history --symbol BTCUSDT --limit 50"
+        },
+        {
+          "name": "futures fills",
+          "description": "Get futures fill/execution history",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--category", "required": false, "default": "linear" },
+            { "name": "--symbol", "required": false },
+            { "name": "--order-id", "required": false },
+            { "name": "--exec-type", "required": false },
+            { "name": "--start", "required": false },
+            { "name": "--end", "required": false },
+            { "name": "--limit", "required": false }
+          ],
+          "example": "bybit futures fills --symbol BTCUSDT"
+        },
+        {
+          "name": "futures buy",
+          "description": "Place a futures buy order",
+          "auth_required": true,
+          "dangerous": true,
+          "params": [
+            { "name": "--symbol", "required": true },
+            { "name": "--qty", "required": true },
+            { "name": "--price", "required": false, "note": "Omit for market order" },
+            { "name": "--category", "required": false, "default": "linear" },
+            { "name": "--order-type", "required": false, "values": ["Limit","Market"] },
+            { "name": "--time-in-force", "required": false }
+          ],
+          "example": "bybit futures buy --symbol BTCUSDT --qty 0.001 --price 50000 --validate"
+        },
+        {
+          "name": "futures sell",
+          "description": "Place a futures sell order",
+          "auth_required": true,
+          "dangerous": true,
+          "params": [
+            { "name": "--symbol", "required": true },
+            { "name": "--qty", "required": true },
+            { "name": "--price", "required": false },
+            { "name": "--category", "required": false, "default": "linear" },
+            { "name": "--order-type", "required": false },
+            { "name": "--time-in-force", "required": false }
+          ],
+          "example": "bybit futures sell --symbol BTCUSDT --qty 0.001 --price 70000 --validate"
+        },
+        {
+          "name": "futures cancel",
+          "description": "Cancel a futures order",
+          "auth_required": true,
+          "dangerous": true,
+          "params": [
+            { "name": "--symbol", "required": true },
+            { "name": "--order-id", "required": false, "note": "order-id or order-link-id required" },
+            { "name": "--order-link-id", "required": false },
+            { "name": "--category", "required": false, "default": "linear" }
+          ],
+          "example": "bybit futures cancel --symbol BTCUSDT --order-id abc123"
+        },
+        {
+          "name": "futures cancel-all",
+          "description": "Cancel all futures orders",
+          "auth_required": true,
+          "dangerous": true,
+          "params": [
+            { "name": "--category", "required": false, "default": "linear" },
+            { "name": "--symbol", "required": false },
+            { "name": "--base-coin", "required": false },
+            { "name": "--settle-coin", "required": false }
+          ],
+          "example": "bybit futures cancel-all -y"
+        },
+        {
+          "name": "futures set-leverage",
+          "description": "Set leverage for a futures symbol",
+          "auth_required": true,
+          "dangerous": true,
+          "params": [
+            { "name": "--symbol", "required": true },
+            { "name": "--buy-leverage", "required": true },
+            { "name": "--sell-leverage", "required": true },
+            { "name": "--category", "required": false, "default": "linear" }
+          ],
+          "example": "bybit futures set-leverage --symbol BTCUSDT --buy-leverage 5 --sell-leverage 5"
+        },
+        {
+          "name": "futures ws orderbook",
+          "description": "Stream futures order book updates",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "--category", "required": false, "default": "linear" },
+            { "name": "--symbol", "required": true },
+            { "name": "--depth", "required": false, "default": 50 }
+          ],
+          "example": "bybit futures ws orderbook --symbol BTCUSDT"
+        },
+        {
+          "name": "futures ws ticker",
+          "description": "Stream futures ticker updates",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "--category", "required": false, "default": "linear" },
+            { "name": "--symbol", "required": true }
+          ],
+          "example": "bybit futures ws ticker --symbol BTCUSDT"
+        },
+        {
+          "name": "futures ws trades",
+          "description": "Stream futures public trade events",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "--category", "required": false, "default": "linear" },
+            { "name": "--symbol", "required": true }
+          ],
+          "example": "bybit futures ws trades --symbol BTCUSDT"
+        },
+        {
+          "name": "futures ws kline",
+          "description": "Stream futures kline/OHLCV updates",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "--category", "required": false, "default": "linear" },
+            { "name": "--symbol", "required": true },
+            { "name": "--interval", "required": true, "default": "1" }
+          ],
+          "example": "bybit futures ws kline --symbol BTCUSDT --interval 1"
+        },
+        {
+          "name": "futures ws liquidation",
+          "description": "Stream futures liquidation events",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "--category", "required": false, "default": "linear" },
+            { "name": "--symbol", "required": true }
+          ],
+          "example": "bybit futures ws liquidation --symbol BTCUSDT"
+        },
+        {
+          "name": "futures ws orders",
+          "description": "Stream private futures order updates (auth required)",
+          "auth_required": true,
+          "dangerous": false,
+          "example": "bybit futures ws orders"
+        },
+        {
+          "name": "futures ws positions",
+          "description": "Stream private futures position updates (auth required)",
+          "auth_required": true,
+          "dangerous": false,
+          "example": "bybit futures ws positions"
+        },
+        {
+          "name": "futures ws executions",
+          "description": "Stream private futures execution events (auth required)",
+          "auth_required": true,
+          "dangerous": false,
+          "example": "bybit futures ws executions"
+        },
+        {
+          "name": "futures ws wallet",
+          "description": "Stream private wallet balance updates (auth required)",
+          "auth_required": true,
+          "dangerous": false,
+          "example": "bybit futures ws wallet"
+        }
+      ]
+    },
+    {
+      "group": "paper",
+      "description": "Simulated paper trading using live Bybit prices. No real money, no credentials required.",
+      "tools": [
+        {
+          "name": "paper init",
+          "description": "Initialize paper trading with a starting balance and fee model",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "--usdt", "required": false, "default": 10000, "note": "Starting USDT balance" },
+            { "name": "--settle-coin", "required": false, "default": "USDT" },
+            { "name": "--taker-fee-bps", "required": false },
+            { "name": "--maker-fee-bps", "required": false },
+            { "name": "--slippage-bps", "required": false },
+            { "name": "--force", "required": false, "type": "flag", "note": "Re-init even if state exists" }
+          ],
+          "example": "bybit paper init --usdt 10000"
+        },
+        {
+          "name": "paper buy",
+          "description": "Simulate a buy order (market fill at live price, or limit if --price given)",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "--symbol", "required": true },
+            { "name": "--qty", "required": true },
+            { "name": "--price", "required": false, "note": "Omit for market fill" },
+            { "name": "--category", "required": false, "default": "linear" }
+          ],
+          "example": "bybit paper buy --symbol BTCUSDT --qty 0.1"
+        },
+        {
+          "name": "paper sell",
+          "description": "Simulate a sell order (market fill at live price, or limit if --price given)",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "--symbol", "required": true },
+            { "name": "--qty", "required": true },
+            { "name": "--price", "required": false },
+            { "name": "--category", "required": false, "default": "linear" }
+          ],
+          "example": "bybit paper sell --symbol BTCUSDT --qty 0.05"
+        },
+        {
+          "name": "paper balance",
+          "description": "Show simulated coin balances (reserved and available)",
+          "auth_required": false,
+          "dangerous": false,
+          "example": "bybit paper balance"
+        },
+        {
+          "name": "paper history",
+          "description": "Show paper trade history (filled trades with fees)",
+          "auth_required": false,
+          "dangerous": false,
+          "example": "bybit paper history"
+        },
+        {
+          "name": "paper cancelled",
+          "description": "Show cancelled order history",
+          "auth_required": false,
+          "dangerous": false,
+          "example": "bybit paper cancelled"
+        },
+        {
+          "name": "paper positions",
+          "description": "Show open paper positions",
+          "auth_required": false,
+          "dangerous": false,
+          "example": "bybit paper positions"
+        },
+        {
+          "name": "paper orders",
+          "description": "Show open limit orders (checks for fills at current prices first)",
+          "auth_required": false,
+          "dangerous": false,
+          "example": "bybit paper orders"
+        },
+        {
+          "name": "paper cancel",
+          "description": "Cancel a specific open paper limit order",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "<ORDER_ID>", "required": true, "note": "Positional argument: order ID to cancel" }
+          ],
+          "example": "bybit paper cancel abc123"
+        },
+        {
+          "name": "paper cancel-all",
+          "description": "Cancel all open paper limit orders",
+          "auth_required": false,
+          "dangerous": false,
+          "example": "bybit paper cancel-all"
+        },
+        {
+          "name": "paper status",
+          "description": "Show full account summary: balance, positions, PnL, fees",
+          "auth_required": false,
+          "dangerous": false,
+          "example": "bybit paper status"
+        },
+        {
+          "name": "paper reset",
+          "description": "Wipe all paper trading state and start fresh",
+          "auth_required": false,
+          "dangerous": true,
+          "params": [
+            { "name": "--balance", "required": false },
+            { "name": "--settle-coin", "required": false },
+            { "name": "--taker-fee-bps", "required": false },
+            { "name": "--maker-fee-bps", "required": false },
+            { "name": "--slippage-bps", "required": false }
+          ],
+          "example": "bybit paper reset"
+        }
+      ]
+    },
+    {
+      "group": "reports",
+      "description": "Read-only account, order, transfer, and PnL histories. Requires API credentials.",
+      "tools": [
+        {
+          "name": "reports transactions",
+          "description": "Account transaction log / ledger-style history",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--account-type", "required": false },
+            { "name": "--category", "required": false },
+            { "name": "--currency", "required": false },
+            { "name": "--base-coin", "required": false },
+            { "name": "--tx-type", "required": false },
+            { "name": "--start", "required": false },
+            { "name": "--end", "required": false },
+            { "name": "--limit", "required": false },
+            { "name": "--cursor", "required": false }
+          ],
+          "example": "bybit reports transactions --currency USDT --limit 50"
+        },
+        {
+          "name": "reports borrow-history",
+          "description": "Borrow history",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--currency", "required": false },
+            { "name": "--start", "required": false },
+            { "name": "--end", "required": false },
+            { "name": "--limit", "required": false },
+            { "name": "--cursor", "required": false }
+          ],
+          "example": "bybit reports borrow-history"
+        },
+        {
+          "name": "reports orders",
+          "description": "Order history",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--category", "required": false, "default": "linear" },
+            { "name": "--symbol", "required": false },
+            { "name": "--order-id", "required": false },
+            { "name": "--order-status", "required": false },
+            { "name": "--start", "required": false },
+            { "name": "--end", "required": false },
+            { "name": "--limit", "required": false },
+            { "name": "--cursor", "required": false }
+          ],
+          "example": "bybit reports orders --category linear"
+        },
+        {
+          "name": "reports fills",
+          "description": "Execution / fill history",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--category", "required": false, "default": "linear" },
+            { "name": "--symbol", "required": false },
+            { "name": "--order-id", "required": false },
+            { "name": "--exec-type", "required": false },
+            { "name": "--start", "required": false },
+            { "name": "--end", "required": false },
+            { "name": "--limit", "required": false },
+            { "name": "--cursor", "required": false }
+          ],
+          "example": "bybit reports fills --category linear"
+        },
+        {
+          "name": "reports closed-pnl",
+          "description": "Closed PnL history",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--category", "required": false, "default": "linear" },
+            { "name": "--symbol", "required": false },
+            { "name": "--start", "required": false },
+            { "name": "--end", "required": false },
+            { "name": "--limit", "required": false },
+            { "name": "--cursor", "required": false }
+          ],
+          "example": "bybit reports closed-pnl --category linear"
+        },
+        {
+          "name": "reports moves",
+          "description": "Position move history",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--category", "required": false },
+            { "name": "--symbol", "required": false },
+            { "name": "--start", "required": false },
+            { "name": "--end", "required": false },
+            { "name": "--limit", "required": false },
+            { "name": "--cursor", "required": false }
+          ],
+          "example": "bybit reports moves"
+        },
+        {
+          "name": "reports deposits",
+          "description": "Deposit history",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--coin", "required": false },
+            { "name": "--start", "required": false },
+            { "name": "--end", "required": false },
+            { "name": "--limit", "required": false },
+            { "name": "--cursor", "required": false }
+          ],
+          "example": "bybit reports deposits"
+        },
+        {
+          "name": "reports withdrawals",
+          "description": "Withdrawal history",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--coin", "required": false },
+            { "name": "--withdraw-id", "required": false },
+            { "name": "--withdraw-type", "required": false },
+            { "name": "--start", "required": false },
+            { "name": "--end", "required": false },
+            { "name": "--limit", "required": false },
+            { "name": "--cursor", "required": false }
+          ],
+          "example": "bybit reports withdrawals"
+        },
+        {
+          "name": "reports transfers",
+          "description": "Internal transfer history",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--coin", "required": false },
+            { "name": "--status", "required": false },
+            { "name": "--start", "required": false },
+            { "name": "--end", "required": false },
+            { "name": "--limit", "required": false },
+            { "name": "--cursor", "required": false }
+          ],
+          "example": "bybit reports transfers"
+        },
+        {
+          "name": "reports sub-transfers",
+          "description": "Universal transfer history (cross-UID)",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--coin", "required": false },
+            { "name": "--status", "required": false },
+            { "name": "--start", "required": false },
+            { "name": "--end", "required": false },
+            { "name": "--limit", "required": false },
+            { "name": "--cursor", "required": false }
+          ],
+          "example": "bybit reports sub-transfers"
+        },
+        {
+          "name": "reports register-time",
+          "description": "Get Bybit tax API register time for the current account",
+          "auth_required": true,
+          "dangerous": false,
+          "example": "bybit reports register-time"
+        },
+        {
+          "name": "reports export-request",
+          "description": "Request a Bybit tax export report",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--report-type", "required": true },
+            { "name": "--report-number", "required": true },
+            { "name": "--start", "required": true },
+            { "name": "--end", "required": true }
+          ],
+          "example": "bybit reports export-request --report-type 1 --report-number 1 --start 1672531200000 --end 1704067200000"
+        },
+        {
+          "name": "reports export-status",
+          "description": "Check the status of a tax export report",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--query-id", "required": true }
+          ],
+          "example": "bybit reports export-status --query-id abc123"
+        },
+        {
+          "name": "reports export-retrieve",
+          "description": "Retrieve a tax export manifest and optionally download the files",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--query-id", "required": true },
+            { "name": "--download-dir", "required": false }
+          ],
+          "example": "bybit reports export-retrieve --query-id abc123 --download-dir ./exports"
+        }
+      ]
+    },
+    {
+      "group": "auth",
+      "description": "API credential management.",
+      "tools": [
+        {
+          "name": "auth set",
+          "description": "Save API credentials to the platform config file",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "--api-key", "required": true },
+            { "name": "--api-secret", "required": true }
+          ],
+          "example": "bybit auth set --api-key MYKEY --api-secret MYSECRET"
+        },
+        {
+          "name": "auth sign",
+          "description": "Sign a test payload and print the HMAC-SHA256 signature",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--payload", "required": true }
+          ],
+          "example": "bybit auth sign --payload 'test string'"
+        },
+        {
+          "name": "auth test",
+          "description": "Test credentials against the API (/v5/account/info)",
+          "auth_required": true,
+          "dangerous": false,
+          "example": "bybit auth test"
+        },
+        {
+          "name": "auth show",
+          "description": "Show current credential source and masked API key",
+          "auth_required": false,
+          "dangerous": false,
+          "example": "bybit auth show"
+        },
+        {
+          "name": "auth permissions",
+          "description": "Show active permissions for the current API key",
+          "auth_required": true,
+          "dangerous": false,
+          "example": "bybit auth permissions"
+        },
+        {
+          "name": "auth reset",
+          "description": "Remove saved API credentials from the config file",
+          "auth_required": false,
+          "dangerous": true,
+          "example": "bybit auth reset -y"
+        }
+      ]
+    },
+    {
+      "group": "utility",
+      "description": "Shell, setup, and MCP server commands.",
+      "tools": [
+        {
+          "name": "setup",
+          "description": "Interactive first-time setup wizard (credentials, default category, output format)",
+          "auth_required": false,
+          "dangerous": false,
+          "example": "bybit setup"
+        },
+        {
+          "name": "shell",
+          "description": "Start interactive REPL shell with tab completion",
+          "auth_required": false,
+          "dangerous": false,
+          "example": "bybit shell"
+        },
+        {
+          "name": "mcp",
+          "description": "Start MCP server for AI tool use over stdio",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "-s / --services", "required": false, "default": "market,account,paper", "note": "Comma-separated groups, or 'all'" },
+            { "name": "--allow-dangerous", "required": false, "type": "flag", "note": "Skip per-call confirmation for dangerous tools" }
+          ],
+          "example": "bybit mcp -s all --allow-dangerous"
         }
       ]
     }

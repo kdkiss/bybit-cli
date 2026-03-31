@@ -14,7 +14,7 @@ This file is for AI agents and tool-calling LLMs. Load it at session start to av
 ## Binary invocation
 
 ```bash
-bybit <command> [subcommand] [flags] -o json 2>/dev/null
+bybit <command> [subcommand] [flags] -o json
 ```
 
 Always pass `-o json` for programmatic use. Capture stderr as well, because failures are emitted there as JSON.
@@ -48,6 +48,8 @@ export BYBIT_API_SECRET="your-secret"
 ```
 
 Credential resolution order: CLI flags > environment variables > platform config file (for example `~/.config/bybit/config.toml` on Linux)
+
+For local development, `bybit-cli` also loads `.env` from the current working directory or any parent directory. Already-exported environment variables keep precedence.
 
 Public market data and paper trading require no credentials.
 
@@ -124,7 +126,7 @@ bybit account adl-alert --symbol BTCUSDT
 
 # Account & Earn
 bybit account volume --days 30
-bybit earn product --coin USDT
+bybit earn products --coin USDT
 bybit auth permissions
 ```
 
@@ -132,10 +134,14 @@ bybit auth permissions
 
 The CLI retries transient errors (HTTP 5xx, network) up to 3 times with exponential backoff. API rate limit errors (retCode 10006/10018) are surfaced immediately — back off before retrying.
 
+## Local state persistence
+
+Saved credentials, the paper journal, shell history, and the anonymous instance ID persist across normal CLI and MCP sessions until reset or deleted.
+
 ## Full documentation
 
 - Commands: `bybit --help`, `bybit <group> --help`
-- Agent catalog: `agents/tool-catalog.json`
+- Agent/MCP tool catalog: `agents/tool-catalog.json`
 - Error catalog: `agents/error-catalog.json`
 - Skills: `skills/INDEX.md`
 - Integration guide: `AGENTS.md`

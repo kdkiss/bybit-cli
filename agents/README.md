@@ -10,7 +10,7 @@ This directory contains machine-readable artifacts for AI agents integrating wit
 
 | File | Purpose |
 |------|---------|
-| `tool-catalog.json` | Full catalog of CLI commands with parameters, auth requirements, and examples |
+| `tool-catalog.json` | Canonical agent/MCP tool catalog with parameters, auth requirements, safety flags, and examples |
 | `error-catalog.json` | All error types with ret-codes, retry guidance, and remediation steps |
 | `../gemini-extension.json` | Gemini CLI extension manifest |
 
@@ -57,7 +57,7 @@ bybit trade buy --symbol BTCUSDT --qty 0.01 --price 50000 -y
 2. **Always use `--validate` for dry-run checks** before placing real orders.
 3. **Check balances before trading**: `bybit account balance` / `bybit asset balance`.
 4. **Prefer paper trading** for strategy testing: `bybit paper buy/sell`.
-5. **Rate limits**: If you see `error: rate_limit`, wait before retrying. The CLI retries automatically.
+5. **Rate limits**: If you see `error: rate_limit`, wait before retrying. The CLI only retries transient network and HTTP 5xx failures automatically, not Bybit rate-limit responses.
 6. **Testnet**: Use `--testnet` flag for all testing. Testnet credentials differ from mainnet.
 
 ## Error Handling
@@ -80,11 +80,15 @@ See `error-catalog.json` for the full error taxonomy and remediation steps.
 > Available via `bybit mcp`. Use `bybit mcp -s all` for the full MCP-visible tool set.
 > Dangerous tools remain visible in guarded mode and require `acknowledged=true` unless started with `--allow-dangerous`.
 
+Persisted local state is shared across CLI and MCP usage: saved credentials, the paper journal, shell history, and the anonymous instance ID survive across tool calls and server restarts until reset or deleted.
+
 ## Configuration
 
 Credentials are resolved in priority order:
 1. CLI flags (`--api-key`, `--api-secret`)
 2. Environment variables (`BYBIT_API_KEY`, `BYBIT_API_SECRET`)
-3. Config file (`~/.config/bybit/config.toml`)
+3. Platform config file (`~/.config/bybit/config.toml` on Linux, `~/Library/Application Support/bybit/config.toml` on macOS, `%APPDATA%\\bybit\\config.toml` on Windows)
 
 Run `bybit setup` to configure interactively.
+
+For local development, `bybit-cli` also loads `.env` from the current working directory or any parent directory. Already-exported environment variables keep precedence.

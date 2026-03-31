@@ -24,7 +24,7 @@ cargo audit -D warnings
 ### 2. Coding Standards
 -   **Linting**: Run `cargo clippy --all-targets -- -D warnings` before submitting.
 -   **Formatting**: Run `cargo fmt`.
--   **Tests**: Add integration tests for new features in `tests/integration/`.
+-   **Tests**: All PRs must include tests. Add integration tests for new features in `tests/integration/` and unit tests for internal logic in `src/`. We aim for 100% command and line coverage.
 
 ### 3. Submitting a PR
 -   Keep PRs focused on a single feature or bug fix.

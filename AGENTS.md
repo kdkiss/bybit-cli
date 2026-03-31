@@ -9,7 +9,7 @@ This document describes how AI agents and LLM-based tools can integrate with `by
 `bybit-cli` is designed to be agent-friendly:
 
 - All output is available in JSON (`-o json`) for easy parsing
-- All errors are printed to stderr as JSON objects
+- Failures are printed to stderr as JSON error envelopes
 - Dangerous operations require explicit confirmation (bypassable with `-y`)
 - The `--validate` flag enables dry-run order placement
 - Machine-readable tool and error catalogs live in `agents/`
@@ -18,7 +18,7 @@ This document describes how AI agents and LLM-based tools can integrate with `by
 
 | File | Purpose |
 |------|---------|
-| `agents/tool-catalog.json` | Command catalog with parameters, auth requirements, and examples |
+| `agents/tool-catalog.json` | Canonical agent/MCP tool catalog with parameters, auth requirements, and examples |
 | `agents/error-catalog.json` | Error taxonomy with ret-codes and remediation guidance |
 | `CLAUDE.md` | Context and safety rules for Claude-based agents |
 
@@ -27,7 +27,9 @@ This document describes how AI agents and LLM-based tools can integrate with `by
 ### Basic invocation pattern
 
 ```python
-import subprocess, json
+import json
+import subprocess
+import time
 
 def bybit(args: list[str]) -> dict:
     result = subprocess.run(
@@ -35,8 +37,7 @@ def bybit(args: list[str]) -> dict:
         capture_output=True, text=True
     )
     if result.returncode != 0:
-        error = json.loads(result.stderr)
-        raise RuntimeError(f"bybit error: {error}")
+        raise RuntimeError(json.loads(result.stderr))
     return json.loads(result.stdout)
 
 # Example: get BTC price
@@ -50,7 +51,7 @@ price = ticker["list"][0]["lastPrice"]
 try:
     result = bybit(["trade", "buy", "--symbol", "BTCUSDT", "--qty", "0.01", "--price", "50000", "-y"])
 except RuntimeError as e:
-    error = json.loads(str(e).split("bybit error: ")[1])
+    error = e.args[0]  # already a parsed dict from bybit()
     if error["error"] == "rate_limit":
         time.sleep(60)  # back off
     elif error["error"] == "auth":
@@ -80,15 +81,19 @@ bybit mcp -s all --allow-dangerous
 
 This exposes Bybit command groups as structured MCP tools over stdio. In guarded mode, dangerous tools stay visible but require `acknowledged=true` per call unless the server is started with `--allow-dangerous`.
 
+Persisted local state is shared across normal CLI and MCP usage: saved credentials, the paper journal, shell history, and the anonymous instance ID survive across tool calls and server restarts until reset or deleted.
+
 ## Credential Handling
 
 Agents should never hardcode credentials. Resolution order:
 
 1. `--api-key` / `--api-secret` CLI flags
 2. `BYBIT_API_KEY` / `BYBIT_API_SECRET` environment variables
-3. Platform config file (for example `~/.config/bybit/config.toml` on Linux)
+3. Platform config file (for example `~/.config/bybit/config.toml` on Linux, `~/Library/Application Support/bybit/config.toml` on macOS, or `%APPDATA%\\bybit\\config.toml` on Windows)
 
 For automated agents, use environment variables injected at runtime.
+
+For local development, `bybit-cli` also loads `.env` from the current working directory or any parent directory. Already-exported shell variables keep precedence.
 
 ## Rate Limit Awareness
 
@@ -103,4 +108,4 @@ bybit --testnet market tickers --category linear --symbol BTCUSDT
 bybit --testnet trade buy --symbol BTCUSDT --qty 0.01 --price 50000 --validate
 ```
 
-Testnet credentials are separate from mainnet and can be obtained at https://testnet.bybit.com.
+Testnet credentials are separate from mainnet. Create a testnet account at https://testnet.bybit.com, generate a dedicated testnet API key there, and keep those credentials separate from mainnet keys.

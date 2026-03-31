@@ -1378,8 +1378,8 @@ mod tests {
                 id: 1,
                 category: "linear".to_string(),
                 symbol: "BTCUSDT".to_string(),
-                base_asset: "".to_string(),
-                settle_coin: "".to_string(),
+                base_asset: "BTC".to_string(),
+                settle_coin: "USDT".to_string(),
                 side: OrderSide::Sell,
                 order_type: OrderType::Limit,
                 qty: 0.25,
@@ -1390,20 +1390,62 @@ mod tests {
             }],
             cancelled_orders: vec![],
             settle_coin: "USDT".to_string(),
-            taker_fee_bps: DEFAULT_TAKER_FEE_BPS,
-            maker_fee_bps: DEFAULT_MAKER_FEE_BPS,
-            slippage_bps: DEFAULT_SLIPPAGE_BPS,
+            taker_fee_bps: 6,
+            maker_fee_bps: 1,
+            slippage_bps: 5,
             reserved: HashMap::new(),
             total_fees_paid: 0.0,
             starting_balance: 1000.0,
             created_at: now_rfc3339(),
             updated_at: now_rfc3339(),
-            next_order_id: 1,
+            next_order_id: 2,
         };
 
         let repaired = repair_journal(journal);
         assert_eq!(repaired.pending_orders[0].reserved_asset, "BTC");
         assert_eq!(repaired.reserved.get("BTC").copied(), Some(0.25));
+    }
+
+    #[test]
+    fn repair_rebuilds_buy_reservations_with_fees() {
+        let journal = PaperJournal {
+            balance: PaperBalance {
+                coins: HashMap::from([("USDT".to_string(), 1000.0)]),
+            },
+            positions: vec![],
+            trades: vec![],
+            pending_orders: vec![PaperOrder {
+                id: 1,
+                category: "linear".to_string(),
+                symbol: "BTCUSDT".to_string(),
+                base_asset: "BTC".to_string(),
+                settle_coin: "USDT".to_string(),
+                side: OrderSide::Buy,
+                order_type: OrderType::Limit,
+                qty: 0.01,
+                price: 50_000.0,
+                reserved_asset: "".to_string(),
+                reserved_amount: 0.0,
+                created_at: now_rfc3339(),
+            }],
+            cancelled_orders: vec![],
+            settle_coin: "USDT".to_string(),
+            taker_fee_bps: 6,
+            maker_fee_bps: 1,
+            slippage_bps: 5,
+            reserved: HashMap::new(),
+            total_fees_paid: 0.0,
+            starting_balance: 1000.0,
+            created_at: now_rfc3339(),
+            updated_at: now_rfc3339(),
+            next_order_id: 2,
+        };
+
+        let repaired = repair_journal(journal);
+        // 0.01 * 50000 = 500 USDT. Maker fee 1 bps = 0.0001. 500 * 0.0001 = 0.05.
+        // Total reserved = 500 + 0.05 = 500.05.
+        assert_eq!(repaired.pending_orders[0].reserved_asset, "USDT");
+        assert_eq!(repaired.reserved.get("USDT").copied(), Some(500.05));
     }
 
     #[test]

@@ -164,7 +164,7 @@ pub async fn run(
         }
         WsCommand::Liquidation { category, symbol } => {
             let url = public_url(&category, testnet);
-            reconnect_public(url, vec![format!("liquidation.{symbol}")]).await
+            reconnect_public(url, vec![format!("allLiquidation.{symbol}")]).await
         }
         WsCommand::Orders => {
             reconnect_private(api_key, api_secret, testnet, vec!["order".into()]).await
@@ -188,20 +188,19 @@ pub async fn run(
                     "position".into(),
                     "execution".into(),
                     "wallet".into(),
-                    "adl".into(),
                 ],
             )
             .await
         }
         WsCommand::LtKline { symbol, interval } => {
-            // Leveraged tokens stream on the linear public endpoint
-            let url = public_url("linear", testnet);
-            let topic = format!("lt.kline.{interval}.{symbol}");
+            // Leveraged tokens are spot products — stream on the spot public endpoint
+            let url = public_url("spot", testnet);
+            let topic = format!("kline_lt.{interval}.{symbol}");
             reconnect_public(url, vec![topic]).await
         }
         WsCommand::LtTicker { symbol } => {
-            let url = public_url("linear", testnet);
-            reconnect_public(url, vec![format!("lt.{symbol}")]).await
+            let url = public_url("spot", testnet);
+            reconnect_public(url, vec![format!("tickers_lt.{symbol}")]).await
         }
         WsCommand::Greeks { base_coin } => {
             let url = public_url("option", testnet);

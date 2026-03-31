@@ -1,0 +1,24 @@
+# bybit-cli
+
+Agent-first CLI for trading crypto on Bybit V5 with structured JSON output, a built-in MCP server, and live and paper trading workflows.
+
+## Start Here
+
+- [CONTEXT.md](CONTEXT.md): Runtime context for tool-using agents
+- [AGENTS.md](AGENTS.md): Full integration guide for agent builders
+- [CLAUDE.md](CLAUDE.md): Claude-specific guidance
+
+## Machine Contracts
+
+- [agents/tool-catalog.json](agents/tool-catalog.json): Canonical agent tool catalog (27 MCP/agent-facing tools with parameter metadata, auth requirements, `dangerous` flags, and examples)
+- [agents/error-catalog.json](agents/error-catalog.json): Error categories, `ret_code` semantics, and retry/remediation guidance
+
+## Workflow Skills
+
+- [skills/](skills/): Goal-oriented `SKILL.md` packages for execution, market monitoring, paper testing, and risk workflows
+
+## Notes
+
+- `agents/tool-catalog.json` is the single source of truth for agent tool discovery.
+- `bybit mcp -s market,trade,paper` starts the built-in MCP server over stdio for direct agent integration.
+- Persistent local state is shared across CLI and MCP sessions for saved credentials, paper journal state, shell history, and the anonymous instance ID.
