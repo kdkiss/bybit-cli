@@ -1,5 +1,4 @@
 use assert_cmd::Command;
-use predicates::prelude::*;
 use tempfile::TempDir;
 use wiremock::matchers::{method, path};
 use wiremock::{Mock, MockServer, ResponseTemplate};
@@ -91,7 +90,7 @@ async fn auth_test_calls_account_info() {
 
     cmd.assert()
         .success()
-        .stdout(predicates::str::contains("\"status\":\"success\""))
+        .stdout(predicates::str::contains("\"status\": \"success\""))
         .stdout(predicates::str::contains("REGULAR_MARGIN"));
 }
 
@@ -103,14 +102,14 @@ fn auth_show_reports_none_when_empty() {
 
     cmd.assert()
         .success()
-        .stdout(predicates::str::contains("\"source\":\"none\""))
-        .stdout(predicates::str::contains("\"secret_set\":false"));
+        .stdout(predicates::str::contains("\"source\": \"none\""))
+        .stdout(predicates::str::contains("\"secret_set\": false"));
 }
 
 #[test]
 fn auth_set_and_reset_flow() {
     let temp_dir = TempDir::new().unwrap();
-    
+
     // 1. Set credentials
     let mut cmd = setup_cmd(&temp_dir);
     cmd.arg("auth")
@@ -131,7 +130,7 @@ fn auth_set_and_reset_flow() {
     cmd.arg("auth").arg("show").arg("-o").arg("json");
     cmd.assert()
         .success()
-        .stdout(predicates::str::contains("\"source\":\"config\""))
+        .stdout(predicates::str::contains("\"source\": \"config\""))
         .stdout(predicates::str::contains("my-t****-key"));
 
     // 3. Reset credentials
@@ -146,7 +145,7 @@ fn auth_set_and_reset_flow() {
     cmd.arg("auth").arg("show").arg("-o").arg("json");
     cmd.assert()
         .success()
-        .stdout(predicates::str::contains("\"source\":\"none\""));
+        .stdout(predicates::str::contains("\"source\": \"none\""));
 }
 
 #[test]
@@ -166,7 +165,7 @@ fn auth_sign_produces_valid_json_signature() {
 
     cmd.assert()
         .success()
-        .stdout(predicates::str::contains("\"api_key\":\"test-key\""))
-        .stdout(predicates::str::contains("\"payload\":\"symbol=BTCUSDT\""))
-        .stdout(predicates::str::contains("\"signature\":"));
+        .stdout(predicates::str::contains("\"api_key\": \"test-key\""))
+        .stdout(predicates::str::contains("\"payload\": \"symbol=BTCUSDT\""))
+        .stdout(predicates::str::contains("\"signature\": \""));
 }

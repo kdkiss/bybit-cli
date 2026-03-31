@@ -1,5 +1,4 @@
 use assert_cmd::Command;
-use predicates::prelude::*;
 
 #[test]
 fn setup_help_works() {
@@ -7,7 +6,7 @@ fn setup_help_works() {
     cmd.arg("setup").arg("--help");
     cmd.assert()
         .success()
-        .stdout(predicates::str::contains("Interactive setup wizard"));
+        .stdout(predicates::str::contains("Interactive first-time setup"));
 }
 
 #[test]
@@ -16,5 +15,5 @@ fn shell_help_works() {
     cmd.arg("shell").arg("--help");
     cmd.assert()
         .success()
-        .stdout(predicates::str::contains("Interactive REPL"));
+        .stdout(predicates::str::contains("Start interactive REPL shell"));
 }

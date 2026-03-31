@@ -1,5 +1,4 @@
 use assert_cmd::Command;
-use predicates::prelude::*;
 use wiremock::matchers::{method, path};
 use wiremock::{Mock, MockServer, ResponseTemplate};
 
@@ -31,7 +30,7 @@ async fn error_mapping_rate_limit_10006() {
 
     cmd.assert()
         .failure()
-        .stderr(predicates::str::contains("\"error\":\"rate_limit\""))
+        .stderr(predicates::str::contains("\"error\": \"rate_limit\""))
         .stderr(predicates::str::contains("10006"));
 }
 
@@ -65,7 +64,7 @@ async fn error_mapping_auth_10003() {
 
     cmd.assert()
         .failure()
-        .stderr(predicates::str::contains("\"error\":\"auth\""))
+        .stderr(predicates::str::contains("\"error\": \"auth\""))
         .stderr(predicates::str::contains("API key is invalid"));
 }
 
@@ -97,7 +96,7 @@ async fn error_mapping_generic_api_error() {
 
     cmd.assert()
         .failure()
-        .stderr(predicates::str::contains("\"error\":\"api\""))
+        .stderr(predicates::str::contains("\"error\": \"api\""))
         .stderr(predicates::str::contains("12345"))
         .stderr(predicates::str::contains("Something went wrong"));
 }
