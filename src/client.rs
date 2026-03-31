@@ -167,7 +167,7 @@ impl BybitClient {
             let msg = format!("server returned HTTP {status}");
             // Api variant is not retried by is_transient().
             return Err(BybitError::Api {
-                category: crate::errors::ErrorCategory::Network,
+                category: crate::errors::ErrorCategory::Api,
                 message: msg,
                 ret_code: status.as_u16() as i64,
             });
@@ -227,10 +227,8 @@ impl BybitClient {
 
         self.retry(|| {
             let query_string = query_string.clone();
-            let api_key = api_key.clone();
-            let api_secret = api_secret.clone();
             async move {
-                let auth = AuthHeaders::new(&api_key, &api_secret, self.recv_window, &query_string);
+                let auth = AuthHeaders::new(api_key, api_secret, self.recv_window, &query_string);
 
                 let resp = self
                     .http
@@ -261,11 +259,8 @@ impl BybitClient {
 
         self.retry(|| {
             let body_str = body_str.clone();
-            let api_key = api_key.clone();
-            let api_secret = api_secret.clone();
-            let body = body.clone();
             async move {
-                let auth = AuthHeaders::new(&api_key, &api_secret, self.recv_window, &body_str);
+                let auth = AuthHeaders::new(api_key, api_secret, self.recv_window, &body_str);
 
                 let resp = self
                     .http
@@ -275,7 +270,7 @@ impl BybitClient {
                     .header("X-BAPI-TIMESTAMP", &auth.timestamp)
                     .header("X-BAPI-SIGN", &auth.signature)
                     .header("X-BAPI-RECV-WINDOW", &auth.recv_window)
-                    .json(&body)
+                    .body(body_str.clone())
                     .send()
                     .await
                     .map_err(BybitError::from)?;
@@ -294,11 +289,8 @@ impl BybitClient {
 
         self.retry(|| {
             let body_str = body_str.clone();
-            let api_key = api_key.clone();
-            let api_secret = api_secret.clone();
-            let body = body.clone();
             async move {
-                let auth = AuthHeaders::new(&api_key, &api_secret, self.recv_window, &body_str);
+                let auth = AuthHeaders::new(api_key, api_secret, self.recv_window, &body_str);
 
                 let resp = self
                     .http
@@ -308,7 +300,7 @@ impl BybitClient {
                     .header("X-BAPI-TIMESTAMP", &auth.timestamp)
                     .header("X-BAPI-SIGN", &auth.signature)
                     .header("X-BAPI-RECV-WINDOW", &auth.recv_window)
-                    .json(&body)
+                    .body(body_str.clone())
                     .send()
                     .await
                     .map_err(BybitError::from)?;
@@ -331,9 +323,9 @@ impl BybitClient {
     // Helper: require credentials or return Auth error
     // -----------------------------------------------------------------------
 
-    fn require_credentials(&self) -> BybitResult<(String, String)> {
+    fn require_credentials(&self) -> BybitResult<(&str, &str)> {
         match (&self.api_key, &self.api_secret) {
-            (Some(k), Some(s)) => Ok((k.clone(), s.clone())),
+            (Some(k), Some(s)) => Ok((k.as_str(), s.as_str())),
             _ => Err(BybitError::Auth(
                 "This command requires API credentials. Set BYBIT_API_KEY and BYBIT_API_SECRET, \
                  or run `bybit setup`."

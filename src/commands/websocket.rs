@@ -234,7 +234,13 @@ fn setup_shutdown_handler() {
 // Reconnect wrappers
 // ---------------------------------------------------------------------------
 
-async fn reconnect_public(url: &'static str, topics: Vec<String>) -> BybitResult<()> {
+/// Shared reconnect loop. Calls `stream_fn()` on each attempt, applying
+/// exponential back-off on error and resetting the counter after a stable session.
+async fn reconnect_loop<F, Fut>(mut stream_fn: F) -> BybitResult<()>
+where
+    F: FnMut() -> Fut,
+    Fut: std::future::Future<Output = BybitResult<()>>,
+{
     let mut reconnects = 0u32;
 
     loop {
@@ -243,7 +249,7 @@ async fn reconnect_public(url: &'static str, topics: Vec<String>) -> BybitResult
         }
 
         let started = std::time::Instant::now();
-        let result = stream_public(url, &topics).await;
+        let result = stream_fn().await;
 
         if is_shutdown() {
             break;
@@ -274,6 +280,10 @@ async fn reconnect_public(url: &'static str, topics: Vec<String>) -> BybitResult
     Ok(())
 }
 
+async fn reconnect_public(url: &'static str, topics: Vec<String>) -> BybitResult<()> {
+    reconnect_loop(|| stream_public(url, &topics)).await
+}
+
 async fn reconnect_private(
     api_key: Option<&str>,
     api_secret: Option<&str>,
@@ -289,42 +299,7 @@ async fn reconnect_private(
         .ok_or_else(|| BybitError::Auth("Private WebSocket requires API credentials.".into()))?
         .to_string();
 
-    let mut reconnects = 0u32;
-
-    loop {
-        if is_shutdown() {
-            break;
-        }
-
-        let started = std::time::Instant::now();
-        let result = stream_private(&key, &secret, testnet, &topics).await;
-
-        if is_shutdown() {
-            break;
-        }
-
-        if started.elapsed().as_secs() >= STABLE_SESSION_SECS {
-            reconnects = 0;
-        }
-
-        match result {
-            Ok(()) => break,
-            Err(e) => {
-                reconnects += 1;
-                if reconnects > MAX_RECONNECTS {
-                    eprintln!("Max reconnects ({MAX_RECONNECTS}) reached. Last error: {e}");
-                    return Err(e);
-                }
-                let delay = jittered_backoff(reconnects);
-                eprintln!(
-                    "WebSocket disconnected ({e}). Reconnecting in {:.1}s… (attempt {reconnects}/{MAX_RECONNECTS})",
-                    delay.as_secs_f32()
-                );
-                tokio::time::sleep(delay).await;
-            }
-        }
-    }
-    Ok(())
+    reconnect_loop(|| stream_private(&key, &secret, testnet, &topics)).await
 }
 
 // ---------------------------------------------------------------------------

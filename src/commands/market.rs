@@ -5,6 +5,37 @@ use crate::client::BybitClient;
 use crate::errors::BybitResult;
 use crate::output::{print_output, OutputFormat};
 
+#[allow(clippy::too_many_arguments)]
+async fn kline_request(
+    client: &BybitClient,
+    endpoint: &str,
+    category: &str,
+    symbol: &str,
+    interval: &str,
+    start: Option<u64>,
+    end: Option<u64>,
+    limit: Option<u32>,
+) -> BybitResult<Value> {
+    let start_str = start.map(|v| v.to_string());
+    let end_str = end.map(|v| v.to_string());
+    let limit_str = limit.map(|v| v.to_string());
+    let mut params = vec![
+        ("category", category),
+        ("symbol", symbol),
+        ("interval", interval),
+    ];
+    if let Some(ref s) = start_str {
+        params.push(("start", s));
+    }
+    if let Some(ref s) = end_str {
+        params.push(("end", s));
+    }
+    if let Some(ref s) = limit_str {
+        params.push(("limit", s));
+    }
+    client.public_get(endpoint, &params).await
+}
+
 #[derive(Debug, clap::Args)]
 pub struct MarketArgs {
     #[command(subcommand)]
@@ -313,24 +344,17 @@ pub async fn run(args: MarketArgs, client: &BybitClient, format: OutputFormat) -
             end,
             limit,
         } => {
-            let start_str = start.map(|s| s.to_string());
-            let end_str = end.map(|e| e.to_string());
-            let limit_str = limit.map(|l| l.to_string());
-            let mut params = vec![
-                ("category", category.as_str()),
-                ("symbol", symbol.as_str()),
-                ("interval", interval.as_str()),
-            ];
-            if let Some(ref s) = start_str {
-                params.push(("start", s));
-            }
-            if let Some(ref s) = end_str {
-                params.push(("end", s));
-            }
-            if let Some(ref s) = limit_str {
-                params.push(("limit", s));
-            }
-            client.public_get("/v5/market/kline", &params).await?
+            kline_request(
+                client,
+                "/v5/market/kline",
+                &category,
+                &symbol,
+                &interval,
+                start,
+                end,
+                limit,
+            )
+            .await?
         }
 
         MarketCommand::MarkPriceKline {
@@ -341,26 +365,17 @@ pub async fn run(args: MarketArgs, client: &BybitClient, format: OutputFormat) -
             end,
             limit,
         } => {
-            let start_str = start.map(|s| s.to_string());
-            let end_str = end.map(|e| e.to_string());
-            let limit_str = limit.map(|l| l.to_string());
-            let mut params = vec![
-                ("category", category.as_str()),
-                ("symbol", symbol.as_str()),
-                ("interval", interval.as_str()),
-            ];
-            if let Some(ref s) = start_str {
-                params.push(("start", s));
-            }
-            if let Some(ref s) = end_str {
-                params.push(("end", s));
-            }
-            if let Some(ref s) = limit_str {
-                params.push(("limit", s));
-            }
-            client
-                .public_get("/v5/market/mark-price-kline", &params)
-                .await?
+            kline_request(
+                client,
+                "/v5/market/mark-price-kline",
+                &category,
+                &symbol,
+                &interval,
+                start,
+                end,
+                limit,
+            )
+            .await?
         }
 
         MarketCommand::IndexPriceKline {
@@ -371,26 +386,17 @@ pub async fn run(args: MarketArgs, client: &BybitClient, format: OutputFormat) -
             end,
             limit,
         } => {
-            let start_str = start.map(|s| s.to_string());
-            let end_str = end.map(|e| e.to_string());
-            let limit_str = limit.map(|l| l.to_string());
-            let mut params = vec![
-                ("category", category.as_str()),
-                ("symbol", symbol.as_str()),
-                ("interval", interval.as_str()),
-            ];
-            if let Some(ref s) = start_str {
-                params.push(("start", s));
-            }
-            if let Some(ref s) = end_str {
-                params.push(("end", s));
-            }
-            if let Some(ref s) = limit_str {
-                params.push(("limit", s));
-            }
-            client
-                .public_get("/v5/market/index-price-kline", &params)
-                .await?
+            kline_request(
+                client,
+                "/v5/market/index-price-kline",
+                &category,
+                &symbol,
+                &interval,
+                start,
+                end,
+                limit,
+            )
+            .await?
         }
 
         MarketCommand::PremiumIndexKline {
@@ -401,26 +407,17 @@ pub async fn run(args: MarketArgs, client: &BybitClient, format: OutputFormat) -
             end,
             limit,
         } => {
-            let start_str = start.map(|s| s.to_string());
-            let end_str = end.map(|e| e.to_string());
-            let limit_str = limit.map(|l| l.to_string());
-            let mut params = vec![
-                ("category", category.as_str()),
-                ("symbol", symbol.as_str()),
-                ("interval", interval.as_str()),
-            ];
-            if let Some(ref s) = start_str {
-                params.push(("start", s));
-            }
-            if let Some(ref s) = end_str {
-                params.push(("end", s));
-            }
-            if let Some(ref s) = limit_str {
-                params.push(("limit", s));
-            }
-            client
-                .public_get("/v5/market/premium-index-price-kline", &params)
-                .await?
+            kline_request(
+                client,
+                "/v5/market/premium-index-price-kline",
+                &category,
+                &symbol,
+                &interval,
+                start,
+                end,
+                limit,
+            )
+            .await?
         }
 
         MarketCommand::FundingRate {
@@ -616,14 +613,18 @@ pub async fn run(args: MarketArgs, client: &BybitClient, format: OutputFormat) -
 
             let bid: f64 = ticker["bid1Price"]
                 .as_str()
-                .unwrap_or("0")
+                .ok_or_else(|| crate::errors::BybitError::Parse("bid1Price missing".to_string()))?
                 .parse()
-                .unwrap_or(0.0);
+                .map_err(|_| {
+                    crate::errors::BybitError::Parse("bid1Price is not a number".to_string())
+                })?;
             let ask: f64 = ticker["ask1Price"]
                 .as_str()
-                .unwrap_or("0")
+                .ok_or_else(|| crate::errors::BybitError::Parse("ask1Price missing".to_string()))?
                 .parse()
-                .unwrap_or(0.0);
+                .map_err(|_| {
+                    crate::errors::BybitError::Parse("ask1Price is not a number".to_string())
+                })?;
             let spread = ask - bid;
             let mid = (ask + bid) / 2.0;
             let spread_pct = if mid > 0.0 {

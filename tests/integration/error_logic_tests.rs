@@ -19,6 +19,8 @@ async fn error_mapping_rate_limit_10006() {
         .await;
 
     let mut cmd = Command::cargo_bin("bybit").unwrap();
+    cmd.env_remove("BYBIT_API_KEY");
+    cmd.env_remove("BYBIT_API_SECRET");
     cmd.arg("--api-url")
         .arg(server.uri())
         .arg("market")
@@ -51,6 +53,8 @@ async fn error_mapping_auth_10003() {
         .await;
 
     let mut cmd = Command::cargo_bin("bybit").unwrap();
+    cmd.env_remove("BYBIT_API_KEY");
+    cmd.env_remove("BYBIT_API_SECRET");
     cmd.arg("--api-key")
         .arg("bad-key")
         .arg("--api-secret")
@@ -85,6 +89,8 @@ async fn error_mapping_generic_api_error() {
         .await;
 
     let mut cmd = Command::cargo_bin("bybit").unwrap();
+    cmd.env_remove("BYBIT_API_KEY");
+    cmd.env_remove("BYBIT_API_SECRET");
     cmd.arg("--api-url")
         .arg(server.uri())
         .arg("market")
