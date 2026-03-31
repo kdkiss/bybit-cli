@@ -81,6 +81,7 @@ config.local.yml
 # bybit-cli local state
 .bybit/
 .bybit-test/
+.bybit-local/
 paper-journal.json
 history
 instance-id

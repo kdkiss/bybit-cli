@@ -15,11 +15,11 @@ Works with Claude, Cursor, Codex, Copilot, Gemini, and any MCP-compatible agent.
 
 Try these with your AI agent:
 
-> *"Install bybit-cli and build me a morning market brief for BTC, ETH, and SOL."*
+> *"Build me a morning market brief for BTC, ETH, and SOL with trend, volatility, funding, and key levels."*
 
-> *"Watch BTCUSDT for 30 seconds via WebSocket. Tell me what you see in the order book."*
+> *"Watch BTCUSDT and alert me if price breaks above 68,000, drops below 66,000, or gets within 0.25% of either level."*
 
-> *"You have $10,000. Paper trade BTCUSDT for one minute and show me your P&L."*
+> *"Create a trade plan for ETHUSDT with an entry, stop, and target, risk only 0.5% of my account, and show me the validate command before placing anything."*
 
 > *"Check my open positions and set a stop-loss at 5% below entry on each one."*
 
