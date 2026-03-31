@@ -347,6 +347,22 @@ async fn trade_cancel_after_zero_disables_timer() {
         .stdout(contains("\"timeOut\""));
 }
 
+#[tokio::test]
+async fn trade_cancel_after_accepts_empty_success_body() {
+    let server = MockServer::start().await;
+    Mock::given(method("POST"))
+        .and(path("/v5/order/cancel-all-after"))
+        .respond_with(ResponseTemplate::new(200))
+        .mount(&server)
+        .await;
+
+    bybit_with_mock(&server)
+        .args(["-y", "-o", "json", "trade", "cancel-after", "60"])
+        .assert()
+        .success()
+        .stdout(contains("{}"));
+}
+
 // ---------------------------------------------------------------------------
 // Batch operations
 // ---------------------------------------------------------------------------

@@ -12,6 +12,7 @@ This directory contains machine-readable artifacts for AI agents integrating wit
 |------|---------|
 | `tool-catalog.json` | Canonical agent/MCP tool catalog with parameters, auth requirements, safety flags, and examples |
 | `error-catalog.json` | All error types with ret-codes, retry guidance, and remediation steps |
+| `examples/README.md` | Curated shell-script examples for read-only, paper, and state-changing workflows |
 | `../gemini-extension.json` | Gemini CLI extension manifest |
 
 ## Quick Start for Agents

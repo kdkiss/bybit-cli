@@ -17,7 +17,7 @@ echo "Watching $SYMBOL — will buy $QTY when price <= $TARGET (category: $CATEG
 
 while true; do
     PRICE=$(bybit market tickers --category "$CATEGORY" --symbol "$SYMBOL" -o json 2>/dev/null \
-        | jq -r '.result.list[0].lastPrice // empty')
+        | jq -r '.list[0].lastPrice // empty')
 
     if [[ -z "$PRICE" ]]; then
         echo "Could not fetch price, retrying in ${POLL_SECS}s…"

@@ -16,7 +16,7 @@ CATEGORY="${5:-linear}"
 
 # Fetch current price
 PRICE=$(bybit market tickers --category "$CATEGORY" --symbol "$SYMBOL" -o json 2>/dev/null \
-    | jq -r '.result.list[0].lastPrice // empty')
+    | jq -r '.list[0].lastPrice // empty')
 
 if [[ -z "$PRICE" ]]; then
     echo "ERROR: could not fetch ticker for $SYMBOL" >&2
@@ -68,4 +68,4 @@ bybit trade batch-place \
 echo ""
 echo "Ladder placed. Current open orders:"
 bybit trade open-orders --category "$CATEGORY" --symbol "$SYMBOL" -o json 2>/dev/null \
-    | jq '[.result.list[] | {orderId, price, qty, side, orderStatus}]'
+    | jq '[.list[]? | {orderId, price, qty, side, orderStatus}]'

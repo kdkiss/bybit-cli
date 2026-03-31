@@ -33,7 +33,7 @@ bybit paper balance -o json 2>/dev/null
 echo ""
 echo "--- Place Limit Buy (10% below market) ---"
 PRICE=$(bybit market tickers --category "$CATEGORY" --symbol "$SYMBOL" -o json 2>/dev/null \
-    | jq -r '.result.list[0].lastPrice // "0"')
+    | jq -r '.list[0].lastPrice // "0"')
 LIMIT_PRICE=$(awk -v p="$PRICE" 'BEGIN { printf "%.2f", p * 0.90 }')
 echo "  Limit price: $LIMIT_PRICE"
 bybit paper buy --category "$CATEGORY" --symbol "$SYMBOL" --qty 0.05 --price "$LIMIT_PRICE" -o json 2>/dev/null

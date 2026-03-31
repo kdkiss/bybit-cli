@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use reqwest::{header, Client, ClientBuilder};
-use serde_json::Value;
+use serde_json::{json, Value};
 use url::form_urlencoded;
 
 use crate::auth::AuthHeaders;
@@ -282,6 +282,45 @@ impl BybitClient {
 
                 let resp = Self::check_status(resp).await?;
                 let envelope: BybitEnvelope = resp.json().await.map_err(BybitError::from)?;
+                self.unpack(envelope)
+            }
+        })
+        .await
+    }
+
+    pub async fn private_post_allow_empty(&self, path: &str, body: &Value) -> BybitResult<Value> {
+        let (api_key, api_secret) = self.require_credentials()?;
+        let body_str = serde_json::to_string(body)?;
+
+        self.retry(|| {
+            let body_str = body_str.clone();
+            let api_key = api_key.clone();
+            let api_secret = api_secret.clone();
+            let body = body.clone();
+            async move {
+                let auth = AuthHeaders::new(&api_key, &api_secret, self.recv_window, &body_str);
+
+                let resp = self
+                    .http
+                    .post(self.url(path))
+                    .header("Content-Type", "application/json")
+                    .header("X-BAPI-API-KEY", &auth.api_key)
+                    .header("X-BAPI-TIMESTAMP", &auth.timestamp)
+                    .header("X-BAPI-SIGN", &auth.signature)
+                    .header("X-BAPI-RECV-WINDOW", &auth.recv_window)
+                    .json(&body)
+                    .send()
+                    .await
+                    .map_err(BybitError::from)?;
+
+                let resp = Self::check_status(resp).await?;
+                let body_text = resp.text().await.map_err(BybitError::from)?;
+                if body_text.trim().is_empty() {
+                    return Ok(json!({}));
+                }
+
+                let envelope: BybitEnvelope =
+                    serde_json::from_str(&body_text).map_err(BybitError::from)?;
                 self.unpack(envelope)
             }
         })

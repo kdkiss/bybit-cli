@@ -444,7 +444,7 @@ pub async fn run(
             }
             let body = json!({ "timeOut": seconds });
             client
-                .private_post("/v5/order/cancel-all-after", &body)
+                .private_post_allow_empty("/v5/order/cancel-all-after", &body)
                 .await?
         }
     };

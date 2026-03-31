@@ -91,6 +91,7 @@ instance-id
 
 # Local snapshots / scratch artifacts
 snap*.json
+TODO.local.md
 
 # Keep lockfile tracked for this binary crate
 !Cargo.lock

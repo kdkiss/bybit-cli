@@ -13,6 +13,7 @@ set -euo pipefail
 
 TIMEOUT="${1:-60}"
 INTERVAL="${2:-30}"
+_CLEANED_UP=0
 
 if [[ "$INTERVAL" -ge "$TIMEOUT" ]]; then
     echo "ERROR: REFRESH_INTERVAL ($INTERVAL) must be less than TIMEOUT ($TIMEOUT)" >&2
@@ -20,10 +21,20 @@ if [[ "$INTERVAL" -ge "$TIMEOUT" ]]; then
 fi
 
 cleanup() {
+    if [[ "${_CLEANED_UP}" == "1" ]]; then
+        return
+    fi
+    _CLEANED_UP=1
+    trap - EXIT INT TERM
     echo ""
     echo "Disabling dead man's switch (cancel-after 0)…"
-    bybit trade cancel-after 0 -y -o json 2>/dev/null || true
-    echo "Timer cleared."
+    if RESULT=$(bybit trade cancel-after 0 -y -o json 2>&1); then
+        TS=$(echo "$RESULT" | jq -r '.timeOut // 0')
+        echo "Timer cleared (timeOut=${TS}s)."
+    else
+        echo "WARN: failed to disable cancel-after timer." >&2
+        echo "$RESULT" >&2
+    fi
 }
 trap cleanup EXIT INT TERM
 
@@ -33,8 +44,12 @@ echo "Press Ctrl+C to exit and disable the timer."
 echo ""
 
 while true; do
-    RESULT=$(bybit trade cancel-after "$TIMEOUT" -y -o json 2>/dev/null)
-    TS=$(echo "$RESULT" | jq -r '.result.timeOut // "?"')
+    if ! RESULT=$(bybit trade cancel-after "$TIMEOUT" -y -o json 2>&1); then
+        echo "ERROR: unable to refresh cancel-after timer." >&2
+        echo "$RESULT" >&2
+        exit 1
+    fi
+    TS=$(echo "$RESULT" | jq -r '.timeOut // "?"')
     echo "[$(date -u +%H:%M:%S)] Timer refreshed — timeOut=${TS}s"
     sleep "$INTERVAL"
 done

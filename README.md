@@ -120,6 +120,7 @@ If you're an AI agent or building one, start here:
 | [AGENTS.md](AGENTS.md) | Full integration guide: auth, invocation, errors, rate limits |
 | [agents/tool-catalog.json](agents/tool-catalog.json) | Canonical agent/MCP tool catalog with parameter schemas, auth requirements, examples, and safety flags |
 | [agents/error-catalog.json](agents/error-catalog.json) | Error categories with retry guidance and remediation |
+| [agents/examples/README.md](agents/examples/README.md) | Curated shell-script examples for agent and automation workflows |
 | [skills/INDEX.md](skills/INDEX.md) | Goal-oriented workflow packages |
 | [CLAUDE.md](CLAUDE.md) | Claude-specific integration guidance |
 | [gemini-extension.json](gemini-extension.json) | Gemini CLI extension manifest for auto-starting the MCP server |
@@ -225,7 +226,7 @@ Visit [Bybit API Management](https://www.bybit.com/app/user/api-management). Gra
 ```bash
 export BYBIT_API_KEY="your-key"
 export BYBIT_API_SECRET="your-secret"
-export BYBIT_TESTNET="1"           # optional: use testnet
+export BYBIT_TESTNET="true"        # optional: use testnet
 export BYBIT_API_URL="https://..."  # optional: override base URL
 ```
 
@@ -662,7 +663,7 @@ The CLI does not pre-throttle requests. When Bybit returns a rate limit error (r
 
 **Mainnet vs testnet confusion**
 
-- `BYBIT_TESTNET=1` or `--testnet` switches the CLI to Bybit testnet.
+- `BYBIT_TESTNET=true` or `--testnet` switches the CLI to Bybit testnet.
 - Testnet keys are separate from mainnet keys.
 - If a command unexpectedly shows empty balances or auth failures, confirm you are pointing at the intended environment.
 

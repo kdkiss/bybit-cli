@@ -31,7 +31,7 @@ for i in $(seq 1 "$NUM_ORDERS"); do
         --qty "$PER_QTY" \
         -y -o json 2>/dev/null)
 
-    ORDER_ID=$(echo "$RESULT" | jq -r '.result.orderId // "unknown"')
+    ORDER_ID=$(echo "$RESULT" | jq -r '.orderId // "unknown"')
     echo "  orderId: $ORDER_ID"
     FILLED=$((FILLED + 1))
 
