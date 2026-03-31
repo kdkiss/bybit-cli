@@ -359,7 +359,7 @@ All output includes `"mode": "paper"` in JSON. Limit buys reserve quote balance 
 
 ## Commands
 
-The CLI exposes 16 top-level command groups. For the machine-readable agent/MCP tool surface, load [agents/tool-catalog.json](agents/tool-catalog.json).
+The CLI exposes 18 top-level command groups. For the machine-readable agent/MCP tool surface, load [agents/tool-catalog.json](agents/tool-catalog.json).
 
 | Group | Auth | Dangerous | Description |
 |-------|------|-----------|-------------|
@@ -368,6 +368,8 @@ The CLI exposes 16 top-level command groups. For the machine-readable agent/MCP 
 | account | Yes | No | Balances, info, fee rates, transaction log |
 | position | Yes | Yes | List, leverage, TP/SL, margin, closed P&L |
 | asset | Yes | Yes | Balances, transfers, deposits, withdrawals |
+| convert | Yes | Mixed | Coin conversion quote, execute, status, and history |
+| margin | Mixed | Mixed | Spot margin status, VIP data, mode toggle, and leverage |
 | funding | Yes | Yes | Wallet balances, deposits, withdrawals, and transfers |
 | subaccount | Yes | Yes | Master-account subaccount management |
 | earn | Mixed | Mixed | Bybit Earn products, positions, stake/redeem, and yield history |
@@ -412,6 +414,7 @@ The CLI exposes 16 top-level command groups. For the machine-readable agent/MCP 
 | `bybit trade cancel --symbol SYM --order-id ID` | Cancel order |
 | `bybit trade cancel-all [--symbol SYM]` | Cancel all orders |
 | `bybit trade cancel-after <SECS>` | Dead man's switch (0 = disable) |
+| `bybit trade dcp-info` | Show current DCP (Disconnect Cancel All) configuration |
 | `bybit trade open-orders [--symbol SYM]` | Open orders |
 | `bybit trade history [--symbol SYM] [--limit N]` | Order history |
 | `bybit trade fills [--symbol SYM] [--limit N]` | Execution history |
@@ -435,6 +438,35 @@ The CLI exposes 16 top-level command groups. For the machine-readable agent/MCP 
 | `bybit account set-margin-mode --margin-mode REGULAR_MARGIN` | Set margin mode |
 | `bybit account set-spot-hedging --mode ON` | Set spot hedging |
 | `bybit account set-usdc-settlement --coin USDC` | Set UTA settlement coin for USDC products |
+| `bybit account borrow --coin USDT --amount AMT` | Manually borrow funds |
+| `bybit account repay --coin USDT --amount AMT` | Manually repay borrowed funds |
+| `bybit account quick-repay [--coin USDT]` | Auto-select and repay liabilities |
+
+### Convert
+
+| Command | Description |
+|---------|-------------|
+| `bybit convert coins [--account-type UNIFIED] [--coin BTC] [--side 1]` | List coins and supported conversion directions |
+| `bybit convert quote --from-coin BTC --to-coin USDT (--from-amount AMT \| --to-amount AMT)` | Request a conversion quote |
+| `bybit convert quote ... --dry-run` | Preview the quote request without calling the API |
+| `bybit convert execute --quote-tx-id ID` | Execute a previously obtained quote |
+| `bybit convert status --quote-tx-id ID [--account-type UNIFIED]` | Check conversion status |
+| `bybit convert history [--account-type UNIFIED] [--coin BTC] [--start MS] [--end MS] [--index N] [--limit N]` | Conversion history |
+
+Notes:
+The Convert API requires the Bybit API key permission `Exchange`. If that permission is missing, Bybit may reject coin-list and quote requests even though the CLI command itself is correct.
+
+### Spot Margin
+
+| Command | Description |
+|---------|-------------|
+| `bybit margin vip-data [--vip-level "No VIP"] [--currency BTC]` | Public VIP borrow/leverage data for spot margin |
+| `bybit margin status` | Current spot margin state and leverage for the unified account |
+| `bybit margin toggle --mode on\|off` | Enable or disable unified account spot margin |
+| `bybit margin set-leverage --leverage N [--currency BTC]` | Set spot margin leverage globally or for a coin |
+
+Notes:
+Spot margin activation and leverage changes can be rejected by Bybit until the account completes the required margin-trading setup or quiz in the Bybit UI.
 
 ### Earn
 
@@ -458,7 +490,7 @@ The CLI exposes 16 top-level command groups. For the machine-readable agent/MCP 
 | `bybit position set-tpsl --symbol SYM [--take-profit P] [--stop-loss P]` | Set TP/SL |
 | `bybit position set-risk-limit --symbol SYM --risk-id N` | Set risk limit |
 | `bybit position add-margin --symbol SYM --margin AMT` | Add/reduce margin |
-| `bybit position closed-pnl [--symbol SYM] [--limit N]` | Closed P&L history |
+| `bybit position closed-pnl [--category linear] [--symbol SYM] [--limit N]` | Closed P&L history for supported contract categories |
 | `bybit position move --from-uid UID --to-uid UID --positions '[...]'` | Move positions |
 | `bybit position move-history` | Move position history |
 
@@ -542,7 +574,7 @@ The CLI exposes 16 top-level command groups. For the machine-readable agent/MCP 
 | `bybit reports borrow-history [--currency USDT]` | Borrow history |
 | `bybit reports orders [--category linear] [--symbol SYM]` | Order history |
 | `bybit reports fills [--category linear] [--symbol SYM]` | Execution history |
-| `bybit reports closed-pnl [--category linear] [--symbol SYM]` | Closed P&L history |
+| `bybit reports closed-pnl [--category linear] [--symbol SYM]` | Closed P&L history for supported contract categories |
 | `bybit reports moves [--category linear] [--symbol SYM]` | Position move history |
 | `bybit reports deposits [--coin BTC]` | Deposit history |
 | `bybit reports withdrawals [--coin USDT]` | Withdrawal history |

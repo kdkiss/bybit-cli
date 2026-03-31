@@ -126,6 +126,30 @@ pub enum AccountCommand {
         #[arg(long)]
         symbol: Option<String>,
     },
+    /// Manually borrow funds (UTA Pro / Portfolio Margin)
+    Borrow {
+        /// Coin to borrow, e.g. USDT
+        #[arg(long)]
+        coin: String,
+        /// Amount to borrow
+        #[arg(long)]
+        amount: String,
+    },
+    /// Manually repay borrowed funds
+    Repay {
+        /// Coin to repay, e.g. USDT
+        #[arg(long)]
+        coin: String,
+        /// Amount to repay
+        #[arg(long)]
+        amount: String,
+    },
+    /// Quick-repay liability (auto-select coin and amount)
+    QuickRepay {
+        /// Coin to repay; omit to auto-select
+        #[arg(long)]
+        coin: Option<String>,
+    },
 }
 
 pub async fn run(
@@ -391,6 +415,37 @@ pub async fn run(
                 params.push(("symbol", s));
             }
             client.private_get("/v5/market/adlAlert", &params).await?
+        }
+
+        AccountCommand::Borrow { coin, amount } => {
+            confirm(&format!("Borrow {amount} {coin}?"), force)?;
+            let body = json!({ "coin": coin, "qty": amount });
+            client
+                .private_post("/v5/account/manual-borrow", &body)
+                .await?
+        }
+
+        AccountCommand::Repay { coin, amount } => {
+            confirm(&format!("Repay {amount} {coin}?"), force)?;
+            let body = json!({ "coin": coin, "qty": amount });
+            client
+                .private_post("/v5/account/manual-repay", &body)
+                .await?
+        }
+
+        AccountCommand::QuickRepay { coin } => {
+            let msg = match &coin {
+                Some(c) => format!("Quick-repay liability for {c}?"),
+                None => "Quick-repay all liabilities?".to_string(),
+            };
+            confirm(&msg, force)?;
+            let mut body = json!({});
+            if let Some(c) = coin {
+                body["coin"] = json!(c);
+            }
+            client
+                .private_post("/v5/account/quick-repayment", &body)
+                .await?
         }
     };
 

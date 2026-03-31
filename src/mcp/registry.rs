@@ -374,6 +374,42 @@ fn account_tools() -> Vec<McpTool> {
             service: "account",
             dangerous: false,
         },
+        McpTool {
+            name: "account_borrow",
+            description: "Manually borrow funds (UTA Pro / Portfolio Margin accounts only)",
+            input_schema: object_schema(
+                vec![
+                    ("coin", str_prop("Coin to borrow, e.g. USDT")),
+                    ("amount", str_prop("Amount to borrow")),
+                ],
+                &["coin", "amount"],
+            ),
+            service: "account",
+            dangerous: true,
+        },
+        McpTool {
+            name: "account_repay",
+            description: "Manually repay borrowed funds",
+            input_schema: object_schema(
+                vec![
+                    ("coin", str_prop("Coin to repay, e.g. USDT")),
+                    ("amount", str_prop("Amount to repay")),
+                ],
+                &["coin", "amount"],
+            ),
+            service: "account",
+            dangerous: true,
+        },
+        McpTool {
+            name: "account_quick_repay",
+            description: "Quick-repay liability (auto-select repayment amount)",
+            input_schema: object_schema(
+                vec![("coin", str_prop("Coin to repay; omit to auto-select"))],
+                &[],
+            ),
+            service: "account",
+            dangerous: true,
+        },
     ]
 }
 
@@ -661,6 +697,13 @@ fn trade_tools() -> Vec<McpTool> {
             ),
             service: "trade",
             dangerous: true,
+        },
+        McpTool {
+            name: "trade_dcp_info",
+            description: "Get current DCP (Disconnect Cancel All) window configuration",
+            input_schema: object_schema(vec![], &[]),
+            service: "trade",
+            dangerous: false,
         },
         McpTool {
             name: "trade_batch_place",
@@ -1981,6 +2024,173 @@ fn paper_tools() -> Vec<McpTool> {
 }
 
 // ---------------------------------------------------------------------------
+// Convert tools
+// ---------------------------------------------------------------------------
+
+fn convert_tools() -> Vec<McpTool> {
+    vec![
+        McpTool {
+            name: "convert_coins",
+            description: "List coins available for conversion and their supported pairs",
+            input_schema: object_schema(
+                vec![
+                    (
+                        "account_type",
+                        enum_prop("Account type", &["UNIFIED", "SPOT", "CONTRACT", "FUND"]),
+                    ),
+                    ("coin", str_prop("Filter by coin name, e.g. BTC")),
+                    (
+                        "side",
+                        int_prop("0 = all, 1 = from-coin list, 2 = to-coin list"),
+                    ),
+                ],
+                &[],
+            ),
+            service: "convert",
+            dangerous: false,
+        },
+        McpTool {
+            name: "convert_quote",
+            description: "Request a conversion quote. Returns a quoteTxId needed to execute.",
+            input_schema: object_schema(
+                vec![
+                    (
+                        "account_type",
+                        enum_prop(
+                            "Account type performing the conversion",
+                            &["UNIFIED", "SPOT", "CONTRACT", "FUND"],
+                        ),
+                    ),
+                    ("from_coin", str_prop("Coin to convert from, e.g. BTC")),
+                    ("to_coin", str_prop("Coin to convert to, e.g. USDT")),
+                    (
+                        "from_amount",
+                        str_prop(
+                            "Amount of from-coin to convert (mutually exclusive with to_amount)",
+                        ),
+                    ),
+                    (
+                        "to_amount",
+                        str_prop("Desired amount of to-coin (mutually exclusive with from_amount)"),
+                    ),
+                    (
+                        "dry_run",
+                        bool_prop("Preview the request without calling the API"),
+                    ),
+                ],
+                &["from_coin", "to_coin"],
+            ),
+            service: "convert",
+            dangerous: true,
+        },
+        McpTool {
+            name: "convert_execute",
+            description: "Execute a previously obtained conversion quote. Irreversible.",
+            input_schema: object_schema(
+                vec![(
+                    "quote_tx_id",
+                    str_prop("Quote transaction ID from convert_quote"),
+                )],
+                &["quote_tx_id"],
+            ),
+            service: "convert",
+            dangerous: true,
+        },
+        McpTool {
+            name: "convert_status",
+            description: "Check the status of a conversion by quoteTxId",
+            input_schema: object_schema(
+                vec![
+                    ("quote_tx_id", str_prop("Quote transaction ID to check")),
+                    (
+                        "account_type",
+                        enum_prop("Account type", &["UNIFIED", "SPOT", "CONTRACT", "FUND"]),
+                    ),
+                ],
+                &["quote_tx_id"],
+            ),
+            service: "convert",
+            dangerous: false,
+        },
+        McpTool {
+            name: "convert_history",
+            description: "Get coin conversion history",
+            input_schema: object_schema(
+                vec![
+                    (
+                        "account_type",
+                        enum_prop("Account type", &["UNIFIED", "SPOT", "CONTRACT", "FUND"]),
+                    ),
+                    ("coin", str_prop("Filter by coin, e.g. USDT")),
+                    ("start", int_prop("Start time in milliseconds")),
+                    ("end", int_prop("End time in milliseconds")),
+                    ("index", int_prop("Page index (0-based)")),
+                    ("limit", int_prop("Page size (default 20, max 100)")),
+                ],
+                &[],
+            ),
+            service: "convert",
+            dangerous: false,
+        },
+    ]
+}
+
+// ---------------------------------------------------------------------------
+// Margin tools
+// ---------------------------------------------------------------------------
+
+fn margin_tools() -> Vec<McpTool> {
+    vec![
+        McpTool {
+            name: "margin_vip_data",
+            description: "Get spot margin VIP borrow and leverage data",
+            input_schema: object_schema(
+                vec![
+                    ("vip_level", str_prop("VIP level label, e.g. No VIP")),
+                    ("currency", str_prop("Coin filter, e.g. BTC")),
+                ],
+                &[],
+            ),
+            service: "margin",
+            dangerous: false,
+        },
+        McpTool {
+            name: "margin_status",
+            description: "Get current unified account spot margin state and leverage",
+            input_schema: object_schema(vec![], &[]),
+            service: "margin",
+            dangerous: false,
+        },
+        McpTool {
+            name: "margin_toggle",
+            description: "Enable or disable unified account spot margin trading",
+            input_schema: object_schema(
+                vec![("mode", enum_prop("Desired mode", &["on", "off"]))],
+                &["mode"],
+            ),
+            service: "margin",
+            dangerous: true,
+        },
+        McpTool {
+            name: "margin_set_leverage",
+            description: "Set unified account spot margin leverage",
+            input_schema: object_schema(
+                vec![
+                    ("leverage", str_prop("Leverage, typically 2-10")),
+                    (
+                        "currency",
+                        str_prop("Optional coin-specific leverage setting"),
+                    ),
+                ],
+                &["leverage"],
+            ),
+            service: "margin",
+            dangerous: true,
+        },
+    ]
+}
+
+// ---------------------------------------------------------------------------
 // Auth tools
 // ---------------------------------------------------------------------------
 
@@ -2037,6 +2247,8 @@ pub fn all_tools() -> Vec<McpTool> {
     tools.extend(position_tools());
     tools.extend(asset_tools());
     tools.extend(funding_tools());
+    tools.extend(convert_tools());
+    tools.extend(margin_tools());
     tools.extend(reports_tools());
     tools.extend(subaccount_tools());
     tools.extend(futures_tools());
@@ -2222,6 +2434,20 @@ pub fn tool_to_args(name: &str, p: &Value) -> Option<Vec<String>> {
             opt!(args, "--category", gs("category"));
             opt!(args, "--symbol", gs("symbol"));
         }
+        "account_borrow" => {
+            args.extend(["account", "borrow"].map(String::from));
+            opt!(args, "--coin", gs("coin"));
+            opt!(args, "--amount", gs("amount"));
+        }
+        "account_repay" => {
+            args.extend(["account", "repay"].map(String::from));
+            opt!(args, "--coin", gs("coin"));
+            opt!(args, "--amount", gs("amount"));
+        }
+        "account_quick_repay" => {
+            args.extend(["account", "quick-repay"].map(String::from));
+            opt!(args, "--coin", gs("coin"));
+        }
 
         // ----------------------------------------------------------------
         // earn
@@ -2381,6 +2607,9 @@ pub fn tool_to_args(name: &str, p: &Value) -> Option<Vec<String>> {
             } else {
                 args.push("0".to_string());
             }
+        }
+        "trade_dcp_info" => {
+            args.extend(["trade", "dcp-info"].map(String::from));
         }
         "trade_batch_place" => {
             args.extend(["trade", "batch-place"].map(String::from));
@@ -2637,6 +2866,66 @@ pub fn tool_to_args(name: &str, p: &Value) -> Option<Vec<String>> {
         "funding_cancel_withdraw" => {
             args.extend(["funding", "cancel-withdraw"].map(String::from));
             opt!(args, "--id", gs("id"));
+        }
+
+        // ----------------------------------------------------------------
+        // convert
+        // ----------------------------------------------------------------
+        "convert_coins" => {
+            args.extend(["convert", "coins"].map(String::from));
+            opt!(args, "--account-type", gs("account_type"));
+            opt!(args, "--coin", gs("coin"));
+            opt!(args, "--side", gi("side"));
+        }
+        "convert_quote" => {
+            args.extend(["convert", "quote"].map(String::from));
+            opt!(args, "--account-type", gs("account_type"));
+            opt!(args, "--from-coin", gs("from_coin"));
+            opt!(args, "--to-coin", gs("to_coin"));
+            opt!(args, "--from-amount", gs("from_amount"));
+            opt!(args, "--to-amount", gs("to_amount"));
+            if gb("dry_run") {
+                args.push("--dry-run".to_string());
+            }
+        }
+        "convert_execute" => {
+            args.extend(["convert", "execute"].map(String::from));
+            opt!(args, "--quote-tx-id", gs("quote_tx_id"));
+        }
+        "convert_status" => {
+            args.extend(["convert", "status"].map(String::from));
+            opt!(args, "--quote-tx-id", gs("quote_tx_id"));
+            opt!(args, "--account-type", gs("account_type"));
+        }
+        "convert_history" => {
+            args.extend(["convert", "history"].map(String::from));
+            opt!(args, "--account-type", gs("account_type"));
+            opt!(args, "--coin", gs("coin"));
+            opt!(args, "--start", gi("start"));
+            opt!(args, "--end", gi("end"));
+            opt!(args, "--index", gi("index"));
+            opt!(args, "--limit", gi("limit"));
+        }
+
+        // ----------------------------------------------------------------
+        // margin
+        // ----------------------------------------------------------------
+        "margin_vip_data" => {
+            args.extend(["margin", "vip-data"].map(String::from));
+            opt!(args, "--vip-level", gs("vip_level"));
+            opt!(args, "--currency", gs("currency"));
+        }
+        "margin_status" => {
+            args.extend(["margin", "status"].map(String::from));
+        }
+        "margin_toggle" => {
+            args.extend(["margin", "toggle"].map(String::from));
+            opt!(args, "--mode", gs("mode"));
+        }
+        "margin_set_leverage" => {
+            args.extend(["margin", "set-leverage"].map(String::from));
+            opt!(args, "--leverage", gs("leverage"));
+            opt!(args, "--currency", gs("currency"));
         }
 
         // ----------------------------------------------------------------

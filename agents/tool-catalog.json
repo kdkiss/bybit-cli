@@ -403,6 +403,13 @@
             { "name": "<SECONDS>", "required": true, "note": "Positional argument: seconds until cancellation (0 to disable)" }
           ],
           "example": "bybit trade cancel-after 60"
+        },
+        {
+          "name": "trade dcp-info",
+          "description": "Get the current DCP (Disconnect Cancel All) configuration",
+          "auth_required": true,
+          "dangerous": false,
+          "example": "bybit trade dcp-info"
         }
       ]
     },
@@ -549,6 +556,153 @@
           "auth_required": true,
           "dangerous": false,
           "example": "bybit account adl-alert"
+        },
+        {
+          "name": "account borrow",
+          "description": "Manually borrow funds",
+          "auth_required": true,
+          "dangerous": true,
+          "params": [
+            { "name": "--coin", "required": true },
+            { "name": "--amount", "required": true }
+          ],
+          "example": "bybit account borrow --coin USDT --amount 100"
+        },
+        {
+          "name": "account repay",
+          "description": "Manually repay borrowed funds",
+          "auth_required": true,
+          "dangerous": true,
+          "params": [
+            { "name": "--coin", "required": true },
+            { "name": "--amount", "required": true }
+          ],
+          "example": "bybit account repay --coin USDT --amount 50"
+        },
+        {
+          "name": "account quick-repay",
+          "description": "Auto-select and repay liabilities",
+          "auth_required": true,
+          "dangerous": true,
+          "params": [
+            { "name": "--coin", "required": false }
+          ],
+          "example": "bybit account quick-repay --coin USDT"
+        }
+      ]
+    },
+    {
+      "group": "convert",
+      "description": "Coin conversion quote, execute, status, and history endpoints. Requires API credentials.",
+      "tools": [
+        {
+          "name": "convert coins",
+          "description": "List coins available for conversion and their supported directions",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--account-type", "required": false, "values": ["UNIFIED","SPOT","CONTRACT","FUND"], "default": "UNIFIED" },
+            { "name": "--coin", "required": false },
+            { "name": "--side", "required": false, "values": [0,1,2], "note": "0 = all, 1 = from-coin list, 2 = to-coin list" }
+          ],
+          "example": "bybit convert coins --account-type UNIFIED --coin BTC"
+        },
+        {
+          "name": "convert quote",
+          "description": "Request a conversion quote",
+          "auth_required": true,
+          "dangerous": true,
+          "params": [
+            { "name": "--account-type", "required": false, "values": ["UNIFIED","SPOT","CONTRACT","FUND"], "default": "UNIFIED" },
+            { "name": "--from-coin", "required": true },
+            { "name": "--to-coin", "required": true },
+            { "name": "--from-amount", "required": false, "note": "Exactly one of --from-amount or --to-amount is required" },
+            { "name": "--to-amount", "required": false, "note": "Exactly one of --from-amount or --to-amount is required" },
+            { "name": "--dry-run", "required": false, "type": "flag", "note": "Preview the request without calling the API" }
+          ],
+          "example": "bybit convert quote --from-coin BTC --to-coin USDT --from-amount 0.001 --dry-run"
+        },
+        {
+          "name": "convert execute",
+          "description": "Execute a previously obtained conversion quote",
+          "auth_required": true,
+          "dangerous": true,
+          "params": [
+            { "name": "--quote-tx-id", "required": true }
+          ],
+          "example": "bybit convert execute --quote-tx-id abc123 -y"
+        },
+        {
+          "name": "convert status",
+          "description": "Check the status of a conversion",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--quote-tx-id", "required": true },
+            { "name": "--account-type", "required": false, "values": ["UNIFIED","SPOT","CONTRACT","FUND"], "default": "UNIFIED" }
+          ],
+          "example": "bybit convert status --quote-tx-id abc123"
+        },
+        {
+          "name": "convert history",
+          "description": "Get conversion history",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [
+            { "name": "--account-type", "required": false, "values": ["UNIFIED","SPOT","CONTRACT","FUND"], "default": "UNIFIED" },
+            { "name": "--coin", "required": false },
+            { "name": "--start", "required": false, "note": "Unix ms timestamp" },
+            { "name": "--end", "required": false, "note": "Unix ms timestamp" },
+            { "name": "--index", "required": false, "note": "0-based page index" },
+            { "name": "--limit", "required": false }
+          ],
+          "example": "bybit convert history --coin USDT --limit 20"
+        }
+      ]
+    },
+    {
+      "group": "margin",
+      "description": "Unified-account spot margin workflows. Status and VIP data are read-only; toggle and leverage changes are dangerous.",
+      "tools": [
+        {
+          "name": "margin vip-data",
+          "description": "Get public VIP borrow and leverage data for spot margin",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "--vip-level", "required": false, "note": "VIP level label, e.g. No VIP" },
+            { "name": "--currency", "required": false }
+          ],
+          "example": "bybit margin vip-data --currency BTC"
+        },
+        {
+          "name": "margin status",
+          "description": "Get current unified-account spot margin state and leverage",
+          "auth_required": true,
+          "dangerous": false,
+          "params": [],
+          "example": "bybit margin status"
+        },
+        {
+          "name": "margin toggle",
+          "description": "Enable or disable unified-account spot margin",
+          "auth_required": true,
+          "dangerous": true,
+          "params": [
+            { "name": "--mode", "required": true, "values": ["on","off"] }
+          ],
+          "example": "bybit margin toggle --mode on -y"
+        },
+        {
+          "name": "margin set-leverage",
+          "description": "Set unified-account spot margin leverage",
+          "auth_required": true,
+          "dangerous": true,
+          "params": [
+            { "name": "--leverage", "required": true, "note": "Leverage, typically 2-10" },
+            { "name": "--currency", "required": false, "note": "Optional coin-specific leverage setting" }
+          ],
+          "example": "bybit margin set-leverage --leverage 4 --currency BTC -y"
         }
       ]
     },

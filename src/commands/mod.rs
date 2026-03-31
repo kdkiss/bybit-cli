@@ -1,10 +1,12 @@
 pub mod account;
 pub mod asset;
 pub mod auth;
+pub mod convert;
 pub mod earn;
 pub mod funding;
 pub mod futures;
 pub mod helpers;
+pub mod margin;
 pub mod market;
 pub mod paper;
 pub mod position;

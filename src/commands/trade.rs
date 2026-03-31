@@ -147,6 +147,8 @@ pub enum TradeCommand {
         /// Seconds until all open orders are cancelled. Pass 0 to disable.
         seconds: u32,
     },
+    /// Get current DCP (Disconnect Cancel All) configuration
+    DcpInfo,
 }
 
 #[derive(Debug, clap::Args)]
@@ -431,6 +433,12 @@ pub async fn run(
             })?;
             let body = json!({ "category": category, "request": parsed });
             client.private_post("/v5/order/cancel-batch", &body).await?
+        }
+
+        TradeCommand::DcpInfo => {
+            client
+                .private_get("/v5/account/query-dcp-info", &[])
+                .await?
         }
 
         TradeCommand::CancelAfter { seconds } => {

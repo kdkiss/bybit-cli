@@ -333,3 +333,77 @@ async fn account_adl_alert_calls_market_adl_alert_endpoint() {
         .stdout(contains("\"adlTriggerThreshold\""))
         .stdout(contains("\"BTCUSDT\""));
 }
+
+#[tokio::test]
+async fn account_borrow_posts_to_manual_borrow_endpoint() {
+    let server = MockServer::start().await;
+    Mock::given(method("POST"))
+        .and(path("/v5/account/manual-borrow"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "retCode": 0, "retMsg": "OK",
+            "result": { "coin": "USDT", "qty": "100" },
+            "time": 1700000000000u64
+        })))
+        .mount(&server)
+        .await;
+
+    bybit_with_mock(&server)
+        .args([
+            "-y", "-o", "json", "account", "borrow", "--coin", "USDT", "--amount", "100",
+        ])
+        .assert()
+        .success()
+        .stdout(contains("\"USDT\""))
+        .stdout(contains("\"100\""));
+}
+
+#[tokio::test]
+async fn account_repay_posts_to_manual_repay_endpoint() {
+    let server = MockServer::start().await;
+    Mock::given(method("POST"))
+        .and(path("/v5/account/manual-repay"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "retCode": 0, "retMsg": "OK",
+            "result": { "coin": "USDT", "qty": "50" },
+            "time": 1700000000000u64
+        })))
+        .mount(&server)
+        .await;
+
+    bybit_with_mock(&server)
+        .args([
+            "-y", "-o", "json", "account", "repay", "--coin", "USDT", "--amount", "50",
+        ])
+        .assert()
+        .success()
+        .stdout(contains("\"USDT\""))
+        .stdout(contains("\"50\""));
+}
+
+#[tokio::test]
+async fn account_quick_repay_posts_to_quick_repayment_endpoint() {
+    let server = MockServer::start().await;
+    Mock::given(method("POST"))
+        .and(path("/v5/account/quick-repayment"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "retCode": 0, "retMsg": "OK",
+            "result": { "coin": "USDT", "status": "SUCCESS" },
+            "time": 1700000000000u64
+        })))
+        .mount(&server)
+        .await;
+
+    bybit_with_mock(&server)
+        .args([
+            "-y",
+            "-o",
+            "json",
+            "account",
+            "quick-repay",
+            "--coin",
+            "USDT",
+        ])
+        .assert()
+        .success()
+        .stdout(contains("\"SUCCESS\""));
+}

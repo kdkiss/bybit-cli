@@ -363,6 +363,27 @@ async fn trade_cancel_after_accepts_empty_success_body() {
         .stdout(contains("{}"));
 }
 
+#[tokio::test]
+async fn trade_dcp_info_calls_query_dcp_info_endpoint() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/v5/account/query-dcp-info"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "retCode": 0, "retMsg": "OK",
+            "result": { "timeWindow": 60, "triggerType": "CancelAll" },
+            "time": 1700000000000u64
+        })))
+        .mount(&server)
+        .await;
+
+    bybit_with_mock(&server)
+        .args(["-o", "json", "trade", "dcp-info"])
+        .assert()
+        .success()
+        .stdout(contains("\"timeWindow\""))
+        .stdout(contains("60"));
+}
+
 // ---------------------------------------------------------------------------
 // Batch operations
 // ---------------------------------------------------------------------------

@@ -11,6 +11,7 @@ pub const VALID_SERVICES: &[&str] = &[
     "position",
     "asset",
     "funding",
+    "convert",
     "reports",
     "subaccount",
     "futures",

@@ -27,6 +27,8 @@ const TOP_COMMANDS: &[&str] = &[
     "account",
     "position",
     "asset",
+    "convert",
+    "margin",
     "funding",
     "subaccount",
     "earn",
@@ -80,6 +82,7 @@ const SUBCOMMANDS: &[(&str, &[&str])] = &[
             "batch-amend",
             "batch-cancel",
             "cancel-after",
+            "dcp-info",
         ],
     ),
     (
@@ -97,8 +100,16 @@ const SUBCOMMANDS: &[(&str, &[&str])] = &[
             "set-spot-hedging",
             "set-usdc-settlement",
             "volume",
+            "borrow",
+            "repay",
+            "quick-repay",
         ],
     ),
+    (
+        "convert",
+        &["coins", "quote", "execute", "status", "history"],
+    ),
+    ("margin", &["vip-data", "toggle", "set-leverage", "status"]),
     (
         "position",
         &[

@@ -15,9 +15,11 @@ use commands::{
     account::{run as run_account, AccountArgs},
     asset::{run as run_asset, AssetArgs},
     auth::{run as run_auth, AuthArgs},
+    convert::{run as run_convert, ConvertArgs},
     earn::{run as run_earn, EarnArgs},
     funding::{run as run_funding, FundingArgs},
     futures::{run as run_futures, FuturesArgs},
+    margin::{run as run_margin, MarginArgs},
     market::{run as run_market, MarketArgs},
     paper::{run as run_paper, PaperArgs},
     position::{run as run_position, PositionArgs},
@@ -144,6 +146,14 @@ pub enum Command {
     #[command(subcommand_value_name = "ASSET_CMD")]
     Asset(AssetArgs),
 
+    /// Coin conversion (quote, execute, status, history)
+    #[command(subcommand_value_name = "CONVERT_CMD")]
+    Convert(ConvertArgs),
+
+    /// Spot margin trade workflows for UTA
+    #[command(subcommand_value_name = "MARGIN_CMD")]
+    Margin(MarginArgs),
+
     /// Funding and wallet workflows
     #[command(subcommand_value_name = "FUNDING_CMD")]
     Funding(FundingArgs),
@@ -265,7 +275,7 @@ impl Command {
                 | TradeCommand::BatchCancel { category, .. } => {
                     *category = default_category.to_string();
                 }
-                TradeCommand::CancelAfter { .. } => {}
+                TradeCommand::CancelAfter { .. } | TradeCommand::DcpInfo => {}
             },
             Command::Account(args) => match &mut args.command {
                 AccountCommand::FeeRate { category, .. }
@@ -282,7 +292,10 @@ impl Command {
                 | AccountCommand::SetMarginMode { .. }
                 | AccountCommand::SetSpotHedging { .. }
                 | AccountCommand::SetUsdcSettlement { .. }
-                | AccountCommand::AdlAlert { .. } => {}
+                | AccountCommand::AdlAlert { .. }
+                | AccountCommand::Borrow { .. }
+                | AccountCommand::Repay { .. }
+                | AccountCommand::QuickRepay { .. } => {}
             },
             Command::Position(args) => match &mut args.command {
                 PositionCommand::List { category, .. }
@@ -406,6 +419,8 @@ pub async fn dispatch(ctx: AppContext, command: Command) -> errors::BybitResult<
         Command::Account(args) => run_account(args, &client, ctx.format, ctx.force).await,
         Command::Position(args) => run_position(args, &client, ctx.format, ctx.force).await,
         Command::Asset(args) => run_asset(args, &client, ctx.format, ctx.force).await,
+        Command::Convert(args) => run_convert(args, &client, ctx.format, ctx.force).await,
+        Command::Margin(args) => run_margin(args, &client, ctx.format, ctx.force).await,
         Command::Funding(args) => run_funding(args, &client, ctx.format, ctx.force).await,
         Command::Subaccount(args) => run_subaccount(args, &client, ctx.format, ctx.force).await,
         Command::Earn(args) => run_earn(args, &client, ctx.format, ctx.force).await,
