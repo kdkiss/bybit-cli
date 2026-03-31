@@ -305,6 +305,8 @@ fn api_secret_file_flag_is_applied() {
 
     Command::cargo_bin("bybit")
         .unwrap()
+        .env_remove("BYBIT_API_KEY")
+        .env_remove("BYBIT_API_SECRET")
         .args([
             "--api-key",
             "test-key",
@@ -332,6 +334,8 @@ fn auth_set_persists_credentials_to_config() {
 
     Command::cargo_bin("bybit")
         .unwrap()
+        .env_remove("BYBIT_API_KEY")
+        .env_remove("BYBIT_API_SECRET")
         .args([
             "--api-secret-file",
             secret_path.to_str().unwrap(),
@@ -365,6 +369,8 @@ fn auth_show_and_reset_use_saved_config() {
 
     Command::cargo_bin("bybit")
         .unwrap()
+        .env_remove("BYBIT_API_KEY")
+        .env_remove("BYBIT_API_SECRET")
         .args(["auth", "show", "-o", "json"])
         .env("BYBIT_CONFIG_DIR", &config_dir)
         .assert()
@@ -374,6 +380,8 @@ fn auth_show_and_reset_use_saved_config() {
 
     Command::cargo_bin("bybit")
         .unwrap()
+        .env_remove("BYBIT_API_KEY")
+        .env_remove("BYBIT_API_SECRET")
         .args(["auth", "reset", "-o", "json"])
         .env("BYBIT_CONFIG_DIR", &config_dir)
         .assert()

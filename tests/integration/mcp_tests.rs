@@ -129,6 +129,9 @@ async fn mcp_guarded_dangerous_call_with_acknowledged_executes_subprocess() {
 
     Command::cargo_bin("bybit")
         .unwrap()
+        .env_remove("BYBIT_TESTNET")
+        .env_remove("BYBIT_API_KEY")
+        .env_remove("BYBIT_API_SECRET")
         .args([
             "--api-url",
             &server.uri(),
@@ -158,6 +161,9 @@ fn mcp_tools_call_executes_safe_tool_via_subprocess() {
 
     Command::cargo_bin("bybit")
         .unwrap()
+        .env_remove("BYBIT_TESTNET")
+        .env_remove("BYBIT_API_KEY")
+        .env_remove("BYBIT_API_SECRET")
         .arg("mcp")
         .env("BYBIT_CONFIG_DIR", &config_dir)
         .write_stdin(mcp_session(
@@ -188,6 +194,9 @@ async fn mcp_futures_tool_executes_safe_tool_via_subprocess() {
 
     Command::cargo_bin("bybit")
         .unwrap()
+        .env_remove("BYBIT_TESTNET")
+        .env_remove("BYBIT_API_KEY")
+        .env_remove("BYBIT_API_SECRET")
         .args(["--api-url", &server.uri(), "mcp", "-s", "futures"])
         .write_stdin(mcp_session(
             r#"{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"futures_tickers","arguments":{"category":"linear","symbol":"BTCUSDT"}}}"#,
@@ -222,6 +231,9 @@ async fn mcp_auth_permissions_masks_api_key_output() {
 
     Command::cargo_bin("bybit")
         .unwrap()
+        .env_remove("BYBIT_TESTNET")
+        .env_remove("BYBIT_API_KEY")
+        .env_remove("BYBIT_API_SECRET")
         .args([
             "--api-url",
             &server.uri(),
