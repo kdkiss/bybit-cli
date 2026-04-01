@@ -29,6 +29,9 @@ use commands::{
     utility::run_setup,
     websocket::{run as run_ws, WsArgs},
 };
+use mcp::server::{
+    McpTransportKind, DEFAULT_MCP_HTTP_HOST, DEFAULT_MCP_HTTP_PATH, DEFAULT_MCP_HTTP_PORT,
+};
 use output::OutputFormat;
 
 // ---------------------------------------------------------------------------
@@ -200,6 +203,18 @@ pub enum Command {
         /// Skip per-call confirmation for dangerous tools
         #[arg(long)]
         allow_dangerous: bool,
+        /// MCP transport to serve
+        #[arg(long, value_enum, default_value_t = McpTransportKind::Stdio)]
+        transport: McpTransportKind,
+        /// Host to bind when using HTTP transport
+        #[arg(long, default_value = DEFAULT_MCP_HTTP_HOST)]
+        host: String,
+        /// Port to bind when using HTTP transport
+        #[arg(long, default_value_t = DEFAULT_MCP_HTTP_PORT)]
+        port: u16,
+        /// Request path to serve when using HTTP transport
+        #[arg(long, default_value = DEFAULT_MCP_HTTP_PATH)]
+        path: String,
     },
 }
 
@@ -453,10 +468,23 @@ pub async fn dispatch(ctx: AppContext, command: Command) -> errors::BybitResult<
         Command::Mcp {
             services,
             allow_dangerous,
+            transport,
+            host,
+            port,
+            path,
         } => {
             let mut mcp_ctx = ctx;
             mcp_ctx.mcp_mode = true;
-            mcp::server::run_mcp_server(mcp_ctx, &services, allow_dangerous).await
+            mcp::server::run_mcp_server(
+                mcp_ctx,
+                &services,
+                allow_dangerous,
+                transport,
+                &host,
+                port,
+                &path,
+            )
+            .await
         }
     }
 }

@@ -1,0 +1,20 @@
+# Docker reads ignore patterns from the build context root when building with `.`
+.git
+.github
+target
+dist
+coverage
+artifacts
+temp
+tmp
+.bybit
+.bybit-test
+.bybit-local
+.claude
+.cursor
+.vscode
+.idea
+TODO.local.md
+*.log
+*.tmp
+*.temp

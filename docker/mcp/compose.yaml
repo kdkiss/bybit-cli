@@ -1,0 +1,49 @@
+name: bybit-mcp
+
+services:
+  mcp:
+    image: bybit-mcp
+    pull_policy: never
+    build:
+      context: ../..
+      dockerfile: docker/mcp/Dockerfile
+    stdin_open: true
+    tty: false
+    environment:
+      BYBIT_API_KEY: ${BYBIT_API_KEY:-}
+      BYBIT_API_SECRET: ${BYBIT_API_SECRET:-}
+      BYBIT_TESTNET: ${BYBIT_TESTNET:-false}
+    volumes:
+      - bybit-mcp-data:/data/bybit
+    command: ["-s", "${BYBIT_MCP_SERVICES:-market,account,paper}"]
+
+  mcp-http:
+    image: bybit-mcp
+    pull_policy: never
+    build:
+      context: ../..
+      dockerfile: docker/mcp/Dockerfile
+    environment:
+      BYBIT_API_KEY: ${BYBIT_API_KEY:-}
+      BYBIT_API_SECRET: ${BYBIT_API_SECRET:-}
+      BYBIT_TESTNET: ${BYBIT_TESTNET:-true}
+    volumes:
+      - bybit-mcp-data:/data/bybit
+    ports:
+      - "${BYBIT_MCP_PORT:-8811}:${BYBIT_MCP_PORT:-8811}"
+    command:
+      [
+        "--transport",
+        "http",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "${BYBIT_MCP_PORT:-8811}",
+        "--path",
+        "${BYBIT_MCP_PATH:-/mcp}",
+        "-s",
+        "${BYBIT_MCP_SERVICES:-market,account,paper}"
+      ]
+
+volumes:
+  bybit-mcp-data:

@@ -170,6 +170,19 @@ fn auth_help() {
         .stdout(contains("sign"));
 }
 
+#[test]
+fn mcp_help_lists_http_transport_flags() {
+    Command::cargo_bin("bybit")
+        .unwrap()
+        .args(["mcp", "--help"])
+        .assert()
+        .success()
+        .stdout(contains("--transport"))
+        .stdout(contains("--host"))
+        .stdout(contains("--port"))
+        .stdout(contains("--path"));
+}
+
 // ---------------------------------------------------------------------------
 // Public market commands (live API — opt-in via BYBIT_RUN_LIVE_PUBLIC=1)
 // ---------------------------------------------------------------------------

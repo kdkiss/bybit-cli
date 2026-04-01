@@ -71,15 +71,16 @@ Before placing real orders, agents should:
 
 ## MCP Integration
 
-The built-in MCP server is available over stdio:
+The built-in MCP server supports stdio and streamable HTTP:
 
 ```bash
 bybit mcp
 bybit mcp -s all
 bybit mcp -s all --allow-dangerous
+bybit mcp --transport http --host 127.0.0.1 --port 8811 --path /mcp -s all
 ```
 
-This exposes Bybit command groups as structured MCP tools over stdio. In guarded mode, dangerous tools stay visible but require `acknowledged=true` per call unless the server is started with `--allow-dangerous`.
+This exposes Bybit command groups as structured MCP tools. In guarded mode, dangerous tools stay visible but require `acknowledged=true` per call unless the server is started with `--allow-dangerous`. HTTP mode binds locally by default and should only be exposed beyond localhost intentionally.
 
 Persisted local state is shared across normal CLI and MCP usage: saved credentials, the paper journal, shell history, and the anonymous instance ID survive across tool calls and server restarts until reset or deleted.
 

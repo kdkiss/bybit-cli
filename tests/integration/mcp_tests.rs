@@ -175,6 +175,27 @@ fn mcp_tools_call_executes_safe_tool_via_subprocess() {
         .stdout(predicate::str::contains(r#"\"status\": \"initialized\""#));
 }
 
+#[test]
+fn mcp_tools_call_executes_safe_tool_via_subprocess_on_testnet() {
+    let temp = TempDir::new().unwrap();
+    let config_dir = temp.path().join("bybit");
+
+    Command::cargo_bin("bybit")
+        .unwrap()
+        .env_remove("BYBIT_TESTNET")
+        .env_remove("BYBIT_API_KEY")
+        .env_remove("BYBIT_API_SECRET")
+        .args(["--testnet", "mcp"])
+        .env("BYBIT_CONFIG_DIR", &config_dir)
+        .write_stdin(mcp_session(
+            r#"{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"paper_init","arguments":{"usdt":25}}}"#,
+        ))
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(r#""isError":false"#))
+        .stdout(predicate::str::contains(r#"\"status\": \"initialized\""#));
+}
+
 #[tokio::test]
 async fn mcp_futures_tool_executes_safe_tool_via_subprocess() {
     let server = MockServer::start().await;

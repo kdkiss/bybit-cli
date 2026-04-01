@@ -15,7 +15,7 @@ Works with Claude, Cursor, Codex, Copilot, Gemini, and any MCP-compatible agent.
 
 Try these with your AI agent:
 
-> *"Build me a morning market brief for BTC, ETH, and SOL with trend, volatility, funding, and key levels."*
+> *"Give me a morning market brief for BTC, ETH, and SOL with trend, volatility, funding, and key levels."*
 
 > *"Watch BTCUSDT and alert me if price breaks above 68,000, drops below 66,000, or gets within 0.25% of either level."*
 
@@ -273,7 +273,7 @@ Highest precedence first:
 
 ## MCP Server
 
-> Built-in MCP server is available via `bybit mcp`. It exposes command groups over stdio for MCP-compatible agents.
+> Built-in MCP server is available via `bybit mcp`. It supports local stdio transport and streamable HTTP for port-based MCP clients.
 
 ```json
 {
@@ -294,7 +294,24 @@ bybit mcp -s all                   # all services, dangerous calls require ackno
 bybit mcp -s all --allow-dangerous # all services, no per-call confirmation
 bybit mcp -s market,trade,paper    # specific services
 bybit mcp -s funding,reports,futures,subaccount
+bybit mcp --transport http --port 8811 -s all
 ```
+
+### MCP Over HTTP
+
+Use HTTP mode when your MCP client connects to a URL instead of launching a local process.
+
+```bash
+bybit mcp --transport http --host 127.0.0.1 --port 8811 --path /mcp -s all
+```
+
+Notes:
+
+- Default transport is still stdio.
+- HTTP mode uses streamable HTTP on the configured host, port, and path.
+- The default bind is `127.0.0.1`, not `0.0.0.0`.
+- Only expose `0.0.0.0` intentionally, and keep dangerous tools guarded unless you truly want autonomous execution.
+- Docker setup and examples live in [docker/README.md](docker/README.md).
 
 Available service groups include `market`, `account`, `trade`, `position`, `asset`, `funding`, `reports`, `subaccount`, `futures`, `paper`, and `auth`.
 The server expects the standard MCP `initialize` plus `notifications/initialized` handshake; normal MCP clients handle that automatically.

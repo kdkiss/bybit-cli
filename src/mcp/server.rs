@@ -1,8 +1,11 @@
 use std::{
+    net::SocketAddr,
     sync::{Arc, Mutex},
     time::Instant,
 };
 
+use axum::Router;
+use clap::ValueEnum;
 use rmcp::{
     handler::server::ServerHandler,
     model::{
@@ -10,6 +13,9 @@ use rmcp::{
         InitializeResult, ListToolsResult, PaginatedRequestParams, ServerCapabilities, Tool,
     },
     service::{RequestContext, RoleServer, ServiceExt},
+    transport::streamable_http_server::{
+        session::local::LocalSessionManager, StreamableHttpServerConfig, StreamableHttpService,
+    },
 };
 use serde_json::{json, Value};
 
@@ -24,9 +30,19 @@ use super::{
     schema::inject_dangerous_confirmation,
 };
 
-const MCP_TRANSPORT: &str = "stdio";
+pub const DEFAULT_MCP_HTTP_HOST: &str = "127.0.0.1";
+pub const DEFAULT_MCP_HTTP_PORT: u16 = 8811;
+pub const DEFAULT_MCP_HTTP_PATH: &str = "/mcp";
+const MCP_TRANSPORT_STDIO: &str = "stdio";
+const MCP_TRANSPORT_HTTP: &str = "streamable_http";
 const DANGEROUS_GATE_ERROR: &str =
     "This operation modifies account state. Set \"acknowledged\": true to proceed, or start the server with --allow-dangerous.";
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
+pub enum McpTransportKind {
+    Stdio,
+    Http,
+}
 
 #[derive(Debug, Default, Clone)]
 struct SessionMetadata {
@@ -38,20 +54,34 @@ pub async fn run_mcp_server(
     ctx: AppContext,
     services: &str,
     allow_dangerous: bool,
+    transport: McpTransportKind,
+    host: &str,
+    port: u16,
+    path: &str,
 ) -> BybitResult<()> {
     let enabled_services = parse_services(services)?;
-    let server = BybitMcpServer::new(ctx, enabled_services, allow_dangerous);
-    let mode_label = if allow_dangerous {
-        "autonomous"
-    } else {
-        "guarded"
-    };
+    match transport {
+        McpTransportKind::Stdio => {
+            run_stdio_mcp_server(ctx, enabled_services, allow_dangerous).await
+        }
+        McpTransportKind::Http => {
+            run_http_mcp_server(ctx, enabled_services, allow_dangerous, host, port, path).await
+        }
+    }
+}
+
+async fn run_stdio_mcp_server(
+    ctx: AppContext,
+    enabled_services: Vec<String>,
+    allow_dangerous: bool,
+) -> BybitResult<()> {
+    let server = BybitMcpServer::new(ctx, enabled_services, allow_dangerous, MCP_TRANSPORT_STDIO);
 
     eprintln!(
         "bybit-cli MCP server v{} starting on stdio ({} tools, mode: {})",
         env!("CARGO_PKG_VERSION"),
         server.tool_count(),
-        mode_label,
+        mode_label(allow_dangerous),
     );
 
     let transport = rmcp::transport::io::stdio();
@@ -68,21 +98,121 @@ pub async fn run_mcp_server(
     Ok(())
 }
 
+async fn run_http_mcp_server(
+    ctx: AppContext,
+    enabled_services: Vec<String>,
+    allow_dangerous: bool,
+    host: &str,
+    port: u16,
+    path: &str,
+) -> BybitResult<()> {
+    let http_path = normalize_http_path(path)?;
+    let server_ctx = ctx.clone();
+    let server_services = enabled_services.clone();
+    let tool_count =
+        BybitMcpServer::new(ctx, enabled_services, allow_dangerous, MCP_TRANSPORT_HTTP)
+            .tool_count();
+    let bind_addr = format!("{host}:{port}");
+    let listener = tokio::net::TcpListener::bind(&bind_addr)
+        .await
+        .map_err(|e| {
+            BybitError::Config(format!(
+                "Failed to bind MCP HTTP server on {bind_addr}: {e}"
+            ))
+        })?;
+    let local_addr = listener
+        .local_addr()
+        .map_err(|e| BybitError::Config(format!("Failed to inspect MCP HTTP bind address: {e}")))?;
+
+    let service: StreamableHttpService<BybitMcpServer, LocalSessionManager> =
+        StreamableHttpService::new(
+            move || {
+                Ok::<_, std::io::Error>(BybitMcpServer::new(
+                    server_ctx.clone(),
+                    server_services.clone(),
+                    allow_dangerous,
+                    MCP_TRANSPORT_HTTP,
+                ))
+            },
+            Default::default(),
+            StreamableHttpServerConfig::default(),
+        );
+    let app = Router::new().route_service(&http_path, service);
+
+    eprintln!(
+        "bybit-cli MCP server v{} starting on streamable HTTP at http://{}{} ({} tools, mode: {})",
+        env!("CARGO_PKG_VERSION"),
+        socket_addr_for_url(local_addr),
+        http_path,
+        tool_count,
+        mode_label(allow_dangerous),
+    );
+
+    axum::serve(listener, app)
+        .await
+        .map_err(|e| BybitError::Config(format!("MCP HTTP server error: {e}")))?;
+
+    Ok(())
+}
+
+fn mode_label(allow_dangerous: bool) -> &'static str {
+    if allow_dangerous {
+        "autonomous"
+    } else {
+        "guarded"
+    }
+}
+
+fn normalize_http_path(path: &str) -> BybitResult<String> {
+    let trimmed = path.trim();
+    if trimmed.is_empty() {
+        return Err(BybitError::Validation(
+            "MCP HTTP path cannot be empty.".to_string(),
+        ));
+    }
+
+    let normalized = if trimmed.starts_with('/') {
+        trimmed.to_string()
+    } else {
+        format!("/{trimmed}")
+    };
+
+    if normalized.len() == 1 {
+        return Ok(normalized);
+    }
+
+    Ok(normalized.trim_end_matches('/').to_string())
+}
+
+fn socket_addr_for_url(addr: SocketAddr) -> String {
+    match addr {
+        SocketAddr::V4(addr) => addr.to_string(),
+        SocketAddr::V6(addr) => format!("[{}]:{}", addr.ip(), addr.port()),
+    }
+}
+
 struct BybitMcpServer {
     ctx: Arc<AppContext>,
     enabled_services: Vec<String>,
     allow_dangerous: bool,
+    transport_label: &'static str,
     instructions: String,
     session: Mutex<SessionMetadata>,
 }
 
 impl BybitMcpServer {
-    fn new(ctx: AppContext, enabled_services: Vec<String>, allow_dangerous: bool) -> Self {
+    fn new(
+        ctx: AppContext,
+        enabled_services: Vec<String>,
+        allow_dangerous: bool,
+        transport_label: &'static str,
+    ) -> Self {
         let instructions = build_instructions(&enabled_services, allow_dangerous);
         Self {
             ctx: Arc::new(ctx),
             enabled_services,
             allow_dangerous,
+            transport_label,
             instructions,
             session: Mutex::new(SessionMetadata::default()),
         }
@@ -179,7 +309,7 @@ impl ServerHandler for BybitMcpServer {
             "server_version": env!("CARGO_PKG_VERSION"),
             "services": self.enabled_services,
             "mode": if self.allow_dangerous { "autonomous" } else { "guarded" },
-            "caller": caller_metadata(&session),
+            "caller": caller_metadata(&session, self.transport_label),
         }));
 
         Ok(
@@ -227,7 +357,7 @@ impl ServerHandler for BybitMcpServer {
             "tool": tool_name,
             "arg_keys": argument_keys(&arguments_map),
             "arg_count": arguments_map.as_ref().map(|args| args.len()).unwrap_or(0),
-            "caller": caller_metadata(&session),
+            "caller": caller_metadata(&session, self.transport_label),
         }));
 
         let (response, error_code, status) =
@@ -258,7 +388,7 @@ impl ServerHandler for BybitMcpServer {
             "status": status,
             "error_code": error_code,
             "duration_ms": started.elapsed().as_millis() as u64,
-            "caller": caller_metadata(&session),
+            "caller": caller_metadata(&session, self.transport_label),
         }));
 
         Ok(response)
@@ -307,12 +437,12 @@ fn argument_keys(arguments: &Option<serde_json::Map<String, Value>>) -> Vec<Stri
     keys
 }
 
-fn caller_metadata(session: &SessionMetadata) -> Value {
+fn caller_metadata(session: &SessionMetadata, transport_label: &str) -> Value {
     let mut caller = serde_json::Map::new();
     caller.insert("agent".into(), json!(crate::telemetry::agent_client()));
     caller.insert("instance_id".into(), json!(crate::telemetry::instance_id()));
     caller.insert("pid".into(), json!(std::process::id()));
-    caller.insert("transport".into(), json!(MCP_TRANSPORT));
+    caller.insert("transport".into(), json!(transport_label));
 
     if let Some(name) = &session.client_name {
         caller.insert("client_name".into(), json!(name));
@@ -397,7 +527,7 @@ async fn execute_subprocess(
         cmd.env("BYBIT_API_SECRET", secret);
     }
     if ctx.testnet {
-        cmd.env("BYBIT_TESTNET", "1");
+        cmd.env("BYBIT_TESTNET", "true");
     } else {
         cmd.env_remove("BYBIT_TESTNET");
     }
@@ -430,11 +560,16 @@ async fn execute_subprocess(
 
 #[cfg(test)]
 mod tests {
+    use std::time::Duration;
+
+    use axum::Router;
     use serde_json::{json, Value};
 
     use super::{
-        argument_keys, build_instructions, caller_metadata, enforce_dangerous_gate, BybitMcpServer,
-        SessionMetadata, DANGEROUS_GATE_ERROR,
+        argument_keys, build_instructions, caller_metadata, enforce_dangerous_gate,
+        normalize_http_path, socket_addr_for_url, BybitMcpServer, LocalSessionManager,
+        SessionMetadata, StreamableHttpServerConfig, StreamableHttpService, DANGEROUS_GATE_ERROR,
+        MCP_TRANSPORT_HTTP, MCP_TRANSPORT_STDIO,
     };
     use crate::{output::OutputFormat, AppContext};
 
@@ -455,7 +590,40 @@ mod tests {
             },
             vec!["trade".to_string()],
             false,
+            MCP_TRANSPORT_STDIO,
         )
+    }
+
+    async fn spawn_http_test_server(
+        path: &str,
+    ) -> (reqwest::Client, String, tokio::task::JoinHandle<()>) {
+        let mut config = StreamableHttpServerConfig::default();
+        config.stateful_mode = false;
+        config.json_response = true;
+        config.sse_keep_alive = None;
+        let service: StreamableHttpService<BybitMcpServer, LocalSessionManager> =
+            StreamableHttpService::new(
+                || Ok::<_, std::io::Error>(test_server()),
+                Default::default(),
+                config,
+            );
+        let app = Router::new().route_service(path, service);
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
+            .await
+            .expect("bind test listener");
+        let base_url = format!(
+            "http://{}{}",
+            socket_addr_for_url(listener.local_addr().expect("listener address")),
+            path
+        );
+        let handle = tokio::spawn(async move {
+            let _ = axum::serve(listener, app).await;
+        });
+        let client = reqwest::Client::builder()
+            .timeout(Duration::from_secs(5))
+            .build()
+            .expect("HTTP client");
+        (client, base_url, handle)
     }
 
     #[test]
@@ -515,11 +683,56 @@ mod tests {
 
     #[test]
     fn caller_metadata_includes_client_info_when_present() {
-        let caller = caller_metadata(&SessionMetadata {
-            client_name: Some("codex".to_string()),
-            client_version: Some("1.2.3".to_string()),
-        });
+        let caller = caller_metadata(
+            &SessionMetadata {
+                client_name: Some("codex".to_string()),
+                client_version: Some("1.2.3".to_string()),
+            },
+            MCP_TRANSPORT_HTTP,
+        );
         assert_eq!(caller.get("client_name"), Some(&json!("codex")));
         assert_eq!(caller.get("client_version"), Some(&json!("1.2.3")));
+        assert_eq!(caller.get("transport"), Some(&json!(MCP_TRANSPORT_HTTP)));
+    }
+
+    #[test]
+    fn normalize_http_path_adds_leading_slash_and_trims_suffix() {
+        assert_eq!(normalize_http_path("mcp/").unwrap(), "/mcp");
+        assert_eq!(normalize_http_path("/").unwrap(), "/");
+    }
+
+    #[tokio::test]
+    async fn http_transport_serves_initialize_and_list_tools() {
+        let path = "/mcp";
+        let (client, url, handle) = spawn_http_test_server(path).await;
+
+        let initialize = client
+            .post(&url)
+            .header("Content-Type", "application/json")
+            .header("Accept", "application/json, text/event-stream")
+            .body(
+                r#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"codex","version":"1.0"}}}"#,
+            )
+            .send()
+            .await
+            .expect("initialize response");
+        assert!(initialize.status().is_success());
+        let initialize_body = initialize.text().await.expect("initialize body");
+        assert!(initialize_body.contains(r#""name":"bybit-cli""#));
+
+        let tools = client
+            .post(&url)
+            .header("Content-Type", "application/json")
+            .header("Accept", "application/json, text/event-stream")
+            .body(r#"{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}"#)
+            .send()
+            .await
+            .expect("tools response");
+        assert!(tools.status().is_success());
+        let tools_body = tools.text().await.expect("tools body");
+        assert!(tools_body.contains(r#""trade_buy""#));
+        assert!(tools_body.contains(r#""acknowledged""#));
+
+        handle.abort();
     }
 }

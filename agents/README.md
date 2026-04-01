@@ -83,6 +83,8 @@ See `error-catalog.json` for the full error taxonomy and remediation steps.
 
 Persisted local state is shared across CLI and MCP usage: saved credentials, the paper journal, shell history, and the anonymous instance ID survive across tool calls and server restarts until reset or deleted.
 
+For isolated agent deployments, the repo also includes Docker MCP assets under [../docker/README.md](../docker/README.md) for both stdio and streamable HTTP transport, with state stored under `BYBIT_CONFIG_DIR=/data/bybit` inside the container.
+
 ## Configuration
 
 Credentials are resolved in priority order:
