@@ -397,7 +397,7 @@ async fn execute_subprocess(
         cmd.env("BYBIT_API_SECRET", secret);
     }
     if ctx.testnet {
-        cmd.env("BYBIT_TESTNET", "1");
+        cmd.env("BYBIT_TESTNET", "true");
     } else {
         cmd.env_remove("BYBIT_TESTNET");
     }
