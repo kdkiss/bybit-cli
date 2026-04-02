@@ -9,7 +9,7 @@
 
 **DISCLAIMER: This is an UNOFFICIAL community-maintained CLI and is NOT affiliated with Bybit. Use at your own risk. Trading involves significant risk of loss.**
 
-The AI-native CLI for trading crypto on Bybit. Full Bybit V5 API access. Built-in MCP server. Live and paper trading. Single binary.
+The AI-native CLI for trading crypto on Bybit. Full Bybit V5 API access. Built-in MCP server. Live trading plus spot and futures paper trading. Single binary.
 
 Works with Claude, Cursor, Codex, Copilot, Gemini, and any MCP-compatible agent.
 
@@ -22,6 +22,8 @@ Try these with your AI agent:
 > *"Create a trade plan for ETHUSDT with an entry, stop, and target, risk only 0.5% of my account, and show me the validate command before placing anything."*
 
 > *"Check my open positions and set a stop-loss at 5% below entry on each one."*
+
+> *"Run a futures paper session on BTCUSDT: initialize 10,000 USDT, go long with 10x leverage, place a reduce-only stop, and show margin plus liquidation risk after each step."*
 
 ---
 
@@ -97,7 +99,7 @@ cp target/release/bybit ~/.local/bin/
 
 ## What You Can Trade
 
-One binary covers Bybit spot, derivatives, earn workflows, streaming, and paper trading.
+One binary covers Bybit spot, derivatives, earn workflows, streaming, and both paper engines.
 
 | Area | What it covers | Flag / namespace | Example |
 |---|---|---|---|
@@ -106,7 +108,8 @@ One binary covers Bybit spot, derivatives, earn workflows, streaming, and paper 
 | **Inverse derivatives** | Coin-margined contracts and historical market/account views | `--category inverse` | `bybit market instruments --category inverse` |
 | **Options** | Option market data plus account greeks and volatility views | `--category option` | `bybit market instruments --category option` |
 | **Earn** | Flexible saving / earn products, staking, redeeming, and yield history | `earn` namespace | `bybit earn products --coin BTC` |
-| **Paper trading** | Local simulation with live public prices and no API keys | `paper` namespace | `bybit paper buy --symbol BTCUSDT --qty 0.01` |
+| **Spot paper trading** | Local spot simulator with live public prices, configurable fees, and no API keys | `paper` namespace | `bybit paper buy --symbol BTCUSDT --qty 0.01` |
+| **Futures paper trading** | Local perpetual futures simulator with leverage, margin, funding, liquidation, and no API keys | `futures paper` namespace | `bybit futures paper buy BTCUSDT 0.01 --leverage 10 --type market` |
 
 Product availability and permissions vary by jurisdiction, account type, and API key scope.
 
@@ -144,7 +147,7 @@ Most CLIs are built for humans at a terminal. This one is built for LLM-based ag
 - **Structured output by default.** Every command supports `-o json`. No screen-scraping.
 - **Consistent error envelopes.** Errors are JSON objects with a stable `error` field. Agents route on `error` without parsing human sentences.
 - **Predictable exit codes.** Success is 0, failure is non-zero. Agents detect and classify failures programmatically.
-- **Paper trading for safe iteration.** Test strategies against live prices with `bybit paper` commands. No API keys, no real money, and a close simulation of live market and limit order flows.
+- **Paper trading for safe iteration.** Test spot strategies with `bybit paper` and perpetual futures strategies with `bybit futures paper`. No API keys, no real money, and both engines run against live Bybit public market data.
 - **Full API surface.** 100+ commands covering market data, trading, account, funding, reporting, positions, assets, subaccounts, futures, and WebSocket streaming.
 - **Built-in MCP server.** Native Model Context Protocol support over stdio with guarded dangerous-tool handling.
 - **Rate-limit aware.** When Bybit rejects a request, the CLI returns an enriched error with `suggestion`, `retryable`, and `docs_url` fields so agents can adapt their strategy.
@@ -215,7 +218,7 @@ bybit shell
 
 ## API Keys & Configuration
 
-Authenticated commands require a Bybit API key pair. Public market data and paper trading work without credentials.
+Authenticated commands require a Bybit API key pair. Public market data, spot paper trading, and futures paper trading work without credentials.
 
 ### Getting API keys
 
@@ -289,21 +292,25 @@ Highest precedence first:
 Gemini CLI users can use the included [gemini-extension.json](gemini-extension.json) manifest from the repo root to register the same MCP server configuration.
 
 ```bash
-bybit mcp                          # read-only (market, account, paper)
+bybit mcp                          # read-only (market, account, paper, futures-paper)
 bybit mcp -s all                   # all services, dangerous calls require acknowledged=true
 bybit mcp -s all --allow-dangerous # all services, no per-call confirmation
-bybit mcp -s market,trade,paper    # specific services
+bybit mcp -s market,trade,paper,futures-paper
 bybit mcp -s funding,reports,futures,subaccount
 ```
 
-Available service groups include `market`, `account`, `trade`, `position`, `asset`, `funding`, `reports`, `subaccount`, `futures`, `paper`, and `auth`.
+Available service groups include `market`, `account`, `trade`, `position`, `asset`, `funding`, `convert`, `reports`, `subaccount`, `futures`, `paper`, `futures-paper`, and `auth`.
 The server expects the standard MCP `initialize` plus `notifications/initialized` handshake; normal MCP clients handle that automatically.
 
-Persisted local state is shared with normal CLI mode: saved credentials, the paper journal, shell history, and the anonymous instance ID persist across MCP tool calls and server restarts until reset or deleted.
+Persisted local state is shared with normal CLI mode: saved credentials, the spot paper journal, the futures paper state, shell history, and the anonymous instance ID persist across MCP tool calls and server restarts until reset or deleted.
 
 ## Paper Trading
 
-Paper trading provides a safe sandbox for testing trading logic against live Bybit prices. No API keys, no real money. It supports market and limit `buy` / `sell` flows with live pricing, local journal state, fees, and slippage.
+Two independent paper engines cover spot and perpetual futures. No API keys, no account, no real money. Both use live Bybit public market data.
+
+### Spot Paper
+
+Spot paper trading provides a safe sandbox for testing spot-style trading logic with market and limit `buy` / `sell` flows, local journal state, configurable fees, and slippage.
 
 **Market orders (fill immediately at live price):**
 
@@ -357,9 +364,54 @@ bybit paper reset --balance 2500 --settle-coin USDC --taker-fee-bps 10 --maker-f
 
 All output includes `"mode": "paper"` in JSON. Limit buys reserve quote balance plus maker fees, limit sells reserve base asset quantity, and pending orders are reconciled when paper read commands run (`balance`, `positions`, `history`, `cancelled`, `orders`, or `status`).
 
+### Futures Paper
+
+Near-parity with live `bybit futures` order flows. Supports all 8 order types (`market`, `limit`, `post`, `stop`, `take-profit`, `ioc`, `trailing-stop`, `fok`), leverage preferences, margin tracking, position netting, liquidation simulation, and funding accrual.
+
+Known differences from live futures:
+
+- `order-status` only reports locally tracked resting open orders by local paper order ID.
+- Post-only orders that would cross the spread are cancelled instead of resting.
+- Immediate fills use the current bid/ask snapshot; FOK checks order-book depth, but partial fills and depth-weighted slippage are not modeled.
+- All fills use the configured futures paper fee rate; live maker/taker fee differences are not simulated separately.
+
+```bash
+bybit futures paper init --balance 10000 -o json
+bybit futures paper buy BTCUSDT 0.01 --leverage 10 --type market -o json
+bybit futures paper sell BTCUSDT 0.01 --type limit --price 95000 --reduce-only -o json
+bybit futures paper buy BTCUSDT 0.01 --type stop --stop-price <STOP_PRICE> --trigger-signal mark -o json
+bybit futures paper positions -o json
+bybit futures paper balance -o json
+bybit futures paper fills -o json
+bybit futures paper status -o json
+bybit futures paper reset -o json
+```
+
+| Command | Description |
+|---------|-------------|
+| `bybit futures paper init [--balance 10000] [--currency USDT] [--fee-rate 0.00055] [--force]` | Initialize a futures paper account |
+| `bybit futures paper reset [--balance AMT] [--currency USDT] [--fee-rate R]` | Reset the futures paper account |
+| `bybit futures paper balance` | Collateral and margin summary |
+| `bybit futures paper status` | Full futures paper account summary |
+| `bybit futures paper buy SYM SIZE [--type T] [--price P] [--stop-price P] [--leverage N]` | Place a paper long |
+| `bybit futures paper sell SYM SIZE [--type T] [--price P] [--stop-price P] [--leverage N]` | Place a paper short |
+| `bybit futures paper orders [--category linear]` | Open futures paper orders |
+| `bybit futures paper order-status <ORDER_ID>` | Query one open futures paper order |
+| `bybit futures paper edit-order --order-id ID [--size Q] [--price P] [--stop-price P]` | Edit a resting order |
+| `bybit futures paper cancel [--order-id ID \| --cli-ord-id ID]` | Cancel one futures paper order |
+| `bybit futures paper cancel-all [--symbol SYM]` | Cancel all futures paper orders |
+| `bybit futures paper batch-order '<JSON>'` | Place multiple futures paper orders from JSON |
+| `bybit futures paper positions [--category linear]` | Open futures paper positions |
+| `bybit futures paper fills` | Futures paper fill history |
+| `bybit futures paper history` | Futures paper PnL, funding, and liquidation events |
+| `bybit futures paper leverage [--symbol SYM]` | Show leverage preferences |
+| `bybit futures paper set-leverage SYM N` | Set default leverage for a symbol |
+
+All futures paper output includes `"mode": "futures_paper"` in JSON. Spot paper and futures paper are fully independent; resetting one does not affect the other.
+
 ## Commands
 
-The CLI exposes 18 top-level command groups. For the machine-readable agent/MCP tool surface, load [agents/tool-catalog.json](agents/tool-catalog.json).
+The CLI exposes 18 top-level command groups plus the nested `futures paper` simulation namespace under `futures`. For the machine-readable agent/MCP tool surface, load [agents/tool-catalog.json](agents/tool-catalog.json).
 
 | Group | Auth | Dangerous | Description |
 |-------|------|-----------|-------------|
@@ -373,9 +425,10 @@ The CLI exposes 18 top-level command groups. For the machine-readable agent/MCP 
 | funding | Yes | Yes | Wallet balances, deposits, withdrawals, and transfers |
 | subaccount | Yes | Yes | Master-account subaccount management |
 | earn | Mixed | Mixed | Bybit Earn products, positions, stake/redeem, and yield history |
-| futures | Mixed | Mixed | Derivatives-focused market data, trading, positions, and streaming |
+| futures | Mixed | Mixed | Derivatives-focused market data, trading, positions, streaming, and the nested futures paper simulator |
 | ws | Optional | No | Real-time WebSocket streams |
-| paper | No | No | Paper trading simulation |
+| paper | No | No | Spot paper trading simulation |
+| futures paper | No | No | Perpetual futures paper trading simulation |
 | reports | Yes | No | Histories plus Bybit tax export request/status/retrieve workflows |
 | auth | Mixed | No | Credential management |
 | utility | No | No | Setup wizard, interactive shell |
@@ -563,6 +616,13 @@ Spot margin activation and leverage changes can be rejected by Bybit until the a
 | `bybit futures cancel --symbol SYM --order-id ID` | Cancel a futures order |
 | `bybit futures cancel-all [--symbol SYM]` | Cancel all futures orders |
 | `bybit futures set-leverage --symbol SYM --buy-leverage N --sell-leverage N` | Set futures leverage |
+| `bybit futures paper init [--balance 10000]` | Initialize futures paper account |
+| `bybit futures paper buy SYM SIZE [--type T] [--leverage N]` | Place a futures paper long |
+| `bybit futures paper sell SYM SIZE [--type T] [--leverage N]` | Place a futures paper short |
+| `bybit futures paper orders` | Show open futures paper orders |
+| `bybit futures paper positions` | Show open futures paper positions |
+| `bybit futures paper status` | Futures paper account summary |
+| `bybit futures paper reset` | Reset futures paper state |
 | `bybit futures ws orderbook --symbol SYM [--depth 50]` | Futures order book stream |
 | `bybit futures ws orders` | Private futures order updates |
 
@@ -720,13 +780,17 @@ The CLI does not pre-throttle requests. When Bybit returns a rate limit error (r
 
 Run `bybit paper init` to initialize the paper trading account before using other paper commands.
 
+**"Futures paper account not initialized" error**
+
+Run `bybit futures paper init` before using `bybit futures paper ...` commands.
+
 **WebSocket disconnects**
 
 The CLI reconnects automatically with exponential backoff (up to 12 attempts). If reconnects fail, check network connectivity and Bybit's [status page](https://status.bybit.com).
 
 **"MCP tool missing"**
 
-Check the service selection passed to `bybit mcp -s ...`. The default service set is `market,account,paper`; use `-s all` or include the specific group you need.
+Check the service selection passed to `bybit mcp -s ...`. The default service set is `market,account,paper,futures-paper`; use `-s all` or include the specific group you need.
 
 For machine-readable remediation guidance, see [agents/error-catalog.json](agents/error-catalog.json).
 
@@ -744,6 +808,7 @@ src/
   client.rs       — HTTP client with retry, envelope parsing, rustls TLS
   errors.rs       — Unified error types with JSON envelopes
   paper.rs        — Paper trading state machine (market + limit orders)
+  futures_paper.rs — Futures paper trading engine (margin, leverage, funding, liquidation)
   shell.rs        — Interactive REPL with rustyline
   telemetry.rs    — Instance ID, agent detection, request metadata
   commands/
@@ -755,6 +820,7 @@ src/
     funding.rs    — Funding and wallet workflow aliases
     subaccount.rs — Master-account subaccount management
     futures.rs    — Derivatives-focused command namespace
+    futures_paper.rs — Futures paper trading commands
     reports.rs    — Read-only reporting and history aliases
     websocket.rs  — WebSocket streaming with reconnect
     paper.rs      — Paper trading commands

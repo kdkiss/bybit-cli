@@ -12,6 +12,7 @@ This document describes how AI agents and LLM-based tools can integrate with `by
 - Failures are printed to stderr as JSON error envelopes
 - Dangerous operations require explicit confirmation (bypassable with `-y`)
 - The `--validate` flag enables dry-run order placement
+- Spot paper trading (`bybit paper ...`) and futures paper trading (`bybit futures paper ...`) use live public data but no credentials
 - Machine-readable tool and error catalogs live in `agents/`
 
 ## Artifacts
@@ -45,6 +46,13 @@ ticker = bybit(["market", "tickers", "--category", "linear", "--symbol", "BTCUSD
 price = ticker["list"][0]["lastPrice"]
 ```
 
+Safe no-auth examples after initializing local paper state:
+
+```python
+spot = bybit(["paper", "status"])
+futures = bybit(["futures", "paper", "status"])
+```
+
 ### Error handling
 
 ```python
@@ -69,6 +77,8 @@ Before placing real orders, agents should:
 4. **Get current price**: `bybit market tickers --symbol <SYM> -o json`
 5. **Confirm with user** before using `-y` on withdrawal/transfer commands
 
+For strategy testing, prefer `bybit paper ...` for spot flows and `bybit futures paper ...` for perpetual futures flows before touching live orders.
+
 ## MCP Integration
 
 The built-in MCP server is available over stdio:
@@ -77,11 +87,12 @@ The built-in MCP server is available over stdio:
 bybit mcp
 bybit mcp -s all
 bybit mcp -s all --allow-dangerous
+bybit mcp -s market,account,paper,futures-paper
 ```
 
 This exposes Bybit command groups as structured MCP tools over stdio. In guarded mode, dangerous tools stay visible but require `acknowledged=true` per call unless the server is started with `--allow-dangerous`.
 
-Persisted local state is shared across normal CLI and MCP usage: saved credentials, the paper journal, shell history, and the anonymous instance ID survive across tool calls and server restarts until reset or deleted.
+Persisted local state is shared across normal CLI and MCP usage: saved credentials, the spot paper journal, the futures paper state, shell history, and the anonymous instance ID survive across tool calls and server restarts until reset or deleted.
 
 ## Credential Handling
 

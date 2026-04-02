@@ -3,6 +3,7 @@ use clap::Subcommand;
 use crate::client::BybitClient;
 use crate::commands::{
     account::{run as run_account, AccountArgs, AccountCommand},
+    futures_paper::{run as run_futures_paper, FuturesPaperArgs},
     market::{run as run_market, MarketArgs, MarketCommand},
     position::{run as run_position, PositionArgs, PositionCommand},
     trade::{run as run_trade, OrderArgs, TradeArgs, TradeCommand},
@@ -205,6 +206,9 @@ pub enum FuturesCommand {
         #[arg(long)]
         sell_leverage: String,
     },
+    /// Simulated futures paper trading (no real money, no auth required)
+    Paper(FuturesPaperArgs),
+
     /// Futures websocket namespace
     Ws(FuturesWsArgs),
 }
@@ -598,6 +602,8 @@ pub async fn run(
             )
             .await
         }
+        FuturesCommand::Paper(args) => run_futures_paper(args, client, format).await,
+
         FuturesCommand::Ws(args) => {
             let ws_command = match args.command {
                 FuturesWsCommand::Orderbook {

@@ -2235,6 +2235,220 @@ fn ws_tools() -> Vec<McpTool> {
 }
 
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// Futures paper tools
+// ---------------------------------------------------------------------------
+
+fn futures_paper_tools() -> Vec<McpTool> {
+    vec![
+        McpTool {
+            name: "futures_paper_init",
+            description: "Initialize a futures paper trading account with starting collateral. No auth required. Use --force to overwrite.",
+            input_schema: object_schema(
+                vec![
+                    ("balance", num_prop("Starting collateral (default: 10000)")),
+                    ("currency", str_prop("Collateral currency (default: USDT)")),
+                    ("fee_rate", num_prop("Taker fee rate as decimal (default: 0.00055)")),
+                    ("force", bool_prop("Overwrite existing account")),
+                ],
+                &[],
+            ),
+            service: "futures-paper",
+            dangerous: false,
+        },
+        McpTool {
+            name: "futures_paper_reset",
+            description: "Reset futures paper account to initial state. Wipes all positions, orders, and fill history.",
+            input_schema: object_schema(
+                vec![
+                    ("balance", num_prop("New starting collateral (default: keep current)")),
+                    ("currency", str_prop("New collateral currency (default: keep current)")),
+                    ("fee_rate", num_prop("New fee rate (default: keep current)")),
+                ],
+                &[],
+            ),
+            service: "futures-paper",
+            dangerous: false,
+        },
+        McpTool {
+            name: "futures_paper_balance",
+            description: "Show futures paper collateral balance and margin summary.",
+            input_schema: object_schema(vec![], &[]),
+            service: "futures-paper",
+            dangerous: false,
+        },
+        McpTool {
+            name: "futures_paper_status",
+            description: "Show full futures paper account summary: equity, PnL, positions, margin usage.",
+            input_schema: object_schema(vec![], &[]),
+            service: "futures-paper",
+            dangerous: false,
+        },
+        McpTool {
+            name: "futures_paper_buy",
+            description: "Place a futures paper long (buy) order. Supports market, limit, post, stop, take-profit, ioc, trailing-stop, fok order types.",
+            input_schema: object_schema(
+                vec![
+                    ("symbol", str_prop("Futures symbol, e.g. BTCUSDT")),
+                    ("size", str_prop("Order size in base asset")),
+                    ("type", str_prop("Order type: limit, market, post, stop, take-profit, ioc, trailing-stop, fok (default: limit)")),
+                    ("price", str_prop("Limit price (required for limit/post/ioc/fok)")),
+                    ("stop_price", str_prop("Stop/trigger price (required for stop/take-profit/trailing-stop)")),
+                    ("trigger_signal", str_prop("Trigger signal: mark, index, or last")),
+                    ("client_order_id", str_prop("Client order ID")),
+                    ("reduce_only", bool_prop("Reduce-only flag")),
+                    ("leverage", str_prop("Leverage override (1–100)")),
+                    ("trailing_stop_max_deviation", str_prop("Trailing stop max deviation")),
+                    ("trailing_stop_deviation_unit", str_prop("Trailing stop unit: percent or quote_currency")),
+                    ("category", str_prop("Asset category (default: linear)")),
+                ],
+                &["symbol", "size"],
+            ),
+            service: "futures-paper",
+            dangerous: false,
+        },
+        McpTool {
+            name: "futures_paper_sell",
+            description: "Place a futures paper short (sell) order. Supports all 8 order types.",
+            input_schema: object_schema(
+                vec![
+                    ("symbol", str_prop("Futures symbol, e.g. BTCUSDT")),
+                    ("size", str_prop("Order size in base asset")),
+                    ("type", str_prop("Order type: limit, market, post, stop, take-profit, ioc, trailing-stop, fok (default: limit)")),
+                    ("price", str_prop("Limit price")),
+                    ("stop_price", str_prop("Stop/trigger price")),
+                    ("trigger_signal", str_prop("Trigger signal: mark, index, or last")),
+                    ("client_order_id", str_prop("Client order ID")),
+                    ("reduce_only", bool_prop("Reduce-only flag")),
+                    ("leverage", str_prop("Leverage override (1–100)")),
+                    ("trailing_stop_max_deviation", str_prop("Trailing stop max deviation")),
+                    ("trailing_stop_deviation_unit", str_prop("Trailing stop unit: percent or quote_currency")),
+                    ("category", str_prop("Asset category (default: linear)")),
+                ],
+                &["symbol", "size"],
+            ),
+            service: "futures-paper",
+            dangerous: false,
+        },
+        McpTool {
+            name: "futures_paper_orders",
+            description: "Show open futures paper orders. Reconciles against current market prices first.",
+            input_schema: object_schema(
+                vec![("category", str_prop("Asset category (default: linear)"))],
+                &[],
+            ),
+            service: "futures-paper",
+            dangerous: false,
+        },
+        McpTool {
+            name: "futures_paper_order_status",
+            description: "Get the status of a specific open futures paper order by ID.",
+            input_schema: object_schema(
+                vec![("order_id", str_prop("Order ID to query"))],
+                &["order_id"],
+            ),
+            service: "futures-paper",
+            dangerous: false,
+        },
+        McpTool {
+            name: "futures_paper_edit_order",
+            description: "Edit a resting futures paper order (size, price, or stop_price).",
+            input_schema: object_schema(
+                vec![
+                    ("order_id", str_prop("Order ID to edit")),
+                    ("size", str_prop("New size")),
+                    ("price", str_prop("New limit price")),
+                    ("stop_price", str_prop("New stop price")),
+                ],
+                &["order_id"],
+            ),
+            service: "futures-paper",
+            dangerous: false,
+        },
+        McpTool {
+            name: "futures_paper_cancel",
+            description: "Cancel a specific open futures paper order.",
+            input_schema: object_schema(
+                vec![
+                    ("order_id", str_prop("Exchange order ID")),
+                    ("cli_ord_id", str_prop("Client order ID")),
+                ],
+                &[],
+            ),
+            service: "futures-paper",
+            dangerous: false,
+        },
+        McpTool {
+            name: "futures_paper_cancel_all",
+            description: "Cancel all open futures paper orders, optionally filtered by symbol.",
+            input_schema: object_schema(
+                vec![("symbol", str_prop("Filter by symbol (optional)"))],
+                &[],
+            ),
+            service: "futures-paper",
+            dangerous: false,
+        },
+        McpTool {
+            name: "futures_paper_batch_order",
+            description: "Place a batch of futures paper orders from a JSON array string.",
+            input_schema: object_schema(
+                vec![("orders_json", str_prop("JSON array of order objects, or @path to JSON file"))],
+                &["orders_json"],
+            ),
+            service: "futures-paper",
+            dangerous: false,
+        },
+        McpTool {
+            name: "futures_paper_positions",
+            description: "Show open futures paper positions with unrealized PnL and liquidation prices.",
+            input_schema: object_schema(
+                vec![("category", str_prop("Asset category (default: linear)"))],
+                &[],
+            ),
+            service: "futures-paper",
+            dangerous: false,
+        },
+        McpTool {
+            name: "futures_paper_fills",
+            description: "Show futures paper fill history.",
+            input_schema: object_schema(vec![], &[]),
+            service: "futures-paper",
+            dangerous: false,
+        },
+        McpTool {
+            name: "futures_paper_history",
+            description: "Show futures paper account history (realized PnL events, funding payments, liquidations).",
+            input_schema: object_schema(vec![], &[]),
+            service: "futures-paper",
+            dangerous: false,
+        },
+        McpTool {
+            name: "futures_paper_leverage",
+            description: "Get current leverage preferences for futures paper trading.",
+            input_schema: object_schema(
+                vec![("symbol", str_prop("Filter by symbol (optional)"))],
+                &[],
+            ),
+            service: "futures-paper",
+            dangerous: false,
+        },
+        McpTool {
+            name: "futures_paper_set_leverage",
+            description: "Set leverage preference for a symbol in futures paper trading.",
+            input_schema: object_schema(
+                vec![
+                    ("symbol", str_prop("Futures symbol, e.g. BTCUSDT")),
+                    ("leverage", str_prop("Leverage value (1–100)")),
+                ],
+                &["symbol", "leverage"],
+            ),
+            service: "futures-paper",
+            dangerous: false,
+        },
+    ]
+}
+
+// ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
 
@@ -2253,6 +2467,7 @@ pub fn all_tools() -> Vec<McpTool> {
     tools.extend(subaccount_tools());
     tools.extend(futures_tools());
     tools.extend(paper_tools());
+    tools.extend(futures_paper_tools());
     tools.extend(auth_tools());
     tools.extend(ws_tools());
     tools
@@ -3277,6 +3492,128 @@ pub fn tool_to_args(name: &str, p: &Value) -> Option<Vec<String>> {
         }
         "paper_reset" => {
             args.extend(["paper", "reset"].map(String::from));
+        }
+
+        // ----------------------------------------------------------------
+        // futures-paper
+        // ----------------------------------------------------------------
+        "futures_paper_init" => {
+            args.extend(["futures", "paper", "init"].map(String::from));
+            opt!(args, "--balance", gn("balance"));
+            opt!(args, "--currency", gs("currency"));
+            opt!(args, "--fee-rate", gn("fee_rate"));
+            if gb("force") {
+                args.push("--force".to_string());
+            }
+        }
+        "futures_paper_reset" => {
+            args.extend(["futures", "paper", "reset"].map(String::from));
+            opt!(args, "--balance", gn("balance"));
+            opt!(args, "--currency", gs("currency"));
+            opt!(args, "--fee-rate", gn("fee_rate"));
+        }
+        "futures_paper_balance" => {
+            args.extend(["futures", "paper", "balance"].map(String::from));
+        }
+        "futures_paper_status" => {
+            args.extend(["futures", "paper", "status"].map(String::from));
+        }
+        "futures_paper_buy" => {
+            args.extend(["futures", "paper", "buy"].map(String::from));
+            if let Some(sym) = gs("symbol") {
+                args.push(sym);
+            }
+            if let Some(sz) = gs("size") {
+                args.push(sz);
+            }
+            opt!(args, "--type", gs("type"));
+            opt!(args, "--price", gs("price"));
+            opt!(args, "--stop-price", gs("stop_price"));
+            opt!(args, "--trigger-signal", gs("trigger_signal"));
+            opt!(args, "--client-order-id", gs("client_order_id"));
+            opt!(args, "--leverage", gs("leverage"));
+            opt!(args, "--trailing-stop-max-deviation", gs("trailing_stop_max_deviation"));
+            opt!(args, "--trailing-stop-deviation-unit", gs("trailing_stop_deviation_unit"));
+            opt!(args, "--category", gs("category"));
+            if gb("reduce_only") {
+                args.push("--reduce-only".to_string());
+            }
+        }
+        "futures_paper_sell" => {
+            args.extend(["futures", "paper", "sell"].map(String::from));
+            if let Some(sym) = gs("symbol") {
+                args.push(sym);
+            }
+            if let Some(sz) = gs("size") {
+                args.push(sz);
+            }
+            opt!(args, "--type", gs("type"));
+            opt!(args, "--price", gs("price"));
+            opt!(args, "--stop-price", gs("stop_price"));
+            opt!(args, "--trigger-signal", gs("trigger_signal"));
+            opt!(args, "--client-order-id", gs("client_order_id"));
+            opt!(args, "--leverage", gs("leverage"));
+            opt!(args, "--trailing-stop-max-deviation", gs("trailing_stop_max_deviation"));
+            opt!(args, "--trailing-stop-deviation-unit", gs("trailing_stop_deviation_unit"));
+            opt!(args, "--category", gs("category"));
+            if gb("reduce_only") {
+                args.push("--reduce-only".to_string());
+            }
+        }
+        "futures_paper_orders" => {
+            args.extend(["futures", "paper", "orders"].map(String::from));
+            opt!(args, "--category", gs("category"));
+        }
+        "futures_paper_order_status" => {
+            args.extend(["futures", "paper", "order-status"].map(String::from));
+            if let Some(id) = gs("order_id") {
+                args.push(id);
+            }
+        }
+        "futures_paper_edit_order" => {
+            args.extend(["futures", "paper", "edit-order"].map(String::from));
+            opt!(args, "--order-id", gs("order_id"));
+            opt!(args, "--size", gs("size"));
+            opt!(args, "--price", gs("price"));
+            opt!(args, "--stop-price", gs("stop_price"));
+        }
+        "futures_paper_cancel" => {
+            args.extend(["futures", "paper", "cancel"].map(String::from));
+            opt!(args, "--order-id", gs("order_id"));
+            opt!(args, "--cli-ord-id", gs("cli_ord_id"));
+        }
+        "futures_paper_cancel_all" => {
+            args.extend(["futures", "paper", "cancel-all"].map(String::from));
+            opt!(args, "--symbol", gs("symbol"));
+        }
+        "futures_paper_batch_order" => {
+            args.extend(["futures", "paper", "batch-order"].map(String::from));
+            if let Some(json) = gs("orders_json") {
+                args.push(json);
+            }
+        }
+        "futures_paper_positions" => {
+            args.extend(["futures", "paper", "positions"].map(String::from));
+            opt!(args, "--category", gs("category"));
+        }
+        "futures_paper_fills" => {
+            args.extend(["futures", "paper", "fills"].map(String::from));
+        }
+        "futures_paper_history" => {
+            args.extend(["futures", "paper", "history"].map(String::from));
+        }
+        "futures_paper_leverage" => {
+            args.extend(["futures", "paper", "leverage"].map(String::from));
+            opt!(args, "--symbol", gs("symbol"));
+        }
+        "futures_paper_set_leverage" => {
+            args.extend(["futures", "paper", "set-leverage"].map(String::from));
+            if let Some(sym) = gs("symbol") {
+                args.push(sym);
+            }
+            if let Some(lev) = gs("leverage") {
+                args.push(lev);
+            }
         }
 
         // ----------------------------------------------------------------

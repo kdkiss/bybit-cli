@@ -57,7 +57,7 @@ bybit trade buy --symbol BTCUSDT --qty 0.01 --price 50000 -y
 1. **Never use `--yes` without explicit user approval** for withdrawal or transfer commands.
 2. **Always use `--validate` for dry-run checks** before placing real orders.
 3. **Check balances before trading**: `bybit account balance` / `bybit asset balance`.
-4. **Prefer paper trading** for strategy testing: `bybit paper buy/sell`.
+4. **Prefer paper trading** for strategy testing: `bybit paper ...` for spot and `bybit futures paper ...` for perpetual futures.
 5. **Rate limits**: If you see `error: rate_limit`, wait before retrying. The CLI only retries transient network and HTTP 5xx failures automatically, not Bybit rate-limit responses.
 6. **Testnet**: Use `--testnet` flag for all testing. Testnet credentials differ from mainnet.
 
@@ -81,7 +81,9 @@ See `error-catalog.json` for the full error taxonomy and remediation steps.
 > Available via `bybit mcp`. Use `bybit mcp -s all` for the full MCP-visible tool set.
 > Dangerous tools remain visible in guarded mode and require `acknowledged=true` unless started with `--allow-dangerous`.
 
-Persisted local state is shared across CLI and MCP usage: saved credentials, the paper journal, shell history, and the anonymous instance ID survive across tool calls and server restarts until reset or deleted.
+The default service set is `market,account,paper,futures-paper`.
+
+Persisted local state is shared across CLI and MCP usage: saved credentials, the spot paper journal, the futures paper state, shell history, and the anonymous instance ID survive across tool calls and server restarts until reset or deleted.
 
 ## Configuration
 

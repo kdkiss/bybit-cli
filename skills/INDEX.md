@@ -12,6 +12,9 @@ Goal-oriented workflow packages for AI agents and human operators.
 | [account-snapshot](account-snapshot/SKILL.md) | Full account balance and position snapshot |
 | [monitor-funding](monitor-funding/SKILL.md) | Check and stream funding rates |
 | [cancel-all-orders](cancel-all-orders/SKILL.md) | Safely cancel all open orders |
+| [bybit-futures-trading](bybit-futures-trading/SKILL.md) | Manage the live and paper futures order lifecycle |
+| [bybit-paper-strategy](bybit-paper-strategy/SKILL.md) | Test spot strategies on paper trading before going live |
+| [bybit-paper-to-live](bybit-paper-to-live/SKILL.md) | Promote validated paper workflows to live trading with guardrails |
 | [paper-trading-session](paper-trading-session/SKILL.md) | Run a complete paper trading session |
 | [stream-orderbook](stream-orderbook/SKILL.md) | Stream real-time order book data |
 | [transfer-funds](transfer-funds/SKILL.md) | Transfer assets between account types |
@@ -54,6 +57,11 @@ bybit trade buy --symbol BTCUSDT --qty 0.01 --price 50000 --validate
 bybit paper init && bybit paper buy --symbol BTCUSDT --qty 0.1
 bybit paper status
 
+# 3b. Use futures paper trading for leveraged strategy testing
+bybit futures paper init --balance 10000
+bybit futures paper buy BTCUSDT 0.01 --leverage 10 --type market
+bybit futures paper status
+
 # 4. Gate dangerous operations behind explicit confirmation
 bybit trade buy --symbol BTCUSDT --qty 0.01 --price 50000   # prompts user
 bybit trade buy --symbol BTCUSDT --qty 0.01 --price 50000 -y  # skip prompt (automation only)
@@ -64,6 +72,6 @@ bybit trade buy --symbol BTCUSDT --qty 0.01 --price 50000 -y  # skip prompt (aut
 1. **Never use `-y` on withdrawal or transfer commands** without explicit user approval
 2. **Always `--validate`** before placing real orders
 3. **Check balances first**: `bybit account balance` / `bybit asset balance`
-4. **Use paper trading** for strategy development
+4. **Use paper trading** for strategy development: `bybit paper ...` for spot, `bybit futures paper ...` for perpetual futures
 5. **Use `--testnet`** for integration testing
 6. **Set a dead man's switch** when running automated strategies: `bybit trade cancel-after 300`

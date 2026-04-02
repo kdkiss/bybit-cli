@@ -1897,7 +1897,7 @@
     },
     {
       "group": "paper",
-      "description": "Simulated paper trading using live Bybit prices. No real money, no credentials required.",
+      "description": "Simulated spot paper trading using live Bybit prices. No real money, no credentials required.",
       "tools": [
         {
           "name": "paper init",
@@ -2012,6 +2012,202 @@
             { "name": "--slippage-bps", "required": false }
           ],
           "example": "bybit paper reset"
+        }
+      ]
+    },
+    {
+      "group": "futures-paper",
+      "description": "Simulated perpetual futures paper trading using live Bybit public data. No real money, no credentials required.",
+      "tools": [
+        {
+          "name": "futures paper init",
+          "description": "Initialize futures paper trading with starting collateral",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "--balance", "required": false, "default": 10000 },
+            { "name": "--currency", "required": false, "default": "USDT" },
+            { "name": "--fee-rate", "required": false, "default": 0.00055 },
+            { "name": "--force", "required": false, "type": "flag", "note": "Overwrite existing futures paper state" }
+          ],
+          "example": "bybit futures paper init --balance 10000"
+        },
+        {
+          "name": "futures paper reset",
+          "description": "Reset futures paper state to a fresh account",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "--balance", "required": false },
+            { "name": "--currency", "required": false },
+            { "name": "--fee-rate", "required": false }
+          ],
+          "example": "bybit futures paper reset --balance 5000"
+        },
+        {
+          "name": "futures paper balance",
+          "description": "Show collateral balance and margin usage",
+          "auth_required": false,
+          "dangerous": false,
+          "example": "bybit futures paper balance"
+        },
+        {
+          "name": "futures paper status",
+          "description": "Show full futures paper account summary: equity, PnL, positions, and margin",
+          "auth_required": false,
+          "dangerous": false,
+          "example": "bybit futures paper status"
+        },
+        {
+          "name": "futures paper buy",
+          "description": "Place a futures paper long order",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "<SYMBOL>", "required": true },
+            { "name": "<SIZE>", "required": true },
+            { "name": "--type", "required": false, "default": "limit", "values": ["limit", "market", "post", "stop", "take-profit", "ioc", "trailing-stop", "fok"] },
+            { "name": "--price", "required": false },
+            { "name": "--stop-price", "required": false },
+            { "name": "--trigger-signal", "required": false, "values": ["mark", "index", "last"] },
+            { "name": "--client-order-id", "required": false },
+            { "name": "--reduce-only", "required": false, "type": "flag" },
+            { "name": "--leverage", "required": false },
+            { "name": "--trailing-stop-max-deviation", "required": false },
+            { "name": "--trailing-stop-deviation-unit", "required": false, "values": ["percent", "quote_currency"] },
+            { "name": "--category", "required": false, "default": "linear" }
+          ],
+          "example": "bybit futures paper buy BTCUSDT 0.01 --leverage 10 --type market"
+        },
+        {
+          "name": "futures paper sell",
+          "description": "Place a futures paper short order",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "<SYMBOL>", "required": true },
+            { "name": "<SIZE>", "required": true },
+            { "name": "--type", "required": false, "default": "limit", "values": ["limit", "market", "post", "stop", "take-profit", "ioc", "trailing-stop", "fok"] },
+            { "name": "--price", "required": false },
+            { "name": "--stop-price", "required": false },
+            { "name": "--trigger-signal", "required": false, "values": ["mark", "index", "last"] },
+            { "name": "--client-order-id", "required": false },
+            { "name": "--reduce-only", "required": false, "type": "flag" },
+            { "name": "--leverage", "required": false },
+            { "name": "--trailing-stop-max-deviation", "required": false },
+            { "name": "--trailing-stop-deviation-unit", "required": false, "values": ["percent", "quote_currency"] },
+            { "name": "--category", "required": false, "default": "linear" }
+          ],
+          "example": "bybit futures paper sell BTCUSDT 0.01 --type limit --price 95000"
+        },
+        {
+          "name": "futures paper orders",
+          "description": "Show open futures paper orders after reconciliation",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "--category", "required": false, "default": "linear" }
+          ],
+          "example": "bybit futures paper orders"
+        },
+        {
+          "name": "futures paper order-status",
+          "description": "Show one open futures paper order by local order ID",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "<ORDER_ID>", "required": true }
+          ],
+          "example": "bybit futures paper order-status fp-000001"
+        },
+        {
+          "name": "futures paper edit-order",
+          "description": "Edit a resting futures paper order",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "--order-id", "required": true },
+            { "name": "--size", "required": false },
+            { "name": "--price", "required": false },
+            { "name": "--stop-price", "required": false }
+          ],
+          "example": "bybit futures paper edit-order --order-id fp-000001 --price 88000"
+        },
+        {
+          "name": "futures paper cancel",
+          "description": "Cancel a specific futures paper order",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "--order-id", "required": false, "note": "Required if --cli-ord-id is omitted" },
+            { "name": "--cli-ord-id", "required": false, "note": "Required if --order-id is omitted" }
+          ],
+          "example": "bybit futures paper cancel --order-id fp-000001"
+        },
+        {
+          "name": "futures paper cancel-all",
+          "description": "Cancel all open futures paper orders, optionally filtered by symbol",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "--symbol", "required": false }
+          ],
+          "example": "bybit futures paper cancel-all --symbol BTCUSDT"
+        },
+        {
+          "name": "futures paper batch-order",
+          "description": "Place a batch of futures paper orders from a JSON array or @file",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "<ORDERS_JSON>", "required": true, "note": "Inline JSON array or @path/to/file.json" }
+          ],
+          "example": "bybit futures paper batch-order @orders.json"
+        },
+        {
+          "name": "futures paper positions",
+          "description": "Show open futures paper positions with mark-to-market PnL and liquidation prices",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "--category", "required": false, "default": "linear" }
+          ],
+          "example": "bybit futures paper positions"
+        },
+        {
+          "name": "futures paper fills",
+          "description": "Show futures paper fill history",
+          "auth_required": false,
+          "dangerous": false,
+          "example": "bybit futures paper fills"
+        },
+        {
+          "name": "futures paper history",
+          "description": "Show futures paper account history including realized PnL, funding, and liquidations",
+          "auth_required": false,
+          "dangerous": false,
+          "example": "bybit futures paper history"
+        },
+        {
+          "name": "futures paper leverage",
+          "description": "Show leverage preferences for futures paper trading",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "--symbol", "required": false }
+          ],
+          "example": "bybit futures paper leverage --symbol BTCUSDT"
+        },
+        {
+          "name": "futures paper set-leverage",
+          "description": "Set a default leverage preference for a futures paper symbol",
+          "auth_required": false,
+          "dangerous": false,
+          "params": [
+            { "name": "<SYMBOL>", "required": true },
+            { "name": "<LEVERAGE>", "required": true }
+          ],
+          "example": "bybit futures paper set-leverage BTCUSDT 20"
         }
       ]
     },
@@ -2297,7 +2493,7 @@
           "auth_required": false,
           "dangerous": false,
           "params": [
-            { "name": "-s / --services", "required": false, "default": "market,account,paper", "note": "Comma-separated groups, or 'all'" },
+            { "name": "-s / --services", "required": false, "default": "market,account,paper,futures-paper", "note": "Comma-separated groups, or 'all'" },
             { "name": "--allow-dangerous", "required": false, "type": "flag", "note": "Skip per-call confirmation for dangerous tools" }
           ],
           "example": "bybit mcp -s all --allow-dangerous"

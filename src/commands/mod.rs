@@ -5,6 +5,7 @@ pub mod convert;
 pub mod earn;
 pub mod funding;
 pub mod futures;
+pub mod futures_paper;
 pub mod helpers;
 pub mod margin;
 pub mod market;

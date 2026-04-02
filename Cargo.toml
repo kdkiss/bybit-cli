@@ -1,6 +1,6 @@
 [package]
 name = "bybit-cli"
-version = "0.1.2"
+version = "0.1.3"
 edition = "2021"
 description = "Bybit CLI — trade, query, and manage your Bybit account from the terminal"
 license = "MIT"

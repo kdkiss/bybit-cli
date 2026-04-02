@@ -47,7 +47,7 @@ Public market data commands require no authentication.
 - **stderr** carries the JSON error envelope on failure, plus any human-readable progress output
 - **Exit code 0** = success, non-zero = failure
 - **WebSocket commands** emit NDJSON (one JSON object per line)
-- **Paper trading** uses live Bybit prices but no real money or authentication
+- **Spot paper trading** (`bybit paper ...`) and **futures paper trading** (`bybit futures paper ...`) use live Bybit prices but no real money or authentication
 - **`--validate`** dry-runs order commands without submitting them
 - **`-o json`** or `-o table` selects output format (table is default)
 
@@ -99,6 +99,7 @@ Bybit V5 uses a `--category` flag across many commands:
 | `ws` | Mixed | Some private calls |
 | `futures` | Mixed | Some trading calls |
 | `paper` | No | No |
+| `futures paper` | No | No |
 | `auth` | Mixed | No |
 | `setup` | No | No |
 | `shell` | No | No |
@@ -112,8 +113,20 @@ Bybit V5 uses a `--category` flag across many commands:
 - **Never** execute withdrawals, transfers, or position changes without user approval
 - Use `--validate` to dry-run all order commands before executing
 - Gate all `trade`, `funding`, `asset`, and position-modifying operations behind user approval
-- Use paper trading (`bybit paper ...`) for strategy testing
+- Use spot paper trading (`bybit paper ...`) for spot strategy testing
+- Use futures paper trading (`bybit futures paper ...`) for perpetual futures strategy testing
 - Public market commands (`bybit market ...`) are always safe to call
+
+### Futures paper trading (no auth, safe)
+
+```bash
+bybit futures paper init --balance 10000 -o json
+bybit futures paper buy BTCUSDT 0.01 --type market -o json
+bybit futures paper sell BTCUSDT 0.01 --type limit --price 95000 -o json
+bybit futures paper positions -o json
+bybit futures paper status -o json
+bybit futures paper set-leverage BTCUSDT 20
+```
 
 ---
 
@@ -122,7 +135,7 @@ Bybit V5 uses a `--category` flag across many commands:
 The CLI includes a built-in MCP server for LLM tool use:
 
 ```bash
-# Read-only mode (market + account + paper)
+# Read-only mode (market + account + paper + futures-paper)
 bybit mcp
 
 # All services enabled (dangerous calls require acknowledged=true)
@@ -132,7 +145,7 @@ bybit mcp -s all
 bybit mcp -s all --allow-dangerous
 ```
 
-Persisted local state is shared with normal CLI usage: saved credentials, the paper journal, shell history, and the anonymous instance ID persist across MCP tool calls and server restarts until reset or deleted.
+Persisted local state is shared with normal CLI usage: saved credentials, the spot paper journal, the futures paper state, shell history, and the anonymous instance ID persist across MCP tool calls and server restarts until reset or deleted.
 
 ---
 
@@ -197,6 +210,7 @@ src/
   config.rs         — Config file management
   errors.rs         — Error types and categories
   paper.rs          — Paper trading state machine
+  futures_paper.rs  — Futures paper trading engine
   shell.rs          — Interactive REPL
   telemetry.rs      — Anonymous request-identification headers (never API keys, secrets, or HMAC signatures)
   commands/
@@ -209,6 +223,7 @@ src/
     asset.rs        — Asset info, coin balances
     websocket.rs    — WebSocket streaming
     paper.rs        — Paper trading commands
+    futures_paper.rs — Futures paper trading commands
     auth.rs         — Credential management
     utility.rs      — Shell, setup, mcp
     helpers.rs      — Shared helpers

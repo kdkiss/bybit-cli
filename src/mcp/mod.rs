@@ -16,10 +16,11 @@ pub const VALID_SERVICES: &[&str] = &[
     "subaccount",
     "futures",
     "paper",
+    "futures-paper",
     "auth",
 ];
 
-pub const DEFAULT_SERVICES: &str = "market,account,paper";
+pub const DEFAULT_SERVICES: &str = "market,account,paper,futures-paper";
 
 pub fn parse_services(input: &str) -> BybitResult<Vec<String>> {
     let trimmed = input.trim();

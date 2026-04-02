@@ -7,7 +7,7 @@ This file is for AI agents and tool-calling LLMs. Load it at session start to av
 `bybit-cli` — an unofficial community-maintained terminal CLI for the [Bybit V5 API](https://bybit-exchange.github.io/docs/v5/intro).
 
 - Full Bybit V5 REST and WebSocket coverage
-- Built-in paper trading with live prices
+- Built-in spot and futures paper trading with live prices
 - Native MCP server for agent tool-calling
 - Single binary, no runtime dependencies
 
@@ -51,7 +51,7 @@ Credential resolution order: CLI flags > environment variables > platform config
 
 For local development, `bybit-cli` also loads `.env` from the current working directory or any parent directory. Already-exported environment variables keep precedence.
 
-Public market data and paper trading require no credentials.
+Public market data, spot paper trading, and futures paper trading require no credentials.
 
 ## Asset categories
 
@@ -72,6 +72,7 @@ bybit market orderbook --category linear --symbol BTCUSDT --limit 5
 bybit market kline --category linear --symbol BTCUSDT --interval 60
 bybit market funding-rate --category linear --symbol BTCUSDT
 bybit paper status
+bybit futures paper status
 ```
 
 ## Dangerous commands (require confirmation or --yes)
@@ -89,6 +90,8 @@ Use `--validate` on buy/sell for dry-run. Pass `-y` to skip confirmation in auto
 
 ## Paper trading (safe sandbox)
 
+### Spot paper trading
+
 ```bash
 bybit paper init --usdt 10000
 bybit paper buy --symbol BTCUSDT --qty 0.1
@@ -97,6 +100,20 @@ bybit paper orders    # show open limit orders (checks fills)
 bybit paper status    # P&L summary with live prices
 bybit paper reset
 ```
+
+### Futures paper trading
+
+```bash
+bybit futures paper init --balance 10000
+bybit futures paper buy BTCUSDT 0.01 --leverage 10 --type market
+bybit futures paper sell BTCUSDT 0.01 --type stop --stop-price <STOP_PRICE> --trigger-signal mark --reduce-only
+bybit futures paper positions
+bybit futures paper balance
+bybit futures paper status
+bybit futures paper reset
+```
+
+Spot paper and futures paper are independent local simulators with separate state files.
 
 ## Testnet
 
@@ -136,7 +153,7 @@ The CLI retries transient errors (HTTP 5xx, network) up to 3 times with exponent
 
 ## Local state persistence
 
-Saved credentials, the paper journal, shell history, and the anonymous instance ID persist across normal CLI and MCP sessions until reset or deleted.
+Saved credentials, the spot paper journal, the futures paper state, shell history, and the anonymous instance ID persist across normal CLI and MCP sessions until reset or deleted.
 
 ## Full documentation
 

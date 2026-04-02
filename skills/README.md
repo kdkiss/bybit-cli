@@ -12,6 +12,9 @@ Ready-to-use skill templates for common Bybit trading workflows. Each skill docu
 | [account-snapshot](account-snapshot/SKILL.md) | Full account balance and position snapshot |
 | [monitor-funding](monitor-funding/SKILL.md) | Check and stream funding rates |
 | [cancel-all-orders](cancel-all-orders/SKILL.md) | Safely cancel all open orders |
+| [bybit-futures-trading](bybit-futures-trading/SKILL.md) | Manage the live and paper futures order lifecycle |
+| [bybit-paper-strategy](bybit-paper-strategy/SKILL.md) | Test spot strategies on paper trading before going live |
+| [bybit-paper-to-live](bybit-paper-to-live/SKILL.md) | Promote validated paper workflows to live trading with guardrails |
 | [paper-trading-session](paper-trading-session/SKILL.md) | Run a complete paper trading session |
 | [stream-orderbook](stream-orderbook/SKILL.md) | Stream real-time order book data |
 | [transfer-funds](transfer-funds/SKILL.md) | Transfer between account types |
