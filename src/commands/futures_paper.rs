@@ -370,7 +370,7 @@ fn cmd_init(
     }
 
     let fee_rate = fee_rate.unwrap_or(DEFAULT_FUTURES_TAKER_FEE_RATE);
-    if !fee_rate.is_finite() || fee_rate < 0.0 || fee_rate > 0.1 {
+    if !fee_rate.is_finite() || !(0.0..=0.1).contains(&fee_rate) {
         return Err(BybitError::Paper(
             "fee_rate must be between 0 and 0.1 (0% – 10%).".to_string(),
         ));
@@ -491,8 +491,7 @@ async fn cmd_place_order(
         .parse()
         .map_err(|_| BybitError::Paper(format!("Invalid size: {size_str}")))?;
 
-    let order_type =
-        FuturesOrderType::from_str(order_type_str).map_err(|e| BybitError::Paper(e))?;
+    let order_type = FuturesOrderType::from_str(order_type_str).map_err(BybitError::Paper)?;
 
     let price = price_str
         .map(|s| s.parse::<f64>())
@@ -510,9 +509,9 @@ async fn cmd_place_order(
         })?;
 
     let trigger_signal = trigger_signal_str
-        .map(|s| TriggerSignal::from_str(s))
+        .map(TriggerSignal::from_str)
         .transpose()
-        .map_err(|e| BybitError::Paper(e))?;
+        .map_err(BybitError::Paper)?;
 
     let leverage = leverage_str
         .map(|s| s.parse::<f64>())
@@ -524,7 +523,7 @@ async fn cmd_place_order(
     let trailing_max_dev = trailing_max_dev_str
         .map(|s| s.parse::<f64>())
         .transpose()
-        .map_err(|_| BybitError::Paper(format!("Invalid trailing_stop_max_deviation")))?;
+        .map_err(|_| BybitError::Paper("Invalid trailing_stop_max_deviation".to_string()))?;
 
     let market = futures_paper::fetch_market_snapshot(client, category, symbol).await?;
 

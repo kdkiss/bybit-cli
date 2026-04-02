@@ -1166,6 +1166,7 @@ impl FuturesPaperState {
     // Fill application and position netting
     // -----------------------------------------------------------------------
 
+    #[allow(clippy::too_many_arguments)]
     fn apply_fill(
         &mut self,
         fill_id: &str,
@@ -1421,12 +1422,12 @@ impl FuturesPaperState {
             }
             match order.side {
                 Side::Long => {
-                    if order.trailing_anchor.map_or(true, |a| mark < a) {
+                    if order.trailing_anchor.is_none_or(|a| mark < a) {
                         order.trailing_anchor = Some(mark);
                     }
                 }
                 Side::Short => {
-                    if order.trailing_anchor.map_or(true, |a| mark > a) {
+                    if order.trailing_anchor.is_none_or(|a| mark > a) {
                         order.trailing_anchor = Some(mark);
                     }
                 }
