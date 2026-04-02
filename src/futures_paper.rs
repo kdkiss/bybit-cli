@@ -362,9 +362,8 @@ pub fn load_state() -> BybitResult<FuturesPaperState> {
         ));
     }
     let contents = fs::read_to_string(&path)?;
-    let state: FuturesPaperState = serde_json::from_str(&contents).map_err(|e| {
-        BybitError::Parse(format!("Failed to parse futures paper state: {e}"))
-    })?;
+    let state: FuturesPaperState = serde_json::from_str(&contents)
+        .map_err(|e| BybitError::Parse(format!("Failed to parse futures paper state: {e}")))?;
     Ok(state)
 }
 
@@ -469,11 +468,7 @@ impl FuturesPaperState {
         (self.collateral + self.unrealized_pnl(mark_prices) - self.used_margin()).max(0.0)
     }
 
-    pub fn resolve_leverage(
-        &self,
-        order_leverage: Option<f64>,
-        symbol: &str,
-    ) -> BybitResult<f64> {
+    pub fn resolve_leverage(&self, order_leverage: Option<f64>, symbol: &str) -> BybitResult<f64> {
         let lev = order_leverage
             .or_else(|| self.leverage_preferences.get(symbol).copied())
             .unwrap_or(DEFAULT_LEVERAGE);
@@ -575,9 +570,9 @@ impl FuturesPaperState {
         market: &MarketSnapshot,
         mark_prices: &HashMap<String, f64>,
     ) -> BybitResult<OrderPlacementResult> {
-        let price = params.price.ok_or_else(|| {
-            BybitError::Paper("Limit orders require --price".to_string())
-        })?;
+        let price = params
+            .price
+            .ok_or_else(|| BybitError::Paper("Limit orders require --price".to_string()))?;
         validate_finite_positive(price, "price")?;
 
         // Check if immediately fillable
@@ -682,9 +677,9 @@ impl FuturesPaperState {
         leverage: f64,
         market: &MarketSnapshot,
     ) -> BybitResult<OrderPlacementResult> {
-        let price = params.price.ok_or_else(|| {
-            BybitError::Paper("Post orders require --price".to_string())
-        })?;
+        let price = params
+            .price
+            .ok_or_else(|| BybitError::Paper("Post orders require --price".to_string()))?;
         validate_finite_positive(price, "price")?;
 
         // Post-only: cancel if would immediately cross
@@ -699,13 +694,16 @@ impl FuturesPaperState {
                 order_id,
                 status: OrderStatus::Cancelled,
                 fills: vec![],
-                message: Some("Post-only order would cross the spread and was cancelled.".to_string()),
+                message: Some(
+                    "Post-only order would cross the spread and was cancelled.".to_string(),
+                ),
             });
         }
 
         let reserved_margin = params.size * price / leverage;
-        let mark_prices: HashMap<String, f64> =
-            [(params.symbol.to_uppercase(), market.mark)].into_iter().collect();
+        let mark_prices: HashMap<String, f64> = [(params.symbol.to_uppercase(), market.mark)]
+            .into_iter()
+            .collect();
         let available = self.available_margin(&mark_prices);
         if !params.reduce_only && available < reserved_margin {
             return Err(BybitError::Paper(format!(
@@ -753,9 +751,9 @@ impl FuturesPaperState {
         leverage: f64,
         market: &MarketSnapshot,
     ) -> BybitResult<OrderPlacementResult> {
-        let price = params.price.ok_or_else(|| {
-            BybitError::Paper("IOC orders require --price".to_string())
-        })?;
+        let price = params
+            .price
+            .ok_or_else(|| BybitError::Paper("IOC orders require --price".to_string()))?;
         validate_finite_positive(price, "price")?;
 
         let fillable = match params.side {
@@ -769,7 +767,9 @@ impl FuturesPaperState {
                 order_id,
                 status: OrderStatus::Cancelled,
                 fills: vec![],
-                message: Some("IOC order could not fill immediately and was cancelled.".to_string()),
+                message: Some(
+                    "IOC order could not fill immediately and was cancelled.".to_string(),
+                ),
             });
         }
 
@@ -778,8 +778,9 @@ impl FuturesPaperState {
             Side::Short => market.bid.max(price),
         };
 
-        let mark_prices: HashMap<String, f64> =
-            [(params.symbol.to_uppercase(), market.mark)].into_iter().collect();
+        let mark_prices: HashMap<String, f64> = [(params.symbol.to_uppercase(), market.mark)]
+            .into_iter()
+            .collect();
         let available = self.available_margin(&mark_prices);
         let required_margin = params.size * fill_price / leverage;
         if !params.reduce_only && available < required_margin {
@@ -820,9 +821,9 @@ impl FuturesPaperState {
         leverage: f64,
         market: &MarketSnapshot,
     ) -> BybitResult<OrderPlacementResult> {
-        let price = params.price.ok_or_else(|| {
-            BybitError::Paper("FOK orders require --price".to_string())
-        })?;
+        let price = params
+            .price
+            .ok_or_else(|| BybitError::Paper("FOK orders require --price".to_string()))?;
         validate_finite_positive(price, "price")?;
 
         let fillable = match params.side {
@@ -836,7 +837,9 @@ impl FuturesPaperState {
                 order_id,
                 status: OrderStatus::Cancelled,
                 fills: vec![],
-                message: Some("FOK order could not fill in full immediately and was cancelled.".to_string()),
+                message: Some(
+                    "FOK order could not fill in full immediately and was cancelled.".to_string(),
+                ),
             });
         }
 
@@ -869,8 +872,9 @@ impl FuturesPaperState {
             Side::Short => market.bid.max(price),
         };
 
-        let mark_prices: HashMap<String, f64> =
-            [(params.symbol.to_uppercase(), market.mark)].into_iter().collect();
+        let mark_prices: HashMap<String, f64> = [(params.symbol.to_uppercase(), market.mark)]
+            .into_iter()
+            .collect();
         let available = self.available_margin(&mark_prices);
         let required_margin = params.size * fill_price / leverage;
         if !params.reduce_only && available < required_margin {
@@ -912,10 +916,7 @@ impl FuturesPaperState {
         mark_prices: &HashMap<String, f64>,
     ) -> BybitResult<OrderPlacementResult> {
         let stop_price = params.stop_price.ok_or_else(|| {
-            BybitError::Paper(format!(
-                "{} orders require --stop-price",
-                params.order_type
-            ))
+            BybitError::Paper(format!("{} orders require --stop-price", params.order_type))
         })?;
         validate_finite_positive(stop_price, "stop_price")?;
 
@@ -933,7 +934,8 @@ impl FuturesPaperState {
                 .unwrap_or("percent");
             if unit != "percent" && unit != "quote_currency" {
                 return Err(BybitError::Paper(
-                    "trailing_stop_deviation_unit must be 'percent' or 'quote_currency'".to_string(),
+                    "trailing_stop_deviation_unit must be 'percent' or 'quote_currency'"
+                        .to_string(),
                 ));
             }
         }
@@ -1080,8 +1082,7 @@ impl FuturesPaperState {
             .iter()
             .position(|o| {
                 order_id.is_some_and(|id| o.id == id)
-                    || client_order_id
-                        .is_some_and(|cid| o.client_order_id.as_deref() == Some(cid))
+                    || client_order_id.is_some_and(|cid| o.client_order_id.as_deref() == Some(cid))
             })
             .ok_or_else(|| {
                 BybitError::Paper(
@@ -1203,9 +1204,7 @@ impl FuturesPaperState {
                 event_type: "realized_pnl".to_string(),
                 symbol: Some(symbol.to_string()),
                 amount: pnl,
-                details: format!(
-                    "Closed {side} position: {size} @ {price:.4}, PnL = {pnl:.4}"
-                ),
+                details: format!("Closed {side} position: {size} @ {price:.4}, PnL = {pnl:.4}"),
                 timestamp: now_rfc3339(),
             };
             self.history.push(event);
@@ -1299,12 +1298,7 @@ impl FuturesPaperState {
         });
     }
 
-    fn validate_reduce_only(
-        &self,
-        symbol: &str,
-        side: Side,
-        size: f64,
-    ) -> BybitResult<()> {
+    fn validate_reduce_only(&self, symbol: &str, side: Side, size: f64) -> BybitResult<()> {
         let pos = self
             .positions
             .iter()
@@ -1339,17 +1333,8 @@ impl FuturesPaperState {
         let mut result = ReconcileResult::default();
 
         self.reconcile_limit_orders(last_prices, mark_prices, &mut result.fills);
-        self.reconcile_triggered_orders(
-            mark_prices,
-            last_prices,
-            index_prices,
-            &mut result.fills,
-        );
-        self.reconcile_liquidations(
-            mark_prices,
-            maintenance_rates,
-            &mut result.liquidations,
-        );
+        self.reconcile_triggered_orders(mark_prices, last_prices, index_prices, &mut result.fills);
+        self.reconcile_liquidations(mark_prices, maintenance_rates, &mut result.liquidations);
         self.reconcile_funding(funding_rates, mark_prices, &mut result.funding_events);
 
         self.last_reconciled_at = Some(now_rfc3339());
@@ -1711,10 +1696,7 @@ pub fn compute_unrealized_pnl(pos: &FuturesPaperPosition, mark_price: f64) -> f6
     compute_realized_pnl(pos.side, pos.entry_price, mark_price, pos.size)
 }
 
-pub fn compute_liquidation_price(
-    pos: &FuturesPaperPosition,
-    maintenance_margin_rate: f64,
-) -> f64 {
+pub fn compute_liquidation_price(pos: &FuturesPaperPosition, maintenance_margin_rate: f64) -> f64 {
     if pos.entry_price <= 0.0 || pos.leverage <= 0.0 {
         return f64::INFINITY;
     }
@@ -1835,9 +1817,7 @@ pub async fn fetch_market_snapshot(
         .as_array()
         .and_then(|a| a.first())
         .cloned()
-        .ok_or_else(|| {
-            BybitError::Paper(format!("No ticker data for symbol {symbol_upper}"))
-        })?;
+        .ok_or_else(|| BybitError::Paper(format!("No ticker data for symbol {symbol_upper}")))?;
 
     let parse_f = |v: &Value| -> f64 {
         v.as_str()

@@ -3532,8 +3532,16 @@ pub fn tool_to_args(name: &str, p: &Value) -> Option<Vec<String>> {
             opt!(args, "--trigger-signal", gs("trigger_signal"));
             opt!(args, "--client-order-id", gs("client_order_id"));
             opt!(args, "--leverage", gs("leverage"));
-            opt!(args, "--trailing-stop-max-deviation", gs("trailing_stop_max_deviation"));
-            opt!(args, "--trailing-stop-deviation-unit", gs("trailing_stop_deviation_unit"));
+            opt!(
+                args,
+                "--trailing-stop-max-deviation",
+                gs("trailing_stop_max_deviation")
+            );
+            opt!(
+                args,
+                "--trailing-stop-deviation-unit",
+                gs("trailing_stop_deviation_unit")
+            );
             opt!(args, "--category", gs("category"));
             if gb("reduce_only") {
                 args.push("--reduce-only".to_string());
@@ -3553,8 +3561,16 @@ pub fn tool_to_args(name: &str, p: &Value) -> Option<Vec<String>> {
             opt!(args, "--trigger-signal", gs("trigger_signal"));
             opt!(args, "--client-order-id", gs("client_order_id"));
             opt!(args, "--leverage", gs("leverage"));
-            opt!(args, "--trailing-stop-max-deviation", gs("trailing_stop_max_deviation"));
-            opt!(args, "--trailing-stop-deviation-unit", gs("trailing_stop_deviation_unit"));
+            opt!(
+                args,
+                "--trailing-stop-max-deviation",
+                gs("trailing_stop_max_deviation")
+            );
+            opt!(
+                args,
+                "--trailing-stop-deviation-unit",
+                gs("trailing_stop_deviation_unit")
+            );
             opt!(args, "--category", gs("category"));
             if gb("reduce_only") {
                 args.push("--reduce-only".to_string());

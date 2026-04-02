@@ -310,7 +310,12 @@ pub async fn run(
             size,
             price,
             stop_price,
-        } => cmd_edit_order(&order_id, size.as_deref(), price.as_deref(), stop_price.as_deref())?,
+        } => cmd_edit_order(
+            &order_id,
+            size.as_deref(),
+            price.as_deref(),
+            stop_price.as_deref(),
+        )?,
 
         FuturesPaperCommand::Cancel {
             order_id,
@@ -486,8 +491,8 @@ async fn cmd_place_order(
         .parse()
         .map_err(|_| BybitError::Paper(format!("Invalid size: {size_str}")))?;
 
-    let order_type = FuturesOrderType::from_str(order_type_str)
-        .map_err(|e| BybitError::Paper(e))?;
+    let order_type =
+        FuturesOrderType::from_str(order_type_str).map_err(|e| BybitError::Paper(e))?;
 
     let price = price_str
         .map(|s| s.parse::<f64>())
@@ -497,7 +502,12 @@ async fn cmd_place_order(
     let stop_price = stop_price_str
         .map(|s| s.parse::<f64>())
         .transpose()
-        .map_err(|_| BybitError::Paper(format!("Invalid stop_price: {}", stop_price_str.unwrap_or(""))))?;
+        .map_err(|_| {
+            BybitError::Paper(format!(
+                "Invalid stop_price: {}",
+                stop_price_str.unwrap_or("")
+            ))
+        })?;
 
     let trigger_signal = trigger_signal_str
         .map(|s| TriggerSignal::from_str(s))
@@ -507,7 +517,9 @@ async fn cmd_place_order(
     let leverage = leverage_str
         .map(|s| s.parse::<f64>())
         .transpose()
-        .map_err(|_| BybitError::Paper(format!("Invalid leverage: {}", leverage_str.unwrap_or(""))))?;
+        .map_err(|_| {
+            BybitError::Paper(format!("Invalid leverage: {}", leverage_str.unwrap_or("")))
+        })?;
 
     let trailing_max_dev = trailing_max_dev_str
         .map(|s| s.parse::<f64>())
@@ -613,7 +625,12 @@ fn cmd_edit_order(
     let stop_price = stop_price_str
         .map(|s| s.parse::<f64>())
         .transpose()
-        .map_err(|_| BybitError::Paper(format!("Invalid stop_price: {}", stop_price_str.unwrap_or(""))))?;
+        .map_err(|_| {
+            BybitError::Paper(format!(
+                "Invalid stop_price: {}",
+                stop_price_str.unwrap_or("")
+            ))
+        })?;
 
     let _lock = futures_paper::StateLock::acquire()?;
     let mut state = futures_paper::load_state()?;
@@ -733,9 +750,7 @@ async fn cmd_batch_order(client: &BybitClient, orders_json: &str) -> BybitResult
     let state_category = futures_paper::load_state()?.category.clone();
     let mut snapshots: HashMap<String, MarketSnapshot> = HashMap::new();
     for sym in &symbols {
-        if let Ok(snap) =
-            futures_paper::fetch_market_snapshot(client, &state_category, sym).await
-        {
+        if let Ok(snap) = futures_paper::fetch_market_snapshot(client, &state_category, sym).await {
             snapshots.insert(sym.clone(), snap);
         }
     }

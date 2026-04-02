@@ -3,9 +3,9 @@ pub mod client;
 pub mod commands;
 pub mod config;
 pub mod errors;
+pub mod futures_paper;
 pub mod mcp;
 pub mod output;
-pub mod futures_paper;
 pub mod paper;
 pub mod shell;
 pub mod telemetry;
@@ -196,7 +196,11 @@ pub enum Command {
     /// Start MCP server for AI tool use
     Mcp {
         /// Comma-separated service groups to expose, or "all"
-        #[arg(short = 's', long, default_value = "market,account,paper,futures-paper")]
+        #[arg(
+            short = 's',
+            long,
+            default_value = "market,account,paper,futures-paper"
+        )]
         services: String,
         /// Skip per-call confirmation for dangerous tools
         #[arg(long)]
