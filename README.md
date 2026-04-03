@@ -294,7 +294,7 @@ Gemini CLI users can use the included [gemini-extension.json](gemini-extension.j
 ```bash
 bybit mcp                          # read-only (market, account, paper, futures-paper)
 bybit mcp -s all                   # all services, dangerous calls require acknowledged=true
-bybit mcp -s all --allow-dangerous # all services, no per-call confirmation
+bybit mcp -s all --allow-dangerous # all services, autonomous mode (no per-call confirmation)
 bybit mcp -s market,trade,paper,futures-paper
 bybit mcp -s funding,reports,futures,subaccount
 ```
@@ -359,6 +359,7 @@ bybit paper reset --balance 2500 --settle-coin USDC --taker-fee-bps 10 --maker-f
 | `bybit paper balance` | Coin balances with total, reserved, and available |
 | `bybit paper positions` | Open positions |
 | `bybit paper history` | Filled trade history |
+| `bybit paper cancelled` | Cancelled order history |
 | `bybit paper status` | Portfolio value, realized/unrealized P&L, fees, and valuation status |
 | `bybit paper reset` | Reinitialize the paper account, optionally overriding balance, settle coin, fees, or slippage |
 
@@ -411,10 +412,10 @@ All futures paper output includes `"mode": "futures_paper"` in JSON. Spot paper 
 
 ## Commands
 
-The CLI exposes 18 top-level command groups plus the nested `futures paper` simulation namespace under `futures`. For the machine-readable agent/MCP tool surface, load [agents/tool-catalog.json](agents/tool-catalog.json).
+The CLI exposes 18 top-level commands. The `futures paper` simulator is a nested namespace under `futures`. For the machine-readable agent/MCP tool surface, load [agents/tool-catalog.json](agents/tool-catalog.json).
 
-| Group | Auth | Dangerous | Description |
-|-------|------|-----------|-------------|
+| Command | Auth | Dangerous | Description |
+|---------|------|-----------|-------------|
 | market | No | No | Tickers, orderbook, klines, funding, open interest |
 | trade | Yes | Yes | Order placement, amendment, cancellation, batch ops |
 | account | Yes | No | Balances, info, fee rates, transaction log |
@@ -428,10 +429,11 @@ The CLI exposes 18 top-level command groups plus the nested `futures paper` simu
 | futures | Mixed | Mixed | Derivatives-focused market data, trading, positions, streaming, and the nested futures paper simulator |
 | ws | Optional | No | Real-time WebSocket streams |
 | paper | No | No | Spot paper trading simulation |
-| futures paper | No | No | Perpetual futures paper trading simulation |
 | reports | Yes | No | Histories plus Bybit tax export request/status/retrieve workflows |
 | auth | Mixed | No | Credential management |
-| utility | No | No | Setup wizard, interactive shell |
+| setup | No | No | Interactive first-time setup wizard |
+| shell | No | No | Interactive REPL with history and tab completion |
+| mcp | Mixed | Mixed | Start the MCP server with configurable service groups in guarded or autonomous mode |
 
 <details>
 <summary>Full command reference</summary>
@@ -450,12 +452,13 @@ The CLI exposes 18 top-level command groups plus the nested `futures paper` simu
 | `bybit market premium-index-kline ...` | Premium index kline |
 | `bybit market funding-rate --category linear --symbol SYM` | Funding rate history |
 | `bybit market trades --category linear --symbol SYM` | Recent trades |
-| `bybit market open-interest --category linear --symbol SYM --interval 1h` | Open interest |
-| `bybit market volatility [--currency BTC]` | Historical volatility (options) |
+| `bybit market open-interest --category linear --symbol SYM --interval-time 1h` | Open interest |
+| `bybit market volatility [--base-coin BTC]` | Historical volatility (options) |
 | `bybit market insurance [--coin USDT]` | Insurance fund |
 | `bybit market risk-limit --category linear --symbol SYM` | Risk limits |
-| `bybit market delivery-price --category linear` | Delivery price |
+| `bybit market delivery-price --category option [--base-coin BTC]` | Delivery price |
 | `bybit market ls-ratio --category linear --symbol SYM --period 5min` | Long/short ratio |
+| `bybit market spread --category linear --symbol SYM` | Bid-ask spread and spread percentage |
 
 ### Trading
 
@@ -488,6 +491,7 @@ The CLI exposes 18 top-level command groups plus the nested `futures paper` simu
 | `bybit account collateral-info` | Collateral info |
 | `bybit account greeks` | Options greeks |
 | `bybit account volume [--category linear] [--days 30]` | Approximate executed trading volume over a lookback window |
+| `bybit account adl-alert [--category linear] [--symbol SYM]` | ADL risk alerts |
 | `bybit account set-margin-mode --margin-mode REGULAR_MARGIN` | Set margin mode |
 | `bybit account set-spot-hedging --mode ON` | Set spot hedging |
 | `bybit account set-usdc-settlement --coin USDC` | Set UTA settlement coin for USDC products |
@@ -541,11 +545,13 @@ Spot margin activation and leverage changes can be rejected by Bybit until the a
 | `bybit position set-leverage --symbol SYM --buy-leverage N --sell-leverage N` | Set leverage |
 | `bybit position switch-mode --symbol SYM --mode 0` | Switch one-way/hedge |
 | `bybit position set-tpsl --symbol SYM [--take-profit P] [--stop-loss P]` | Set TP/SL |
+| `bybit position trailing-stop --symbol SYM --trailing-stop D` | Set a trailing stop |
 | `bybit position set-risk-limit --symbol SYM --risk-id N` | Set risk limit |
 | `bybit position add-margin --symbol SYM --margin AMT` | Add/reduce margin |
 | `bybit position closed-pnl [--category linear] [--symbol SYM] [--limit N]` | Closed P&L history for supported contract categories |
 | `bybit position move --from-uid UID --to-uid UID --positions '[...]'` | Move positions |
 | `bybit position move-history` | Move position history |
+| `bybit position flatten [--category linear] [--symbol SYM]` | Cancel all orders and close positions in an emergency |
 
 ### Assets
 
@@ -564,6 +570,7 @@ Spot margin activation and leverage changes can be rejected by Bybit until the a
 | `bybit asset deposit-history` | Deposit history |
 | `bybit asset withdraw --coin USDT --chain TRX --address ADDR --amount AMT` | Withdraw |
 | `bybit asset withdraw-history` | Withdrawal history |
+| `bybit asset withdrawal-methods --coin BTC` | Withdrawal networks and fees |
 | `bybit asset cancel-withdraw --id ID` | Cancel pending withdrawal |
 
 ### Funding
@@ -606,6 +613,8 @@ Spot margin activation and leverage changes can be rejected by Bybit until the a
 | `bybit futures tickers [--category linear] [--symbol SYM]` | Futures ticker / 24h stats |
 | `bybit futures orderbook --symbol SYM [--limit 50]` | Futures L2 order book |
 | `bybit futures funding-rate --symbol SYM` | Funding rate history |
+| `bybit futures adl-alert [--category linear] [--symbol SYM]` | Futures ADL risk level |
+| `bybit futures risk-limit [--category linear] [--symbol SYM]` | Futures risk limit tiers |
 | `bybit futures open-interest --symbol SYM --interval-time 1h` | Open interest |
 | `bybit futures positions [--symbol SYM]` | Open futures positions |
 | `bybit futures open-orders [--symbol SYM]` | Open futures orders |
@@ -624,7 +633,14 @@ Spot margin activation and leverage changes can be rejected by Bybit until the a
 | `bybit futures paper status` | Futures paper account summary |
 | `bybit futures paper reset` | Reset futures paper state |
 | `bybit futures ws orderbook --symbol SYM [--depth 50]` | Futures order book stream |
+| `bybit futures ws ticker --symbol SYM` | Futures ticker stream |
+| `bybit futures ws trades --symbol SYM` | Futures public trades stream |
+| `bybit futures ws kline --symbol SYM --interval 1` | Futures kline/OHLCV stream |
+| `bybit futures ws liquidation --symbol SYM` | Futures liquidation stream |
 | `bybit futures ws orders` | Private futures order updates |
+| `bybit futures ws positions` | Private futures position updates |
+| `bybit futures ws executions` | Private futures execution updates |
+| `bybit futures ws wallet` | Private futures wallet updates |
 
 ### Reports
 

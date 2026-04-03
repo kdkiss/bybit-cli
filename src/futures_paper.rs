@@ -1332,6 +1332,7 @@ impl FuturesPaperState {
         maintenance_rates: &HashMap<String, f64>,
     ) -> ReconcileResult {
         let mut result = ReconcileResult::default();
+        self.maintenance_margin_fallback_used = false;
 
         self.reconcile_limit_orders(last_prices, mark_prices, &mut result.fills);
         self.reconcile_triggered_orders(mark_prices, last_prices, index_prices, &mut result.fills);
@@ -1552,10 +1553,13 @@ impl FuturesPaperState {
                 Some(p) if p.is_finite() && *p > 0.0 => *p,
                 _ => continue,
             };
-            let maint_rate = maintenance_rates
-                .get(&pos.symbol)
-                .copied()
-                .unwrap_or(DEFAULT_MAINTENANCE_MARGIN_RATE);
+            let maint_rate = match maintenance_rates.get(&pos.symbol).copied() {
+                Some(rate) if rate.is_finite() && rate > 0.0 => rate,
+                _ => {
+                    self.maintenance_margin_fallback_used = true;
+                    DEFAULT_MAINTENANCE_MARGIN_RATE
+                }
+            };
             let liq_price = compute_liquidation_price(pos, maint_rate);
             if !liq_price.is_finite() || liq_price <= 0.0 {
                 continue;
@@ -1916,11 +1920,13 @@ pub async fn fetch_all_market_data(
     HashMap<String, f64>,
     HashMap<String, f64>,
     HashMap<String, f64>,
+    HashMap<String, f64>,
 )> {
     let mut mark_prices = HashMap::new();
     let mut last_prices = HashMap::new();
     let mut index_prices = HashMap::new();
     let mut funding_rates = HashMap::new();
+    let mut maintenance_rates = HashMap::new();
 
     for symbol in symbols {
         let resp = client
@@ -1941,9 +1947,35 @@ pub async fn fetch_all_market_data(
             index_prices.insert(symbol.clone(), parse(&ticker["indexPrice"]));
             funding_rates.insert(symbol.clone(), parse(&ticker["fundingRate"]));
         }
+
+        if let Ok(risk_resp) = client
+            .public_get(
+                "/v5/market/risk-limit",
+                &[("category", category), ("symbol", symbol.as_str())],
+            )
+            .await
+        {
+            if let Some(maintenance_margin) = risk_resp["list"]
+                .as_array()
+                .and_then(|a| a.first())
+                .and_then(|entry| entry["maintenanceMargin"].as_str())
+                .and_then(|s| s.parse::<f64>().ok())
+            {
+                let normalized = maintenance_margin / 100.0;
+                if normalized.is_finite() && normalized > 0.0 {
+                    maintenance_rates.insert(symbol.clone(), normalized);
+                }
+            }
+        }
     }
 
-    Ok((mark_prices, last_prices, index_prices, funding_rates))
+    Ok((
+        mark_prices,
+        last_prices,
+        index_prices,
+        funding_rates,
+        maintenance_rates,
+    ))
 }
 
 // ---------------------------------------------------------------------------
@@ -1971,10 +2003,17 @@ pub fn order_to_json(order: &FuturesPaperOrder) -> Value {
     })
 }
 
-pub fn position_to_json(pos: &FuturesPaperPosition, mark_price: Option<f64>) -> Value {
+pub fn position_to_json(
+    pos: &FuturesPaperPosition,
+    mark_price: Option<f64>,
+    maintenance_margin_rate: Option<f64>,
+) -> Value {
     let mark = mark_price.unwrap_or(pos.entry_price);
     let upnl = compute_unrealized_pnl(pos, mark);
-    let liq_price = compute_liquidation_price(pos, DEFAULT_MAINTENANCE_MARGIN_RATE);
+    let liq_price = compute_liquidation_price(
+        pos,
+        maintenance_margin_rate.unwrap_or(DEFAULT_MAINTENANCE_MARGIN_RATE),
+    );
     let margin = pos.size * pos.entry_price / pos.leverage;
     json!({
         "symbol": pos.symbol,
@@ -2006,4 +2045,225 @@ pub fn fill_to_json(fill: &FuturesPaperFill) -> Value {
         "client_order_id": fill.client_order_id,
         "filled_at": fill.filled_at,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn test_state() -> FuturesPaperState {
+        FuturesPaperState::new(10_000.0, "USDT", DEFAULT_FUTURES_TAKER_FEE_RATE)
+    }
+
+    fn market_snapshot(bid: f64, ask: f64) -> MarketSnapshot {
+        MarketSnapshot {
+            bid,
+            ask,
+            last: (bid + ask) / 2.0,
+            mark: (bid + ask) / 2.0,
+            index: (bid + ask) / 2.0,
+            ask_levels: vec![(ask, 100.0)],
+            bid_levels: vec![(bid, 100.0)],
+        }
+    }
+
+    fn market_order(symbol: &str, side: Side, size: f64, leverage: f64) -> OrderParams {
+        OrderParams {
+            symbol: symbol.to_string(),
+            side,
+            size,
+            order_type: FuturesOrderType::Market,
+            price: None,
+            stop_price: None,
+            trigger_signal: None,
+            client_order_id: None,
+            reduce_only: false,
+            leverage: Some(leverage),
+            trailing_stop_max_deviation: None,
+            trailing_stop_deviation_unit: None,
+        }
+    }
+
+    fn test_position(symbol: &str) -> FuturesPaperPosition {
+        FuturesPaperPosition {
+            symbol: symbol.to_string(),
+            side: Side::Long,
+            size: 1.0,
+            entry_price: 100.0,
+            leverage: 10.0,
+            unrealized_funding: 0.0,
+            last_funding_time: None,
+            created_at: "2024-01-01T00:00:00Z".to_string(),
+            updated_at: "2024-01-01T00:00:00Z".to_string(),
+        }
+    }
+
+    #[test]
+    fn market_buy_opens_long_position() {
+        let mut state = test_state();
+        let result = state
+            .place_order(
+                market_order("BTCUSDT", Side::Long, 1.5, 10.0),
+                &market_snapshot(99.0, 100.0),
+            )
+            .unwrap();
+
+        assert_eq!(result.status, OrderStatus::Filled);
+        assert_eq!(result.fills.len(), 1);
+        assert_eq!(state.positions.len(), 1);
+        assert_eq!(state.positions[0].side, Side::Long);
+        assert!((state.positions[0].size - 1.5).abs() < 1e-9);
+        assert!((state.positions[0].entry_price - 100.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn same_side_market_orders_aggregate_weighted_entry() {
+        let mut state = FuturesPaperState::new(100_000.0, "USDT", DEFAULT_FUTURES_TAKER_FEE_RATE);
+
+        state
+            .place_order(
+                market_order("BTCUSDT", Side::Long, 1.0, 10.0),
+                &market_snapshot(99.0, 100.0),
+            )
+            .unwrap();
+        state
+            .place_order(
+                market_order("BTCUSDT", Side::Long, 3.0, 10.0),
+                &market_snapshot(109.0, 110.0),
+            )
+            .unwrap();
+
+        assert_eq!(state.positions.len(), 1);
+        assert_eq!(state.positions[0].side, Side::Long);
+        assert!((state.positions[0].size - 4.0).abs() < 1e-9);
+        assert!((state.positions[0].entry_price - 107.5).abs() < 1e-9);
+    }
+
+    #[test]
+    fn opposite_side_market_order_reduces_position_and_realizes_pnl() {
+        let mut state = FuturesPaperState::new(100_000.0, "USDT", DEFAULT_FUTURES_TAKER_FEE_RATE);
+
+        state
+            .place_order(
+                market_order("BTCUSDT", Side::Long, 2.0, 10.0),
+                &market_snapshot(99.0, 100.0),
+            )
+            .unwrap();
+        let result = state
+            .place_order(
+                market_order("BTCUSDT", Side::Short, 1.0, 10.0),
+                &market_snapshot(119.0, 120.0),
+            )
+            .unwrap();
+
+        assert_eq!(state.positions.len(), 1);
+        assert_eq!(state.positions[0].side, Side::Long);
+        assert!((state.positions[0].size - 1.0).abs() < 1e-9);
+        assert_eq!(result.fills.len(), 1);
+        assert_eq!(result.fills[0].realized_pnl, Some(19.0));
+    }
+
+    #[test]
+    fn reduce_only_market_order_requires_opposite_position() {
+        let mut state = test_state();
+        let mut params = market_order("BTCUSDT", Side::Long, 1.0, 10.0);
+        params.reduce_only = true;
+
+        let err = state
+            .place_order(params, &market_snapshot(99.0, 100.0))
+            .unwrap_err();
+
+        assert!(err.to_string().contains("reduce_only"));
+    }
+
+    #[test]
+    fn cancel_order_by_client_order_id_removes_resting_order() {
+        let mut state = test_state();
+        let params = OrderParams {
+            symbol: "BTCUSDT".to_string(),
+            side: Side::Long,
+            size: 1.0,
+            order_type: FuturesOrderType::Limit,
+            price: Some(90.0),
+            stop_price: None,
+            trigger_signal: None,
+            client_order_id: Some("cid-123".to_string()),
+            reduce_only: false,
+            leverage: Some(10.0),
+            trailing_stop_max_deviation: None,
+            trailing_stop_deviation_unit: None,
+        };
+
+        state
+            .place_order(params, &market_snapshot(99.0, 100.0))
+            .unwrap();
+        assert_eq!(state.open_orders.len(), 1);
+
+        let cancelled = state.cancel_order(None, Some("cid-123")).unwrap();
+        assert_eq!(cancelled.status, OrderStatus::Cancelled);
+        assert!(state.open_orders.is_empty());
+    }
+
+    #[test]
+    fn batch_orders_report_missing_market_snapshot() {
+        let mut state = test_state();
+        let results = state.batch_orders(
+            vec![market_order("BTCUSDT", Side::Long, 1.0, 10.0)],
+            &HashMap::new(),
+        );
+
+        assert_eq!(results.len(), 1);
+        assert!(!results[0].success);
+        assert_eq!(
+            results[0].error.as_deref(),
+            Some("No market snapshot available for symbol.")
+        );
+    }
+
+    #[test]
+    fn trailing_stop_quote_currency_unit_triggers_correctly() {
+        let order = FuturesPaperOrder {
+            id: "fp-1".to_string(),
+            symbol: "BTCUSDT".to_string(),
+            side: Side::Long,
+            size: 1.0,
+            filled_size: 0.0,
+            order_type: FuturesOrderType::TrailingStop,
+            price: None,
+            stop_price: Some(100.0),
+            trigger_signal: Some(TriggerSignal::Mark),
+            client_order_id: None,
+            reduce_only: false,
+            leverage: 10.0,
+            reserved_margin: 0.0,
+            status: OrderStatus::Open,
+            trailing_stop_max_deviation: Some(5.0),
+            trailing_stop_deviation_unit: Some("quote_currency".to_string()),
+            trailing_anchor: Some(100.0),
+            created_at: "2024-01-01T00:00:00Z".to_string(),
+            updated_at: "2024-01-01T00:00:00Z".to_string(),
+        };
+
+        assert!(!check_trailing_stop_trigger(&order, 96.0));
+        assert!(check_trailing_stop_trigger(&order, 95.0));
+    }
+
+    #[test]
+    fn position_to_json_uses_custom_maintenance_rate() {
+        let json = position_to_json(&test_position("BTCUSDT"), Some(100.0), Some(0.015));
+        let liq = json["liquidation_price"].as_f64().unwrap();
+        assert!((liq - 91.5).abs() < 1e-9);
+    }
+
+    #[test]
+    fn reconcile_marks_maintenance_fallback_when_rate_missing() {
+        let mut state = FuturesPaperState::new(1000.0, "USDT", DEFAULT_FUTURES_TAKER_FEE_RATE);
+        state.positions.push(test_position("BTCUSDT"));
+
+        let marks = HashMap::from([(String::from("BTCUSDT"), 95.0)]);
+        let empty = HashMap::new();
+        state.reconcile(&marks, &marks, &marks, &empty, &empty);
+
+        assert!(state.maintenance_margin_fallback_used);
+    }
 }

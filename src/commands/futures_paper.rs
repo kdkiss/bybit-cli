@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::str::FromStr;
 
 use clap::Subcommand;
@@ -11,6 +11,12 @@ use crate::futures_paper::{
     MarketSnapshot, OrderParams, Side, TriggerSignal, DEFAULT_FUTURES_TAKER_FEE_RATE, MAX_LEVERAGE,
 };
 use crate::output::{print_output, OutputFormat};
+
+#[derive(Default)]
+struct MarketDataContext {
+    marks: HashMap<String, f64>,
+    maintenance_rates: HashMap<String, f64>,
+}
 
 // ---------------------------------------------------------------------------
 // Subcommand definitions
@@ -427,17 +433,21 @@ fn cmd_balance() -> BybitResult<Value> {
 }
 
 async fn cmd_status(client: &BybitClient) -> BybitResult<Value> {
-    let state = futures_paper::load_state()?;
+    let (state, market_data) = load_state_with_reconciliation(client, None, false).await?;
     let category = state.category.clone();
-    let symbols: Vec<String> = state.positions.iter().map(|p| p.symbol.clone()).collect();
-
-    let mark_prices = if symbols.is_empty() {
-        HashMap::new()
+    let mark_prices = if market_data.marks.is_empty() {
+        let symbols: Vec<String> = state.positions.iter().map(|p| p.symbol.clone()).collect();
+        if symbols.is_empty() {
+            HashMap::new()
+        } else {
+            let (marks, _, _, _, _) =
+                futures_paper::fetch_all_market_data(client, &category, &symbols).await?;
+            marks
+        }
     } else {
-        let (marks, _, _, _) =
-            futures_paper::fetch_all_market_data(client, &category, &symbols).await?;
-        marks
+        market_data.marks
     };
+    let maintenance_rates = market_data.maintenance_rates;
 
     let upnl = state.unrealized_pnl(&mark_prices);
     let position_margin = state.position_margin();
@@ -448,7 +458,13 @@ async fn cmd_status(client: &BybitClient) -> BybitResult<Value> {
     let positions: Vec<Value> = state
         .positions
         .iter()
-        .map(|p| position_to_json(p, mark_prices.get(&p.symbol).copied()))
+        .map(|p| {
+            position_to_json(
+                p,
+                mark_prices.get(&p.symbol).copied(),
+                maintenance_rates.get(&p.symbol).copied(),
+            )
+        })
         .collect();
 
     Ok(json!({
@@ -467,6 +483,7 @@ async fn cmd_status(client: &BybitClient) -> BybitResult<Value> {
         "fills_count": state.fills.len(),
         "created_at": state.created_at,
         "last_reconciled_at": state.last_reconciled_at,
+        "maintenance_margin_fallback_used": state.maintenance_margin_fallback_used,
     }))
 }
 
@@ -563,29 +580,7 @@ async fn cmd_place_order(
 }
 
 async fn cmd_orders(client: &BybitClient, category: &str) -> BybitResult<Value> {
-    // Reconcile first
-    {
-        let _lock = futures_paper::StateLock::acquire()?;
-        let mut state = futures_paper::load_state()?;
-        let symbols: Vec<String> = state
-            .open_orders
-            .iter()
-            .map(|o| o.symbol.clone())
-            .collect::<std::collections::HashSet<_>>()
-            .into_iter()
-            .collect();
-
-        if !symbols.is_empty() {
-            if let Ok((marks, lasts, indexes, fundings)) =
-                futures_paper::fetch_all_market_data(client, category, &symbols).await
-            {
-                state.reconcile(&marks, &lasts, &indexes, &fundings, &HashMap::new());
-                let _ = futures_paper::save_state(&state);
-            }
-        }
-    }
-
-    let state = futures_paper::load_state()?;
+    let (state, _) = load_state_with_reconciliation(client, Some(category), true).await?;
     let orders: Vec<Value> = state.open_orders.iter().map(order_to_json).collect();
     Ok(json!({
         "mode": "futures_paper",
@@ -692,50 +687,7 @@ async fn cmd_batch_order(client: &BybitClient, orders_json: &str) -> BybitResult
 
     let mut params_list: Vec<OrderParams> = Vec::new();
     for (i, item) in raw.iter().enumerate() {
-        let symbol = item["symbol"]
-            .as_str()
-            .ok_or_else(|| BybitError::Paper(format!("Order {i}: missing symbol")))?
-            .to_uppercase();
-        let side_str = item["side"]
-            .as_str()
-            .ok_or_else(|| BybitError::Paper(format!("Order {i}: missing side")))?;
-        let side = Side::from_buy_sell(side_str)
-            .ok_or_else(|| BybitError::Paper(format!("Order {i}: invalid side: {side_str}")))?;
-        let size: f64 = item["size"]
-            .as_str()
-            .and_then(|s| s.parse().ok())
-            .or_else(|| item["size"].as_f64())
-            .ok_or_else(|| BybitError::Paper(format!("Order {i}: missing/invalid size")))?;
-        let order_type_str = item["type"].as_str().unwrap_or("limit");
-        let order_type = FuturesOrderType::from_str(order_type_str)
-            .map_err(|e| BybitError::Paper(format!("Order {i}: {e}")))?;
-        let price = item["price"]
-            .as_str()
-            .and_then(|s| s.parse().ok())
-            .or_else(|| item["price"].as_f64());
-        let stop_price = item["stop_price"]
-            .as_str()
-            .and_then(|s| s.parse().ok())
-            .or_else(|| item["stop_price"].as_f64());
-        let leverage = item["leverage"]
-            .as_str()
-            .and_then(|s| s.parse().ok())
-            .or_else(|| item["leverage"].as_f64());
-
-        params_list.push(OrderParams {
-            symbol,
-            side,
-            size,
-            order_type,
-            price,
-            stop_price,
-            trigger_signal: None,
-            client_order_id: item["client_order_id"].as_str().map(str::to_string),
-            reduce_only: item["reduce_only"].as_bool().unwrap_or(false),
-            leverage,
-            trailing_stop_max_deviation: None,
-            trailing_stop_deviation_unit: None,
-        });
+        params_list.push(parse_batch_order_params(item, i)?);
     }
 
     // Collect unique symbols and fetch market snapshots
@@ -781,27 +733,29 @@ async fn cmd_batch_order(client: &BybitClient, orders_json: &str) -> BybitResult
 }
 
 async fn cmd_positions(client: &BybitClient, category: &str) -> BybitResult<Value> {
-    let state = futures_paper::load_state()?;
-    let symbols: Vec<String> = state.positions.iter().map(|p| p.symbol.clone()).collect();
-
-    let mark_prices = if symbols.is_empty() {
-        HashMap::new()
-    } else {
-        let (marks, _, _, _) =
-            futures_paper::fetch_all_market_data(client, category, &symbols).await?;
-        marks
-    };
+    let (state, market_data) =
+        load_state_with_reconciliation(client, Some(category), false).await?;
+    let mark_prices = market_data.marks;
+    let maintenance_rates = market_data.maintenance_rates;
 
     let positions: Vec<Value> = state
         .positions
         .iter()
-        .map(|p| position_to_json(p, mark_prices.get(&p.symbol).copied()))
+        .map(|p| {
+            position_to_json(
+                p,
+                mark_prices.get(&p.symbol).copied(),
+                maintenance_rates.get(&p.symbol).copied(),
+            )
+        })
         .collect();
 
     Ok(json!({
         "mode": "futures_paper",
         "positions": positions,
         "count": positions.len(),
+        "last_reconciled_at": state.last_reconciled_at,
+        "maintenance_margin_fallback_used": state.maintenance_margin_fallback_used,
     }))
 }
 
@@ -897,4 +851,352 @@ fn cmd_set_leverage(symbol: &str, leverage_str: &str) -> BybitResult<Value> {
 
 pub fn futures_paper_state_path() -> BybitResult<std::path::PathBuf> {
     futures_paper::futures_paper_state_path()
+}
+
+fn collect_reconciliation_symbols(state: &FuturesPaperState) -> Vec<String> {
+    state
+        .positions
+        .iter()
+        .map(|p| p.symbol.clone())
+        .chain(state.open_orders.iter().map(|o| o.symbol.clone()))
+        .collect::<HashSet<_>>()
+        .into_iter()
+        .collect()
+}
+
+async fn load_state_with_reconciliation(
+    client: &BybitClient,
+    category_override: Option<&str>,
+    tolerate_fetch_errors: bool,
+) -> BybitResult<(FuturesPaperState, MarketDataContext)> {
+    let _lock = futures_paper::StateLock::acquire()?;
+    let mut state = futures_paper::load_state()?;
+    let symbols = collect_reconciliation_symbols(&state);
+
+    if symbols.is_empty() {
+        if state.maintenance_margin_fallback_used {
+            state.maintenance_margin_fallback_used = false;
+            futures_paper::save_state(&state)?;
+        }
+        return Ok((state, MarketDataContext::default()));
+    }
+
+    let category = category_override.unwrap_or(&state.category);
+    let market_data = match futures_paper::fetch_all_market_data(client, category, &symbols).await {
+        Ok((marks, lasts, indexes, fundings, maintenance_rates)) => {
+            state.reconcile(&marks, &lasts, &indexes, &fundings, &maintenance_rates);
+            futures_paper::save_state(&state)?;
+            MarketDataContext {
+                marks,
+                maintenance_rates,
+            }
+        }
+        Err(_err) if tolerate_fetch_errors => MarketDataContext::default(),
+        Err(err) => return Err(err),
+    };
+
+    Ok((state, market_data))
+}
+
+fn parse_batch_number(item: &Value, field: &str, index: usize) -> BybitResult<Option<f64>> {
+    let Some(value) = item.get(field) else {
+        return Ok(None);
+    };
+
+    let parsed = match value {
+        Value::Null => return Ok(None),
+        Value::String(s) => s
+            .parse::<f64>()
+            .map_err(|_| BybitError::Paper(format!("Order {index}: invalid {field}: {s}")))?,
+        Value::Number(n) => n.as_f64().ok_or_else(|| {
+            BybitError::Paper(format!("Order {index}: invalid numeric field {field}"))
+        })?,
+        _ => {
+            return Err(BybitError::Paper(format!(
+                "Order {index}: {field} must be a string or number"
+            )))
+        }
+    };
+
+    if !parsed.is_finite() {
+        return Err(BybitError::Paper(format!(
+            "Order {index}: {field} must be finite"
+        )));
+    }
+
+    Ok(Some(parsed))
+}
+
+fn parse_batch_order_params(item: &Value, index: usize) -> BybitResult<OrderParams> {
+    let symbol = item["symbol"]
+        .as_str()
+        .ok_or_else(|| BybitError::Paper(format!("Order {index}: missing symbol")))?
+        .to_uppercase();
+    let side_str = item["side"]
+        .as_str()
+        .ok_or_else(|| BybitError::Paper(format!("Order {index}: missing side")))?;
+    let side = Side::from_buy_sell(side_str)
+        .ok_or_else(|| BybitError::Paper(format!("Order {index}: invalid side: {side_str}")))?;
+    let size = parse_batch_number(item, "size", index)?
+        .ok_or_else(|| BybitError::Paper(format!("Order {index}: missing size")))?;
+    let order_type_str = item["type"].as_str().unwrap_or("limit");
+    let order_type = FuturesOrderType::from_str(order_type_str)
+        .map_err(|e| BybitError::Paper(format!("Order {index}: {e}")))?;
+    let price = parse_batch_number(item, "price", index)?;
+    let stop_price = parse_batch_number(item, "stop_price", index)?;
+    let leverage = parse_batch_number(item, "leverage", index)?;
+    let trigger_signal = match item.get("trigger_signal") {
+        Some(Value::String(s)) => Some(
+            TriggerSignal::from_str(s)
+                .map_err(|e| BybitError::Paper(format!("Order {index}: {e}")))?,
+        ),
+        Some(Value::Null) | None => None,
+        Some(_) => {
+            return Err(BybitError::Paper(format!(
+                "Order {index}: trigger_signal must be a string"
+            )))
+        }
+    };
+    let trailing_stop_max_deviation =
+        parse_batch_number(item, "trailing_stop_max_deviation", index)?;
+    let trailing_stop_deviation_unit = match item.get("trailing_stop_deviation_unit") {
+        Some(Value::String(s)) => {
+            if s != "percent" && s != "quote_currency" {
+                return Err(BybitError::Paper(format!(
+                    "Order {index}: trailing_stop_deviation_unit must be 'percent' or 'quote_currency'"
+                )));
+            }
+            Some(s.to_string())
+        }
+        Some(Value::Null) | None => None,
+        Some(_) => {
+            return Err(BybitError::Paper(format!(
+                "Order {index}: trailing_stop_deviation_unit must be a string"
+            )))
+        }
+    };
+
+    Ok(OrderParams {
+        symbol,
+        side,
+        size,
+        order_type,
+        price,
+        stop_price,
+        trigger_signal,
+        client_order_id: item["client_order_id"].as_str().map(str::to_string),
+        reduce_only: item["reduce_only"].as_bool().unwrap_or(false),
+        leverage,
+        trailing_stop_max_deviation,
+        trailing_stop_deviation_unit,
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use std::ffi::OsString;
+    use std::sync::{Mutex, OnceLock};
+
+    use tempfile::TempDir;
+    use wiremock::matchers::{method, path, query_param};
+    use wiremock::{Mock, MockServer, ResponseTemplate};
+
+    use super::*;
+    use crate::futures_paper::{load_state, save_state, FuturesPaperPosition};
+
+    static ENV_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+
+    struct ConfigDirGuard {
+        previous: Option<OsString>,
+    }
+
+    impl ConfigDirGuard {
+        fn set(path: &std::path::Path) -> Self {
+            let previous = std::env::var_os("BYBIT_CONFIG_DIR");
+            std::env::set_var("BYBIT_CONFIG_DIR", path);
+            Self { previous }
+        }
+    }
+
+    impl Drop for ConfigDirGuard {
+        fn drop(&mut self) {
+            if let Some(previous) = self.previous.take() {
+                std::env::set_var("BYBIT_CONFIG_DIR", previous);
+            } else {
+                std::env::remove_var("BYBIT_CONFIG_DIR");
+            }
+        }
+    }
+
+    fn test_client(server: &MockServer) -> BybitClient {
+        BybitClient::new(false, Some(&server.uri()), None, None, None).unwrap()
+    }
+
+    fn funding_ticker_response(symbol: &str, mark: &str, funding_rate: &str) -> Value {
+        json!({
+            "retCode": 0,
+            "retMsg": "OK",
+            "result": {
+                "list": [{
+                    "symbol": symbol,
+                    "bid1Price": mark,
+                    "ask1Price": mark,
+                    "lastPrice": mark,
+                    "markPrice": mark,
+                    "indexPrice": mark,
+                    "fundingRate": funding_rate
+                }]
+            },
+            "time": 1700000000000u64
+        })
+    }
+
+    fn risk_limit_response(symbol: &str, maintenance_margin: &str) -> Value {
+        json!({
+            "retCode": 0,
+            "retMsg": "OK",
+            "result": {
+                "list": [{
+                    "symbol": symbol,
+                    "maintenanceMargin": maintenance_margin
+                }]
+            },
+            "time": 1700000000000u64
+        })
+    }
+
+    #[test]
+    fn parse_batch_order_params_keeps_trigger_and_trailing_fields() {
+        let item = json!({
+            "symbol": "BTCUSDT",
+            "side": "buy",
+            "size": "1.25",
+            "type": "trailing-stop",
+            "stop_price": "90000",
+            "trigger_signal": "index",
+            "leverage": "10",
+            "trailing_stop_max_deviation": "1.5",
+            "trailing_stop_deviation_unit": "quote_currency",
+            "client_order_id": "cid-1",
+            "reduce_only": true
+        });
+
+        let params = parse_batch_order_params(&item, 0).unwrap();
+
+        assert_eq!(params.symbol, "BTCUSDT");
+        assert_eq!(params.trigger_signal, Some(TriggerSignal::Index));
+        assert_eq!(params.trailing_stop_max_deviation, Some(1.5));
+        assert_eq!(
+            params.trailing_stop_deviation_unit.as_deref(),
+            Some("quote_currency")
+        );
+        assert_eq!(params.leverage, Some(10.0));
+        assert!(params.reduce_only);
+    }
+
+    #[allow(clippy::await_holding_lock)]
+    #[tokio::test]
+    async fn cmd_status_reconciles_funding_before_rendering() {
+        let _env_lock = ENV_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap();
+        let temp = TempDir::new().unwrap();
+        let _config_guard = ConfigDirGuard::set(temp.path());
+        let server = MockServer::start().await;
+
+        Mock::given(method("GET"))
+            .and(path("/v5/market/tickers"))
+            .and(query_param("category", "linear"))
+            .and(query_param("symbol", "BTCUSDT"))
+            .respond_with(
+                ResponseTemplate::new(200)
+                    .set_body_json(funding_ticker_response("BTCUSDT", "100", "0.001")),
+            )
+            .mount(&server)
+            .await;
+
+        Mock::given(method("GET"))
+            .and(path("/v5/market/risk-limit"))
+            .and(query_param("category", "linear"))
+            .and(query_param("symbol", "BTCUSDT"))
+            .respond_with(
+                ResponseTemplate::new(200).set_body_json(risk_limit_response("BTCUSDT", "0.5")),
+            )
+            .mount(&server)
+            .await;
+
+        let mut state = FuturesPaperState::new(1000.0, "USDT", DEFAULT_FUTURES_TAKER_FEE_RATE);
+        state.positions.push(FuturesPaperPosition {
+            symbol: "BTCUSDT".to_string(),
+            side: Side::Long,
+            size: 1.0,
+            entry_price: 100.0,
+            leverage: 10.0,
+            unrealized_funding: 0.0,
+            last_funding_time: None,
+            created_at: "2024-01-01T00:00:00Z".to_string(),
+            updated_at: "2024-01-01T00:00:00Z".to_string(),
+        });
+        save_state(&state).unwrap();
+
+        let result = cmd_status(&test_client(&server)).await.unwrap();
+        let collateral = result["collateral"].as_f64().unwrap();
+        assert!((collateral - 999.9).abs() < 1e-9);
+        assert_eq!(result["maintenance_margin_fallback_used"], false);
+
+        let persisted = load_state().unwrap();
+        assert_eq!(persisted.history.len(), 1);
+        assert!(persisted.last_reconciled_at.is_some());
+    }
+
+    #[allow(clippy::await_holding_lock)]
+    #[tokio::test]
+    async fn cmd_positions_uses_fetched_maintenance_margin() {
+        let _env_lock = ENV_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap();
+        let temp = TempDir::new().unwrap();
+        let _config_guard = ConfigDirGuard::set(temp.path());
+        let server = MockServer::start().await;
+
+        Mock::given(method("GET"))
+            .and(path("/v5/market/tickers"))
+            .and(query_param("category", "linear"))
+            .and(query_param("symbol", "BTCUSDT"))
+            .respond_with(
+                ResponseTemplate::new(200)
+                    .set_body_json(funding_ticker_response("BTCUSDT", "100", "0")),
+            )
+            .mount(&server)
+            .await;
+
+        Mock::given(method("GET"))
+            .and(path("/v5/market/risk-limit"))
+            .and(query_param("category", "linear"))
+            .and(query_param("symbol", "BTCUSDT"))
+            .respond_with(
+                ResponseTemplate::new(200).set_body_json(risk_limit_response("BTCUSDT", "1.5")),
+            )
+            .mount(&server)
+            .await;
+
+        let mut state = FuturesPaperState::new(1000.0, "USDT", DEFAULT_FUTURES_TAKER_FEE_RATE);
+        state.positions.push(FuturesPaperPosition {
+            symbol: "BTCUSDT".to_string(),
+            side: Side::Long,
+            size: 1.0,
+            entry_price: 100.0,
+            leverage: 10.0,
+            unrealized_funding: 0.0,
+            last_funding_time: Some("2024-01-01T00:00:00Z".to_string()),
+            created_at: "2024-01-01T00:00:00Z".to_string(),
+            updated_at: "2024-01-01T00:00:00Z".to_string(),
+        });
+        save_state(&state).unwrap();
+
+        let result = cmd_positions(&test_client(&server), "linear")
+            .await
+            .unwrap();
+        let liq_price = result["positions"][0]["liquidation_price"]
+            .as_f64()
+            .unwrap();
+        assert!((liq_price - 91.5).abs() < 1e-9);
+        assert_eq!(result["maintenance_margin_fallback_used"], false);
+    }
 }

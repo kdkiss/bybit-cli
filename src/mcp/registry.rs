@@ -8,13 +8,15 @@ use super::schema::{bool_prop, enum_prop, int_prop, num_prop, object_schema, str
 // Tool descriptor
 // ---------------------------------------------------------------------------
 
+#[derive(Clone)]
 pub struct McpTool {
     pub name: &'static str,
     pub description: &'static str,
     pub input_schema: Value,
     /// Which service group this tool belongs to (market / account / trade / position / asset / funding / reports / subaccount / futures / paper / auth)
     pub service: &'static str,
-    /// Dangerous tools are hidden unless `allow_dangerous` is set
+    /// In guarded mode, dangerous tools stay visible but require
+    /// `acknowledged=true`. `--allow-dangerous` removes the per-call gate.
     pub dangerous: bool,
 }
 

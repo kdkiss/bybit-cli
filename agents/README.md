@@ -79,7 +79,7 @@ See `error-catalog.json` for the full error taxonomy and remediation steps.
 ## MCP Server
 
 > Available via `bybit mcp`. Use `bybit mcp -s all` for the full MCP-visible tool set.
-> Dangerous tools remain visible in guarded mode and require `acknowledged=true` unless started with `--allow-dangerous`.
+> Dangerous tools remain visible in guarded mode and require `acknowledged=true` unless started with `--allow-dangerous` for autonomous mode.
 
 The default service set is `market,account,paper,futures-paper`.
 

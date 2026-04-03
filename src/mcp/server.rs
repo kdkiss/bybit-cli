@@ -27,6 +27,8 @@ use super::{
 const MCP_TRANSPORT: &str = "stdio";
 const DANGEROUS_GATE_ERROR: &str =
     "This operation modifies account state. Set \"acknowledged\": true to proceed, or start the server with --allow-dangerous.";
+const MCP_SERVER_STACK_SIZE: usize = 32 * 1024 * 1024;
+const MCP_REGISTRY_STACK_SIZE: usize = 32 * 1024 * 1024;
 
 #[derive(Debug, Default, Clone)]
 struct SessionMetadata {
@@ -39,8 +41,34 @@ pub async fn run_mcp_server(
     services: &str,
     allow_dangerous: bool,
 ) -> BybitResult<()> {
+    let services = services.to_string();
+    let handle = std::thread::Builder::new()
+        .name("bybit-mcp-main".to_string())
+        .stack_size(MCP_SERVER_STACK_SIZE)
+        .spawn(move || {
+            let runtime = tokio::runtime::Builder::new_current_thread()
+                .enable_all()
+                .build()
+                .map_err(|error| {
+                    BybitError::Config(format!("Failed to build MCP server runtime: {error}"))
+                })?;
+            runtime.block_on(run_mcp_server_inner(ctx, &services, allow_dangerous))
+        })
+        .map_err(|error| {
+            BybitError::Config(format!("Failed to start MCP server thread: {error}"))
+        })?;
+
+    tokio::task::block_in_place(|| handle.join())
+        .map_err(|_| BybitError::Config("MCP server thread panicked".to_string()))?
+}
+
+async fn run_mcp_server_inner(
+    ctx: AppContext,
+    services: &str,
+    allow_dangerous: bool,
+) -> BybitResult<()> {
     let enabled_services = parse_services(services)?;
-    let server = BybitMcpServer::new(ctx, enabled_services, allow_dangerous);
+    let server = BybitMcpServer::new(ctx, enabled_services, allow_dangerous)?;
     let mode_label = if allow_dangerous {
         "autonomous"
     } else {
@@ -70,6 +98,7 @@ pub async fn run_mcp_server(
 
 struct BybitMcpServer {
     ctx: Arc<AppContext>,
+    tools: Vec<McpTool>,
     enabled_services: Vec<String>,
     allow_dangerous: bool,
     instructions: String,
@@ -77,23 +106,29 @@ struct BybitMcpServer {
 }
 
 impl BybitMcpServer {
-    fn new(ctx: AppContext, enabled_services: Vec<String>, allow_dangerous: bool) -> Self {
+    fn new(
+        ctx: AppContext,
+        enabled_services: Vec<String>,
+        allow_dangerous: bool,
+    ) -> BybitResult<Self> {
+        let tools = build_registered_tools()?;
         let instructions = build_instructions(&enabled_services, allow_dangerous);
-        Self {
+        Ok(Self {
             ctx: Arc::new(ctx),
+            tools,
             enabled_services,
             allow_dangerous,
             instructions,
             session: Mutex::new(SessionMetadata::default()),
-        }
+        })
     }
 
     fn tool_count(&self) -> usize {
         self.filtered_tools().count()
     }
 
-    fn filtered_tools(&self) -> impl Iterator<Item = McpTool> + '_ {
-        all_tools().into_iter().filter(|tool| {
+    fn filtered_tools(&self) -> impl Iterator<Item = &McpTool> + '_ {
+        self.tools.iter().filter(|tool| {
             self.enabled_services
                 .iter()
                 .any(|service| service == tool.service)
@@ -122,7 +157,7 @@ impl BybitMcpServer {
             .collect()
     }
 
-    fn find_tool(&self, name: &str) -> Option<McpTool> {
+    fn find_tool(&self, name: &str) -> Option<&McpTool> {
         self.filtered_tools().find(|tool| tool.name == name)
     }
 
@@ -162,6 +197,22 @@ impl BybitMcpServer {
             .await
             .map_err(|msg| ("subprocess_failed", msg))
     }
+}
+
+fn build_registered_tools() -> BybitResult<Vec<McpTool>> {
+    let handle = std::thread::Builder::new()
+        .name("bybit-mcp-registry".to_string())
+        .stack_size(MCP_REGISTRY_STACK_SIZE)
+        .spawn(all_tools)
+        .map_err(|error| {
+            BybitError::Config(format!(
+                "Failed to start MCP registry builder thread: {error}"
+            ))
+        })?;
+
+    handle
+        .join()
+        .map_err(|_| BybitError::Config("MCP tool registry build panicked".to_string()))
 }
 
 impl ServerHandler for BybitMcpServer {
@@ -456,6 +507,7 @@ mod tests {
             vec!["trade".to_string()],
             false,
         )
+        .expect("test MCP server should build")
     }
 
     #[test]

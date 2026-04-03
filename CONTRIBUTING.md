@@ -30,6 +30,7 @@ cargo audit -D warnings
 -   Keep PRs focused on a single feature or bug fix.
 -   Update `README.md` and `skills/` if you add new commands or workflows.
 -   If you add a new CLI command, make sure to also update the MCP registry in `src/mcp/registry.rs`.
+-   Run `cargo test --test doc_sync` after command-surface or documentation changes. Use `cargo run --example command_inventory` to inspect the live clap command inventory when updating docs.
 
 ## 📜 Unofficial Status
 

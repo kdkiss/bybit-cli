@@ -4,6 +4,8 @@ use bybit_cli::{
     dispatch, env_flag, has_option_flag, has_switch_flag, resolve_cli_api_secret, AppContext, Cli,
 };
 
+const CLI_MAIN_STACK_SIZE: usize = 32 * 1024 * 1024;
+
 fn exit_with_error(e: bybit_cli::errors::BybitError) -> ! {
     let json = e.to_json();
     eprintln!(
@@ -14,6 +16,26 @@ fn exit_with_error(e: bybit_cli::errors::BybitError) -> ! {
 }
 
 fn main() {
+    let handle = std::thread::Builder::new()
+        .name("bybit-main".to_string())
+        .stack_size(CLI_MAIN_STACK_SIZE)
+        .spawn(run)
+        .unwrap_or_else(|error| {
+            exit_with_error(bybit_cli::errors::BybitError::Io(std::io::Error::other(
+                format!("Failed to start CLI thread: {error}"),
+            )))
+        });
+
+    match handle.join() {
+        Ok(Ok(())) => {}
+        Ok(Err(error)) => exit_with_error(error),
+        Err(_) => exit_with_error(bybit_cli::errors::BybitError::Io(std::io::Error::other(
+            "CLI thread panicked",
+        ))),
+    }
+}
+
+fn run() -> Result<(), bybit_cli::errors::BybitError> {
     // Load .env from the current directory or any parent directory.
     // Already-exported shell variables keep precedence (dotenv() does not override).
     dotenvy::dotenv().ok();
@@ -23,7 +45,7 @@ fn main() {
         let mut cmd = Cli::command();
         let _ = cmd.print_help();
         println!();
-        return;
+        return Ok(());
     }
 
     let cli = Cli::parse();
@@ -40,7 +62,7 @@ fn main() {
         cli.api_secret_file.as_deref(),
     ) {
         Ok(secret) => secret,
-        Err(e) => exit_with_error(e),
+        Err(e) => return Err(e),
     };
     let api_secret_from_input = api_secret.is_some();
 
@@ -109,7 +131,6 @@ fn main() {
             )))
         });
 
-    if let Err(e) = runtime.block_on(dispatch(ctx, command)) {
-        exit_with_error(e);
-    }
+    runtime.block_on(dispatch(ctx, command))?;
+    Ok(())
 }

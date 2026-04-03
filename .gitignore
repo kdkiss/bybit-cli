@@ -100,3 +100,5 @@ scripts/
 artifacts/
 TASK.md
 .kilocode/mcp.json
+TODO_FIX.local
+BINANCE_CLI.local

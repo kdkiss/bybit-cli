@@ -1,5 +1,6 @@
 pub mod auth;
 pub mod client;
+pub mod command_inventory;
 pub mod commands;
 pub mod config;
 pub mod errors;
