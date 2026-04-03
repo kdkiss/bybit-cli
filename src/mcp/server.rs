@@ -153,7 +153,7 @@ impl BybitMcpServer {
 
     fn tool_definitions(&self) -> Vec<Tool> {
         self.filtered_tools()
-            .map(|tool| self.build_tool_definition(&tool))
+            .map(|tool| self.build_tool_definition(tool))
             .collect()
     }
 
@@ -258,7 +258,7 @@ impl ServerHandler for BybitMcpServer {
 
     fn get_tool(&self, name: &str) -> Option<Tool> {
         self.find_tool(name)
-            .map(|tool| self.build_tool_definition(&tool))
+            .map(|tool| self.build_tool_definition(tool))
     }
 
     async fn call_tool(

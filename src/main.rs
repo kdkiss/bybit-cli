@@ -56,14 +56,11 @@ fn run() -> Result<(), bybit_cli::errors::BybitError> {
     let testnet_flag_present = has_switch_flag(&raw_args, "--testnet");
 
     // Read secret from stdin if requested
-    let api_secret = match resolve_cli_api_secret(
+    let api_secret = resolve_cli_api_secret(
         cli.api_secret,
         cli.api_secret_stdin,
         cli.api_secret_file.as_deref(),
-    ) {
-        Ok(secret) => secret,
-        Err(e) => return Err(e),
-    };
+    )?;
     let api_secret_from_input = api_secret.is_some();
 
     // Merge flag/env credentials with config file fallback
