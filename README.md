@@ -51,19 +51,42 @@ Try these with your AI agent:
 
 Single binary, no runtime dependencies.
 
-### One-liner (macOS / Linux)
+### Recommended: download, verify, install
+
+Download the release archive for your platform from the [GitHub Releases](https://github.com/kdkiss/bybit-cli/releases) page, verify the checksum or minisign signature, then place `bybit` or `bybit.exe` on your `PATH`.
+
+Example verified install on Linux (`x86_64`; replace the archive name with the artifact for your platform):
 
 ```bash
-curl --proto '=https' --tlsv1.2 -LsSf https://github.com/kdkiss/bybit-cli/releases/latest/download/bybit-cli-installer.sh | sh
+curl -LO https://github.com/kdkiss/bybit-cli/releases/latest/download/bybit-cli-x86_64-unknown-linux-gnu.tar.gz
+curl -LO https://github.com/kdkiss/bybit-cli/releases/latest/download/bybit-cli-x86_64-unknown-linux-gnu.tar.gz.minisig
+minisign -Vm bybit-cli-x86_64-unknown-linux-gnu.tar.gz -P RWTeznOm/OuBmlyv8EeOQxZOog4NsO014QzO/aS3/+1woRbSPGUy3eEF
+tar -xzf bybit-cli-x86_64-unknown-linux-gnu.tar.gz
+install -m 755 bybit ~/.local/bin/bybit
 ```
 
-### One-liner (Windows)
+On Windows, download the matching `.zip` plus checksum or `.minisig` from Releases, verify it, then extract `bybit.exe` into a directory on `PATH`.
+
+<details>
+<summary>Convenience bootstrap installers</summary>
+
+These wrappers are convenient, but the verified archive flow above is the recommended default.
+
+macOS / Linux:
+
+```bash
+curl --proto '=https' --tlsv1.2 -LsSf -o bybit-cli-installer.sh https://github.com/kdkiss/bybit-cli/releases/latest/download/bybit-cli-installer.sh
+sh bybit-cli-installer.sh
+```
+
+Windows:
 
 ```powershell
-irm https://github.com/kdkiss/bybit-cli/releases/latest/download/bybit-cli-installer.ps1 | iex
+Invoke-WebRequest -Uri https://github.com/kdkiss/bybit-cli/releases/latest/download/bybit-cli-installer.ps1 -OutFile bybit-cli-installer.ps1
+powershell -ExecutionPolicy Bypass -File .\bybit-cli-installer.ps1
 ```
 
-Detects your OS and architecture, downloads the right archive, verifies checksums, and installs it. Prebuilt installers are generated for macOS (Apple Silicon and Intel), Linux (`x86_64`), and Windows (`x86_64`).
+</details>
 
 Verify it works:
 
@@ -113,6 +136,8 @@ One binary covers Bybit spot, derivatives, earn workflows, streaming, and both p
 
 Product availability and permissions vary by jurisdiction, account type, and API key scope.
 
+Migrating from `kraken-cli` conventions? See [KRAKEN_COMPAT.md](KRAKEN_COMPAT.md).
+
 ## For AI Agents
 
 If you're an AI agent or building one, start here:
@@ -121,11 +146,13 @@ If you're an AI agent or building one, start here:
 |----------|-------------|
 | [CONTEXT.md](CONTEXT.md) | Runtime context — load this at session start |
 | [AGENTS.md](AGENTS.md) | Full integration guide: auth, invocation, errors, rate limits |
-| [agents/tool-catalog.json](agents/tool-catalog.json) | Canonical agent/MCP tool catalog with parameter schemas, auth requirements, examples, and safety flags |
+| [agents/tool-catalog.json](agents/tool-catalog.json) | Canonical CLI/agent command catalog with parameter schemas, auth requirements, examples, and safety flags |
+| [agents/mcp-tool-catalog.json](agents/mcp-tool-catalog.json) | Runtime MCP tool catalog generated from the live stdio registry |
 | [agents/error-catalog.json](agents/error-catalog.json) | Error categories with retry guidance and remediation |
 | [agents/examples/README.md](agents/examples/README.md) | Curated shell-script examples for agent and automation workflows |
 | [skills/INDEX.md](skills/INDEX.md) | Goal-oriented workflow packages |
 | [CLAUDE.md](CLAUDE.md) | Claude-specific integration guidance |
+| [KRAKEN_COMPAT.md](KRAKEN_COMPAT.md) | Kraken-to-Bybit workflow mapping and migration notes |
 | [gemini-extension.json](gemini-extension.json) | Gemini CLI extension manifest for auto-starting the MCP server |
 
 Core invocation pattern:
@@ -235,6 +262,13 @@ export BYBIT_API_URL="https://..."  # optional: override base URL
 
 For local development, `bybit-cli` also loads `.env` from the current working directory (or its parents) at startup. Already-exported environment variables keep precedence.
 
+### Non-echo secret input (recommended for interactive or shared systems)
+
+```bash
+printf '%s\n' 'your-secret' | bybit --api-key your-key --api-secret-stdin auth test
+bybit --api-key your-key --api-secret-file ~/.config/bybit/api-secret.txt auth test
+```
+
 ### Config file (for humans)
 
 Stored in your platform config directory:
@@ -271,12 +305,13 @@ Highest precedence first:
 
 - Config file is created with `0600` permissions (owner read/write only) on Unix.
 - Secrets are never logged, printed, or included in error messages.
-- Use `--api-secret-stdin` instead of `--api-secret` to avoid secrets in process listings.
+- Prefer `--api-secret-stdin` or `--api-secret-file` over `--api-secret` on interactive or shared systems.
 - For automation, prefer environment variables over command-line flags.
 
 ## MCP Server
 
 > Built-in MCP server is available via `bybit mcp`. It exposes command groups over stdio for MCP-compatible agents.
+> Load [agents/mcp-tool-catalog.json](agents/mcp-tool-catalog.json) for the runtime MCP tool surface, or [agents/tool-catalog.json](agents/tool-catalog.json) for the broader CLI/agent command catalog.
 
 ```json
 {
@@ -299,7 +334,7 @@ bybit mcp -s market,trade,paper,futures-paper
 bybit mcp -s funding,reports,futures,subaccount
 ```
 
-Available service groups include `market`, `account`, `trade`, `position`, `asset`, `funding`, `convert`, `reports`, `subaccount`, `futures`, `paper`, `futures-paper`, and `auth`.
+Available service groups include `market`, `account`, `trade`, `position`, `asset`, `funding`, `convert`, `reports`, `subaccount`, `futures`, `paper`, `futures-paper`, `auth`, and `ws`.
 The server expects the standard MCP `initialize` plus `notifications/initialized` handshake; normal MCP clients handle that automatically.
 
 Persisted local state is shared with normal CLI mode: saved credentials, the spot paper journal, the futures paper state, shell history, and the anonymous instance ID persist across MCP tool calls and server restarts until reset or deleted.
@@ -412,7 +447,7 @@ All futures paper output includes `"mode": "futures_paper"` in JSON. Spot paper 
 
 ## Commands
 
-The CLI exposes 18 top-level commands. The `futures paper` simulator is a nested namespace under `futures`. For the machine-readable agent/MCP tool surface, load [agents/tool-catalog.json](agents/tool-catalog.json).
+The CLI exposes 18 top-level commands. The `futures paper` simulator is a nested namespace under `futures`. For machine-readable references, load [agents/tool-catalog.json](agents/tool-catalog.json) for the full CLI/agent command catalog and [agents/mcp-tool-catalog.json](agents/mcp-tool-catalog.json) for the runtime MCP tool surface.
 
 | Command | Auth | Dangerous | Description |
 |---------|------|-----------|-------------|

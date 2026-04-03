@@ -10,7 +10,8 @@ Agent-first CLI for trading crypto on Bybit V5 with structured JSON output, a bu
 
 ## Machine Contracts
 
-- [agents/tool-catalog.json](agents/tool-catalog.json): Canonical agent tool catalog with parameter metadata, auth requirements, `dangerous` flags, and examples
+- [agents/tool-catalog.json](agents/tool-catalog.json): Canonical CLI/agent command catalog with parameter metadata, auth requirements, `dangerous` flags, and examples
+- [agents/mcp-tool-catalog.json](agents/mcp-tool-catalog.json): Runtime MCP tool catalog generated from the live stdio registry
 - [agents/error-catalog.json](agents/error-catalog.json): Error categories, `ret_code` semantics, and retry/remediation guidance
 
 ## Workflow Skills
@@ -19,6 +20,8 @@ Agent-first CLI for trading crypto on Bybit V5 with structured JSON output, a bu
 
 ## Notes
 
-- `agents/tool-catalog.json` is the single source of truth for agent tool discovery.
+- `agents/tool-catalog.json` is the broad CLI/agent command catalog.
+- `agents/mcp-tool-catalog.json` is the parity-checked runtime MCP tool catalog.
 - `bybit mcp -s market,trade,paper,futures-paper` starts the built-in MCP server over stdio for direct agent integration.
 - Persistent local state is shared across CLI and MCP sessions for saved credentials, the spot paper journal, the futures paper state, shell history, and the anonymous instance ID.
+- Users migrating from kraken-cli-style workflows should start with [KRAKEN_COMPAT.md](KRAKEN_COMPAT.md).

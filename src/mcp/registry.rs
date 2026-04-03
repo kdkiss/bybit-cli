@@ -1,7 +1,9 @@
 // MCP tool registry — defines all tools exposed by the MCP server.
 
+use serde_json::json;
 use serde_json::Value;
 
+use super::{DEFAULT_SERVICES, VALID_SERVICES};
 use super::schema::{bool_prop, enum_prop, int_prop, num_prop, object_schema, str_prop};
 
 // ---------------------------------------------------------------------------
@@ -2231,7 +2233,7 @@ fn ws_tools() -> Vec<McpTool> {
         name: "ws_notifications",
         description: "Stream all private notifications (orders, positions, executions, wallet)",
         input_schema: object_schema(vec![], &[]),
-        service: "websocket",
+        service: "ws",
         dangerous: false,
     }]
 }
@@ -2473,6 +2475,29 @@ pub fn all_tools() -> Vec<McpTool> {
     tools.extend(auth_tools());
     tools.extend(ws_tools());
     tools
+}
+
+pub fn runtime_tool_catalog() -> Value {
+    let tools: Vec<Value> = all_tools()
+        .into_iter()
+        .map(|tool| {
+            json!({
+                "name": tool.name,
+                "description": tool.description,
+                "service": tool.service,
+                "dangerous": tool.dangerous,
+                "input_schema": tool.input_schema,
+            })
+        })
+        .collect();
+
+    json!({
+        "schema_version": "1.0",
+        "transport": "stdio",
+        "default_services": DEFAULT_SERVICES.split(',').collect::<Vec<_>>(),
+        "valid_services": VALID_SERVICES,
+        "tools": tools,
+    })
 }
 
 // ---------------------------------------------------------------------------

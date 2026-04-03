@@ -31,6 +31,7 @@ cargo audit -D warnings
 -   Update `README.md` and `skills/` if you add new commands or workflows.
 -   If you add a new CLI command, make sure to also update the MCP registry in `src/mcp/registry.rs`.
 -   Run `cargo test --test doc_sync` after command-surface or documentation changes. Use `cargo run --example command_inventory` to inspect the live clap command inventory when updating docs.
+-   If you touch the MCP registry or service list, regenerate `agents/mcp-tool-catalog.json` with `cargo run --example mcp_tool_catalog > agents/mcp-tool-catalog.json` and run `cargo test --test mcp_catalog_sync`.
 
 ## 📜 Unofficial Status
 

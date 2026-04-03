@@ -1,0 +1,4967 @@
+{
+  "default_services": [
+    "market",
+    "account",
+    "paper",
+    "futures-paper"
+  ],
+  "schema_version": "1.0",
+  "tools": [
+    {
+      "dangerous": false,
+      "description": "Get the Bybit server time",
+      "input_schema": {
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "name": "market_server_time",
+      "service": "market"
+    },
+    {
+      "dangerous": false,
+      "description": "Get ticker data (price, 24h stats, funding rate) for one or all symbols",
+      "input_schema": {
+        "properties": {
+          "base_coin": {
+            "description": "Base coin filter, e.g. BTC",
+            "type": "string"
+          },
+          "category": {
+            "description": "Asset category",
+            "enum": [
+              "linear",
+              "spot",
+              "inverse",
+              "option"
+            ],
+            "type": "string"
+          },
+          "exp_date": {
+            "description": "Expiry date for options, e.g. 25DEC23",
+            "type": "string"
+          },
+          "symbol": {
+            "description": "Trading pair symbol, e.g. BTCUSDT",
+            "type": "string"
+          }
+        },
+        "required": [
+          "category"
+        ],
+        "type": "object"
+      },
+      "name": "market_tickers",
+      "service": "market"
+    },
+    {
+      "dangerous": false,
+      "description": "Get the order book for a symbol",
+      "input_schema": {
+        "properties": {
+          "category": {
+            "description": "Asset category",
+            "enum": [
+              "linear",
+              "spot",
+              "inverse",
+              "option"
+            ],
+            "type": "string"
+          },
+          "limit": {
+            "description": "Depth limit (1–500, default 25)",
+            "type": "integer"
+          },
+          "symbol": {
+            "description": "Trading pair symbol, e.g. BTCUSDT",
+            "type": "string"
+          }
+        },
+        "required": [
+          "category",
+          "symbol"
+        ],
+        "type": "object"
+      },
+      "name": "market_orderbook",
+      "service": "market"
+    },
+    {
+      "dangerous": false,
+      "description": "Get OHLCV candlestick data",
+      "input_schema": {
+        "properties": {
+          "category": {
+            "description": "Asset category",
+            "enum": [
+              "linear",
+              "spot",
+              "inverse",
+              "option"
+            ],
+            "type": "string"
+          },
+          "end": {
+            "description": "End time in milliseconds",
+            "type": "integer"
+          },
+          "interval": {
+            "description": "Candle interval",
+            "enum": [
+              "1",
+              "3",
+              "5",
+              "15",
+              "30",
+              "60",
+              "120",
+              "240",
+              "360",
+              "720",
+              "D",
+              "W",
+              "M"
+            ],
+            "type": "string"
+          },
+          "limit": {
+            "description": "Number of candles (default 200, max 1000)",
+            "type": "integer"
+          },
+          "start": {
+            "description": "Start time in milliseconds",
+            "type": "integer"
+          },
+          "symbol": {
+            "description": "Trading pair symbol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "category",
+          "symbol",
+          "interval"
+        ],
+        "type": "object"
+      },
+      "name": "market_kline",
+      "service": "market"
+    },
+    {
+      "dangerous": false,
+      "description": "Get historical funding rate data for a perpetual symbol",
+      "input_schema": {
+        "properties": {
+          "category": {
+            "description": "Asset category",
+            "enum": [
+              "linear",
+              "spot",
+              "inverse",
+              "option"
+            ],
+            "type": "string"
+          },
+          "end": {
+            "description": "End time in milliseconds",
+            "type": "integer"
+          },
+          "limit": {
+            "description": "Number of records (default 200, max 200)",
+            "type": "integer"
+          },
+          "start": {
+            "description": "Start time in milliseconds",
+            "type": "integer"
+          },
+          "symbol": {
+            "description": "Perpetual symbol, e.g. BTCUSDT",
+            "type": "string"
+          }
+        },
+        "required": [
+          "category",
+          "symbol"
+        ],
+        "type": "object"
+      },
+      "name": "market_funding_rate",
+      "service": "market"
+    },
+    {
+      "dangerous": false,
+      "description": "Get recent public trade history for a symbol",
+      "input_schema": {
+        "properties": {
+          "base_coin": {
+            "description": "Base coin for options",
+            "type": "string"
+          },
+          "category": {
+            "description": "Asset category",
+            "enum": [
+              "linear",
+              "spot",
+              "inverse",
+              "option"
+            ],
+            "type": "string"
+          },
+          "limit": {
+            "description": "Number of trades (default 60, max 1000)",
+            "type": "integer"
+          },
+          "option_type": {
+            "description": "Option type filter",
+            "enum": [
+              "Call",
+              "Put"
+            ],
+            "type": "string"
+          },
+          "symbol": {
+            "description": "Trading pair symbol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "category",
+          "symbol"
+        ],
+        "type": "object"
+      },
+      "name": "market_trades",
+      "service": "market"
+    },
+    {
+      "dangerous": false,
+      "description": "Get instrument (trading pair) specifications",
+      "input_schema": {
+        "properties": {
+          "base_coin": {
+            "description": "Base coin filter, e.g. BTC",
+            "type": "string"
+          },
+          "category": {
+            "description": "Asset category",
+            "enum": [
+              "linear",
+              "spot",
+              "inverse",
+              "option"
+            ],
+            "type": "string"
+          },
+          "cursor": {
+            "description": "Pagination cursor",
+            "type": "string"
+          },
+          "limit": {
+            "description": "Page size (default 500)",
+            "type": "integer"
+          },
+          "status": {
+            "description": "Instrument status",
+            "enum": [
+              "Trading",
+              "PreLaunch"
+            ],
+            "type": "string"
+          },
+          "symbol": {
+            "description": "Specific symbol to query",
+            "type": "string"
+          }
+        },
+        "required": [
+          "category"
+        ],
+        "type": "object"
+      },
+      "name": "market_instruments",
+      "service": "market"
+    },
+    {
+      "dangerous": false,
+      "description": "Get open interest data for a symbol",
+      "input_schema": {
+        "properties": {
+          "category": {
+            "description": "Asset category",
+            "enum": [
+              "linear",
+              "spot",
+              "inverse",
+              "option"
+            ],
+            "type": "string"
+          },
+          "end": {
+            "description": "End time in milliseconds",
+            "type": "integer"
+          },
+          "interval_time": {
+            "description": "Interval",
+            "enum": [
+              "5min",
+              "15min",
+              "30min",
+              "1h",
+              "4h",
+              "1d"
+            ],
+            "type": "string"
+          },
+          "limit": {
+            "description": "Number of records (default 50, max 200)",
+            "type": "integer"
+          },
+          "start": {
+            "description": "Start time in milliseconds",
+            "type": "integer"
+          },
+          "symbol": {
+            "description": "Symbol, e.g. BTCUSDT",
+            "type": "string"
+          }
+        },
+        "required": [
+          "category",
+          "symbol",
+          "interval_time"
+        ],
+        "type": "object"
+      },
+      "name": "market_open_interest",
+      "service": "market"
+    },
+    {
+      "dangerous": false,
+      "description": "Get risk limit tiers for a symbol",
+      "input_schema": {
+        "properties": {
+          "category": {
+            "description": "Asset category",
+            "enum": [
+              "linear",
+              "spot",
+              "inverse",
+              "option"
+            ],
+            "type": "string"
+          },
+          "symbol": {
+            "description": "Symbol, e.g. BTCUSDT",
+            "type": "string"
+          }
+        },
+        "required": [
+          "category"
+        ],
+        "type": "object"
+      },
+      "name": "market_risk_limit",
+      "service": "market"
+    },
+    {
+      "dangerous": false,
+      "description": "Get insurance fund data",
+      "input_schema": {
+        "properties": {
+          "coin": {
+            "description": "Coin, e.g. BTC (default: all)",
+            "type": "string"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "market_insurance",
+      "service": "market"
+    },
+    {
+      "dangerous": false,
+      "description": "Get delivery price for futures/options",
+      "input_schema": {
+        "properties": {
+          "base_coin": {
+            "description": "Base coin",
+            "type": "string"
+          },
+          "category": {
+            "description": "Asset category",
+            "enum": [
+              "linear",
+              "spot",
+              "inverse",
+              "option"
+            ],
+            "type": "string"
+          },
+          "cursor": {
+            "description": "Pagination cursor",
+            "type": "string"
+          },
+          "limit": {
+            "description": "Page size",
+            "type": "integer"
+          },
+          "symbol": {
+            "description": "Symbol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "category"
+        ],
+        "type": "object"
+      },
+      "name": "market_delivery_price",
+      "service": "market"
+    },
+    {
+      "dangerous": false,
+      "description": "Get long/short ratio for a symbol",
+      "input_schema": {
+        "properties": {
+          "category": {
+            "description": "Asset category",
+            "enum": [
+              "linear",
+              "spot",
+              "inverse",
+              "option"
+            ],
+            "type": "string"
+          },
+          "limit": {
+            "description": "Number of records (max 500)",
+            "type": "integer"
+          },
+          "period": {
+            "description": "Period",
+            "enum": [
+              "5min",
+              "15min",
+              "30min",
+              "1h",
+              "4h",
+              "1d"
+            ],
+            "type": "string"
+          },
+          "symbol": {
+            "description": "Symbol, e.g. BTCUSDT",
+            "type": "string"
+          }
+        },
+        "required": [
+          "category",
+          "symbol",
+          "period"
+        ],
+        "type": "object"
+      },
+      "name": "market_ls_ratio",
+      "service": "market"
+    },
+    {
+      "dangerous": false,
+      "description": "Get current bid-ask spread for a symbol",
+      "input_schema": {
+        "properties": {
+          "category": {
+            "description": "Asset category",
+            "enum": [
+              "linear",
+              "spot",
+              "inverse",
+              "option"
+            ],
+            "type": "string"
+          },
+          "symbol": {
+            "description": "Symbol, e.g. BTCUSDT",
+            "type": "string"
+          }
+        },
+        "required": [
+          "category",
+          "symbol"
+        ],
+        "type": "object"
+      },
+      "name": "market_spread",
+      "service": "market"
+    },
+    {
+      "dangerous": false,
+      "description": "Get unified trading account balance",
+      "input_schema": {
+        "properties": {
+          "account_type": {
+            "description": "Account type",
+            "enum": [
+              "UNIFIED",
+              "CONTRACT"
+            ],
+            "type": "string"
+          },
+          "coin": {
+            "description": "Filter by coin, e.g. USDT",
+            "type": "string"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "account_balance",
+      "service": "account"
+    },
+    {
+      "dangerous": false,
+      "description": "Get account margin mode and status",
+      "input_schema": {
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "name": "account_info",
+      "service": "account"
+    },
+    {
+      "dangerous": false,
+      "description": "Get maker/taker fee rates",
+      "input_schema": {
+        "properties": {
+          "base_coin": {
+            "description": "Base coin (options only)",
+            "type": "string"
+          },
+          "category": {
+            "description": "Asset category",
+            "enum": [
+              "linear",
+              "spot",
+              "inverse",
+              "option"
+            ],
+            "type": "string"
+          },
+          "symbol": {
+            "description": "Symbol to get fee rate for",
+            "type": "string"
+          }
+        },
+        "required": [
+          "category"
+        ],
+        "type": "object"
+      },
+      "name": "account_fee_rate",
+      "service": "account"
+    },
+    {
+      "dangerous": false,
+      "description": "Get account transaction / P&L history",
+      "input_schema": {
+        "properties": {
+          "account_type": {
+            "description": "Account type, e.g. UNIFIED",
+            "type": "string"
+          },
+          "category": {
+            "description": "Asset category",
+            "enum": [
+              "linear",
+              "spot",
+              "inverse",
+              "option"
+            ],
+            "type": "string"
+          },
+          "currency": {
+            "description": "Settlement currency, e.g. USDT",
+            "type": "string"
+          },
+          "cursor": {
+            "description": "Pagination cursor",
+            "type": "string"
+          },
+          "end": {
+            "description": "End time in milliseconds",
+            "type": "integer"
+          },
+          "limit": {
+            "description": "Page size (default 20, max 50)",
+            "type": "integer"
+          },
+          "start": {
+            "description": "Start time in milliseconds",
+            "type": "integer"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "account_transaction_log",
+      "service": "account"
+    },
+    {
+      "dangerous": false,
+      "description": "Get borrow history for the account",
+      "input_schema": {
+        "properties": {
+          "currency": {
+            "description": "Coin, e.g. USDT",
+            "type": "string"
+          },
+          "cursor": {
+            "description": "Pagination cursor",
+            "type": "string"
+          },
+          "end": {
+            "description": "End time in milliseconds",
+            "type": "integer"
+          },
+          "limit": {
+            "description": "Page size (default 20, max 50)",
+            "type": "integer"
+          },
+          "start": {
+            "description": "Start time in milliseconds",
+            "type": "integer"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "account_borrow_history",
+      "service": "account"
+    },
+    {
+      "dangerous": false,
+      "description": "Get collateral information for margin trading",
+      "input_schema": {
+        "properties": {
+          "currency": {
+            "description": "Coin, e.g. BTC",
+            "type": "string"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "account_collateral_info",
+      "service": "account"
+    },
+    {
+      "dangerous": false,
+      "description": "Get trading volume for a period (e.g. last 30 days)",
+      "input_schema": {
+        "properties": {
+          "base_coin": {
+            "description": "Base coin filter",
+            "type": "string"
+          },
+          "category": {
+            "description": "Asset category",
+            "enum": [
+              "linear",
+              "spot",
+              "inverse",
+              "option"
+            ],
+            "type": "string"
+          },
+          "days": {
+            "description": "Lookback days (default 30)",
+            "type": "integer"
+          },
+          "symbol": {
+            "description": "Symbol filter",
+            "type": "string"
+          }
+        },
+        "required": [
+          "category"
+        ],
+        "type": "object"
+      },
+      "name": "account_volume",
+      "service": "account"
+    },
+    {
+      "dangerous": true,
+      "description": "Set USDC settlement coin (USDC or USDT) for UTA",
+      "input_schema": {
+        "properties": {
+          "coin": {
+            "description": "Settlement coin",
+            "enum": [
+              "USDC",
+              "USDT"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "coin"
+        ],
+        "type": "object"
+      },
+      "name": "account_set_usdc_settlement",
+      "service": "account"
+    },
+    {
+      "dangerous": false,
+      "description": "Get ADL risk level for a symbol (Private)",
+      "input_schema": {
+        "properties": {
+          "category": {
+            "description": "Asset category",
+            "enum": [
+              "linear",
+              "spot",
+              "inverse",
+              "option"
+            ],
+            "type": "string"
+          },
+          "symbol": {
+            "description": "Specific symbol (optional)",
+            "type": "string"
+          }
+        },
+        "required": [
+          "category"
+        ],
+        "type": "object"
+      },
+      "name": "account_adl_alert",
+      "service": "account"
+    },
+    {
+      "dangerous": true,
+      "description": "Manually borrow funds (UTA Pro / Portfolio Margin accounts only)",
+      "input_schema": {
+        "properties": {
+          "amount": {
+            "description": "Amount to borrow",
+            "type": "string"
+          },
+          "coin": {
+            "description": "Coin to borrow, e.g. USDT",
+            "type": "string"
+          }
+        },
+        "required": [
+          "coin",
+          "amount"
+        ],
+        "type": "object"
+      },
+      "name": "account_borrow",
+      "service": "account"
+    },
+    {
+      "dangerous": true,
+      "description": "Manually repay borrowed funds",
+      "input_schema": {
+        "properties": {
+          "amount": {
+            "description": "Amount to repay",
+            "type": "string"
+          },
+          "coin": {
+            "description": "Coin to repay, e.g. USDT",
+            "type": "string"
+          }
+        },
+        "required": [
+          "coin",
+          "amount"
+        ],
+        "type": "object"
+      },
+      "name": "account_repay",
+      "service": "account"
+    },
+    {
+      "dangerous": true,
+      "description": "Quick-repay liability (auto-select repayment amount)",
+      "input_schema": {
+        "properties": {
+          "coin": {
+            "description": "Coin to repay; omit to auto-select",
+            "type": "string"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "account_quick_repay",
+      "service": "account"
+    },
+    {
+      "dangerous": false,
+      "description": "List available savings/earn products",
+      "input_schema": {
+        "properties": {
+          "coin": {
+            "description": "Coin filter, e.g. USDT",
+            "type": "string"
+          },
+          "product_type": {
+            "description": "Product type: FlexibleSavings, FixedSavings",
+            "type": "string"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "earn_product",
+      "service": "earn"
+    },
+    {
+      "dangerous": false,
+      "description": "Get current staking/earn positions",
+      "input_schema": {
+        "properties": {
+          "coin": {
+            "description": "Coin filter",
+            "type": "string"
+          },
+          "order_id": {
+            "description": "Specific order ID",
+            "type": "string"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "earn_positions",
+      "service": "earn"
+    },
+    {
+      "dangerous": true,
+      "description": "Stake funds into an earn product",
+      "input_schema": {
+        "properties": {
+          "amount": {
+            "description": "Amount to stake",
+            "type": "string"
+          },
+          "coin": {
+            "description": "Coin symbol",
+            "type": "string"
+          },
+          "product_id": {
+            "description": "Product ID",
+            "type": "string"
+          }
+        },
+        "required": [
+          "product_id",
+          "coin",
+          "amount"
+        ],
+        "type": "object"
+      },
+      "name": "earn_stake",
+      "service": "earn"
+    },
+    {
+      "dangerous": true,
+      "description": "Unstake funds from an earn product",
+      "input_schema": {
+        "properties": {
+          "amount": {
+            "description": "Amount to unstake",
+            "type": "string"
+          },
+          "coin": {
+            "description": "Coin symbol",
+            "type": "string"
+          },
+          "order_id": {
+            "description": "Order ID to unstake from",
+            "type": "string"
+          }
+        },
+        "required": [
+          "order_id",
+          "coin",
+          "amount"
+        ],
+        "type": "object"
+      },
+      "name": "earn_unstake",
+      "service": "earn"
+    },
+    {
+      "dangerous": false,
+      "description": "Get staking/earn history",
+      "input_schema": {
+        "properties": {
+          "coin": {
+            "description": "Coin filter",
+            "type": "string"
+          },
+          "cursor": {
+            "description": "Pagination cursor",
+            "type": "string"
+          },
+          "end": {
+            "description": "End time in milliseconds",
+            "type": "integer"
+          },
+          "limit": {
+            "description": "Page size",
+            "type": "integer"
+          },
+          "start": {
+            "description": "Start time in milliseconds",
+            "type": "integer"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "earn_history",
+      "service": "earn"
+    },
+    {
+      "dangerous": true,
+      "description": "Place a buy (long) order. Always --validate first to dry-run.",
+      "input_schema": {
+        "properties": {
+          "category": {
+            "description": "Asset category",
+            "enum": [
+              "linear",
+              "spot",
+              "inverse",
+              "option"
+            ],
+            "type": "string"
+          },
+          "display_qty": {
+            "description": "Visible quantity for Iceberg orders",
+            "type": "string"
+          },
+          "order_link_id": {
+            "description": "Client order ID",
+            "type": "string"
+          },
+          "order_type": {
+            "description": "Order type",
+            "enum": [
+              "Limit",
+              "Market"
+            ],
+            "type": "string"
+          },
+          "position_idx": {
+            "description": "Position index: 0=one-way, 1=buy-side hedge, 2=sell-side hedge",
+            "type": "integer"
+          },
+          "post_only": {
+            "description": "Convenience flag for PostOnly time-in-force",
+            "type": "boolean"
+          },
+          "price": {
+            "description": "Limit price (omit for market order)",
+            "type": "string"
+          },
+          "qty": {
+            "description": "Order quantity",
+            "type": "string"
+          },
+          "reduce_only": {
+            "description": "Reduce-only order",
+            "type": "boolean"
+          },
+          "sl_limit_price": {
+            "description": "Limit price for stop loss",
+            "type": "string"
+          },
+          "sl_trigger_by": {
+            "description": "SL trigger source: LastPrice, IndexPrice, MarkPrice",
+            "type": "string"
+          },
+          "stop_loss": {
+            "description": "Stop-loss price",
+            "type": "string"
+          },
+          "symbol": {
+            "description": "Trading pair, e.g. BTCUSDT",
+            "type": "string"
+          },
+          "take_profit": {
+            "description": "Take-profit price",
+            "type": "string"
+          },
+          "time_in_force": {
+            "description": "Time in force",
+            "enum": [
+              "GTC",
+              "IOC",
+              "FOK",
+              "PostOnly"
+            ],
+            "type": "string"
+          },
+          "tp_limit_price": {
+            "description": "Limit price for take profit",
+            "type": "string"
+          },
+          "tp_trigger_by": {
+            "description": "TP trigger source: LastPrice, IndexPrice, MarkPrice",
+            "type": "string"
+          },
+          "trigger_price": {
+            "description": "Trigger price for conditional orders",
+            "type": "string"
+          }
+        },
+        "required": [
+          "category",
+          "symbol",
+          "qty"
+        ],
+        "type": "object"
+      },
+      "name": "trade_buy",
+      "service": "trade"
+    },
+    {
+      "dangerous": true,
+      "description": "Place a sell (short) order. Always --validate first to dry-run.",
+      "input_schema": {
+        "properties": {
+          "category": {
+            "description": "Asset category",
+            "enum": [
+              "linear",
+              "spot",
+              "inverse",
+              "option"
+            ],
+            "type": "string"
+          },
+          "display_qty": {
+            "description": "Visible quantity for Iceberg orders",
+            "type": "string"
+          },
+          "order_link_id": {
+            "description": "Client order ID",
+            "type": "string"
+          },
+          "order_type": {
+            "description": "Order type",
+            "enum": [
+              "Limit",
+              "Market"
+            ],
+            "type": "string"
+          },
+          "position_idx": {
+            "description": "Position index: 0=one-way, 1=buy-side hedge, 2=sell-side hedge",
+            "type": "integer"
+          },
+          "post_only": {
+            "description": "Convenience flag for PostOnly time-in-force",
+            "type": "boolean"
+          },
+          "price": {
+            "description": "Limit price (omit for market order)",
+            "type": "string"
+          },
+          "qty": {
+            "description": "Order quantity",
+            "type": "string"
+          },
+          "reduce_only": {
+            "description": "Reduce-only order",
+            "type": "boolean"
+          },
+          "sl_limit_price": {
+            "description": "Limit price for stop loss",
+            "type": "string"
+          },
+          "sl_trigger_by": {
+            "description": "SL trigger source: LastPrice, IndexPrice, MarkPrice",
+            "type": "string"
+          },
+          "stop_loss": {
+            "description": "Stop-loss price",
+            "type": "string"
+          },
+          "symbol": {
+            "description": "Trading pair, e.g. BTCUSDT",
+            "type": "string"
+          },
+          "take_profit": {
+            "description": "Take-profit price",
+            "type": "string"
+          },
+          "time_in_force": {
+            "description": "Time in force",
+            "enum": [
+              "GTC",
+              "IOC",
+              "FOK",
+              "PostOnly"
+            ],
+            "type": "string"
+          },
+          "tp_limit_price": {
+            "description": "Limit price for take profit",
+            "type": "string"
+          },
+          "tp_trigger_by": {
+            "description": "TP trigger source: LastPrice, IndexPrice, MarkPrice",
+            "type": "string"
+          },
+          "trigger_price": {
+            "description": "Trigger price for conditional orders",
+            "type": "string"
+          }
+        },
+        "required": [
+          "category",
+          "symbol",
+          "qty"
+        ],
+        "type": "object"
+      },
+      "name": "trade_sell",
+      "service": "trade"
+    },
+    {
+      "dangerous": false,
+      "description": "Dry-run a buy order (validate only, does not submit)",
+      "input_schema": {
+        "properties": {
+          "category": {
+            "description": "Asset category",
+            "enum": [
+              "linear",
+              "spot",
+              "inverse",
+              "option"
+            ],
+            "type": "string"
+          },
+          "display_qty": {
+            "description": "Visible quantity for Iceberg orders",
+            "type": "string"
+          },
+          "order_link_id": {
+            "description": "Client order ID",
+            "type": "string"
+          },
+          "order_type": {
+            "description": "Order type",
+            "enum": [
+              "Limit",
+              "Market"
+            ],
+            "type": "string"
+          },
+          "position_idx": {
+            "description": "Position index: 0=one-way, 1=buy-side hedge, 2=sell-side hedge",
+            "type": "integer"
+          },
+          "post_only": {
+            "description": "Convenience flag for PostOnly time-in-force",
+            "type": "boolean"
+          },
+          "price": {
+            "description": "Limit price (omit for market order)",
+            "type": "string"
+          },
+          "qty": {
+            "description": "Order quantity",
+            "type": "string"
+          },
+          "reduce_only": {
+            "description": "Reduce-only order",
+            "type": "boolean"
+          },
+          "sl_limit_price": {
+            "description": "Limit price for stop loss",
+            "type": "string"
+          },
+          "sl_trigger_by": {
+            "description": "SL trigger source: LastPrice, IndexPrice, MarkPrice",
+            "type": "string"
+          },
+          "stop_loss": {
+            "description": "Stop-loss price",
+            "type": "string"
+          },
+          "symbol": {
+            "description": "Trading pair, e.g. BTCUSDT",
+            "type": "string"
+          },
+          "take_profit": {
+            "description": "Take-profit price",
+            "type": "string"
+          },
+          "time_in_force": {
+            "description": "Time in force",
+            "enum": [
+              "GTC",
+              "IOC",
+              "FOK",
+              "PostOnly"
+            ],
+            "type": "string"
+          },
+          "tp_limit_price": {
+            "description": "Limit price for take profit",
+            "type": "string"
+          },
+          "tp_trigger_by": {
+            "description": "TP trigger source: LastPrice, IndexPrice, MarkPrice",
+            "type": "string"
+          },
+          "trigger_price": {
+            "description": "Trigger price for conditional orders",
+            "type": "string"
+          }
+        },
+        "required": [
+          "category",
+          "symbol",
+          "qty"
+        ],
+        "type": "object"
+      },
+      "name": "trade_validate_buy",
+      "service": "trade"
+    },
+    {
+      "dangerous": false,
+      "description": "Dry-run a sell order (validate only, does not submit)",
+      "input_schema": {
+        "properties": {
+          "category": {
+            "description": "Asset category",
+            "enum": [
+              "linear",
+              "spot",
+              "inverse",
+              "option"
+            ],
+            "type": "string"
+          },
+          "display_qty": {
+            "description": "Visible quantity for Iceberg orders",
+            "type": "string"
+          },
+          "order_link_id": {
+            "description": "Client order ID",
+            "type": "string"
+          },
+          "order_type": {
+            "description": "Order type",
+            "enum": [
+              "Limit",
+              "Market"
+            ],
+            "type": "string"
+          },
+          "position_idx": {
+            "description": "Position index: 0=one-way, 1=buy-side hedge, 2=sell-side hedge",
+            "type": "integer"
+          },
+          "post_only": {
+            "description": "Convenience flag for PostOnly time-in-force",
+            "type": "boolean"
+          },
+          "price": {
+            "description": "Limit price (omit for market order)",
+            "type": "string"
+          },
+          "qty": {
+            "description": "Order quantity",
+            "type": "string"
+          },
+          "reduce_only": {
+            "description": "Reduce-only order",
+            "type": "boolean"
+          },
+          "sl_limit_price": {
+            "description": "Limit price for stop loss",
+            "type": "string"
+          },
+          "sl_trigger_by": {
+            "description": "SL trigger source: LastPrice, IndexPrice, MarkPrice",
+            "type": "string"
+          },
+          "stop_loss": {
+            "description": "Stop-loss price",
+            "type": "string"
+          },
+          "symbol": {
+            "description": "Trading pair, e.g. BTCUSDT",
+            "type": "string"
+          },
+          "take_profit": {
+            "description": "Take-profit price",
+            "type": "string"
+          },
+          "time_in_force": {
+            "description": "Time in force",
+            "enum": [
+              "GTC",
+              "IOC",
+              "FOK",
+              "PostOnly"
+            ],
+            "type": "string"
+          },
+          "tp_limit_price": {
+            "description": "Limit price for take profit",
+            "type": "string"
+          },
+          "tp_trigger_by": {
+            "description": "TP trigger source: LastPrice, IndexPrice, MarkPrice",
+            "type": "string"
+          },
+          "trigger_price": {
+            "description": "Trigger price for conditional orders",
+            "type": "string"
+          }
+        },
+        "required": [
+          "category",
+          "symbol",
+          "qty"
+        ],
+        "type": "object"
+      },
+      "name": "trade_validate_sell",
+      "service": "trade"
+    },
+    {
+      "dangerous": true,
+      "description": "Amend an existing open order",
+      "input_schema": {
+        "properties": {
+          "category": {
+            "description": "Asset category",
+            "enum": [
+              "linear",
+              "spot",
+              "inverse",
+              "option"
+            ],
+            "type": "string"
+          },
+          "order_id": {
+            "description": "Order ID to amend",
+            "type": "string"
+          },
+          "order_link_id": {
+            "description": "Client order ID",
+            "type": "string"
+          },
+          "price": {
+            "description": "New price",
+            "type": "string"
+          },
+          "qty": {
+            "description": "New quantity",
+            "type": "string"
+          },
+          "stop_loss": {
+            "description": "New stop-loss price",
+            "type": "string"
+          },
+          "symbol": {
+            "description": "Symbol",
+            "type": "string"
+          },
+          "take_profit": {
+            "description": "New take-profit price",
+            "type": "string"
+          },
+          "trigger_price": {
+            "description": "New trigger price",
+            "type": "string"
+          }
+        },
+        "required": [
+          "category",
+          "symbol"
+        ],
+        "type": "object"
+      },
+      "name": "trade_amend",
+      "service": "trade"
+    },
+    {
+      "dangerous": true,
+      "description": "Cancel an open order by order_id or order_link_id",
+      "input_schema": {
+        "properties": {
+          "category": {
+            "description": "Asset category",
+            "enum": [
+              "linear",
+              "spot",
+              "inverse",
+              "option"
+            ],
+            "type": "string"
+          },
+          "order_id": {
+            "description": "Order ID to cancel",
+            "type": "string"
+          },
+          "order_link_id": {
+            "description": "Client order ID to cancel",
+            "type": "string"
+          },
+          "symbol": {
+            "description": "Symbol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "category",
+          "symbol"
+        ],
+        "type": "object"
+      },
+      "name": "trade_cancel",
+      "service": "trade"
+    },
+    {
+      "dangerous": true,
+      "description": "Cancel all open orders for a symbol or category",
+      "input_schema": {
+        "properties": {
+          "base_coin": {
+            "description": "Base coin filter",
+            "type": "string"
+          },
+          "category": {
+            "description": "Asset category",
+            "enum": [
+              "linear",
+              "spot",
+              "inverse",
+              "option"
+            ],
+            "type": "string"
+          },
+          "settle_coin": {
+            "description": "Settle coin filter",
+            "type": "string"
+          },
+          "symbol": {
+            "description": "Symbol (omit to cancel all in category)",
+            "type": "string"
+          }
+        },
+        "required": [
+          "category"
+        ],
+        "type": "object"
+      },
+      "name": "trade_cancel_all",
+      "service": "trade"
+    },
+    {
+      "dangerous": false,
+      "description": "List open orders",
+      "input_schema": {
+        "properties": {
+          "base_coin": {
+            "description": "Base coin filter",
+            "type": "string"
+          },
+          "category": {
+            "description": "Asset category",
+            "enum": [
+              "linear",
+              "spot",
+              "inverse",
+              "option"
+            ],
+            "type": "string"
+          },
+          "cursor": {
+            "description": "Pagination cursor",
+            "type": "string"
+          },
+          "limit": {
+            "description": "Page size (default 20, max 50)",
+            "type": "integer"
+          },
+          "order_id": {
+            "description": "Specific order ID",
+            "type": "string"
+          },
+          "order_link_id": {
+            "description": "Specific client order ID",
+            "type": "string"
+          },
+          "symbol": {
+            "description": "Symbol filter",
+            "type": "string"
+          }
+        },
+        "required": [
+          "category"
+        ],
+        "type": "object"
+      },
+      "name": "trade_open_orders",
+      "service": "trade"
+    },
+    {
+      "dangerous": false,
+      "description": "Get order history",
+      "input_schema": {
+        "properties": {
+          "category": {
+            "description": "Asset category",
+            "enum": [
+              "linear",
+              "spot",
+              "inverse",
+              "option"
+            ],
+            "type": "string"
+          },
+          "cursor": {
+            "description": "Pagination cursor",
+            "type": "string"
+          },
+          "end": {
+            "description": "End time in milliseconds",
+            "type": "integer"
+          },
+          "limit": {
+            "description": "Page size (default 20, max 50)",
+            "type": "integer"
+          },
+          "order_id": {
+            "description": "Specific order ID",
+            "type": "string"
+          },
+          "order_status": {
+            "description": "Status filter, e.g. Filled",
+            "type": "string"
+          },
+          "start": {
+            "description": "Start time in milliseconds",
+            "type": "integer"
+          },
+          "symbol": {
+            "description": "Symbol filter",
+            "type": "string"
+          }
+        },
+        "required": [
+          "category"
+        ],
+        "type": "object"
+      },
+      "name": "trade_history",
+      "service": "trade"
+    },
+    {
+      "dangerous": false,
+      "description": "Get execution (fill) history",
+      "input_schema": {
+        "properties": {
+          "category": {
+            "description": "Asset category",
+            "enum": [
+              "linear",
+              "spot",
+              "inverse",
+              "option"
+            ],
+            "type": "string"
+          },
+          "cursor": {
+            "description": "Pagination cursor",
+            "type": "string"
+          },
+          "end": {
+            "description": "End time in milliseconds",
+            "type": "integer"
+          },
+          "exec_type": {
+            "description": "Execution type filter",
+            "type": "string"
+          },
+          "limit": {
+            "description": "Page size (default 20, max 100)",
+            "type": "integer"
+          },
+          "order_id": {
+            "description": "Order ID filter",
+            "type": "string"
+          },
+          "start": {
+            "description": "Start time in milliseconds",
+            "type": "integer"
+          },
+          "symbol": {
+            "description": "Symbol filter",
+            "type": "string"
+          }
+        },
+        "required": [
+          "category"
+        ],
+        "type": "object"
+      },
+      "name": "trade_fills",
+      "service": "trade"
+    },
+    {
+      "dangerous": true,
+      "description": "Dead man's switch — cancel all open orders after N seconds (0 = disable)",
+      "input_schema": {
+        "properties": {
+          "seconds": {
+            "description": "Seconds until all orders are cancelled. 0 to disable.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "seconds"
+        ],
+        "type": "object"
+      },
+      "name": "trade_cancel_after",
+      "service": "trade"
+    },
+    {
+      "dangerous": false,
+      "description": "Get current DCP (Disconnect Cancel All) window configuration",
+      "input_schema": {
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "name": "trade_dcp_info",
+      "service": "trade"
+    },
+    {
+      "dangerous": true,
+      "description": "Place up to 20 orders in a single request",
+      "input_schema": {
+        "properties": {
+          "category": {
+            "description": "Asset category",
+            "enum": [
+              "linear",
+              "spot",
+              "inverse",
+              "option"
+            ],
+            "type": "string"
+          },
+          "orders": {
+            "description": "JSON array of order objects",
+            "type": "string"
+          }
+        },
+        "required": [
+          "category",
+          "orders"
+        ],
+        "type": "object"
+      },
+      "name": "trade_batch_place",
+      "service": "trade"
+    },
+    {
+      "dangerous": true,
+      "description": "Amend up to 20 orders in a single request",
+      "input_schema": {
+        "properties": {
+          "category": {
+            "description": "Asset category",
+            "enum": [
+              "linear",
+              "spot",
+              "inverse",
+              "option"
+            ],
+            "type": "string"
+          },
+          "orders": {
+            "description": "JSON array of amend objects",
+            "type": "string"
+          }
+        },
+        "required": [
+          "category",
+          "orders"
+        ],
+        "type": "object"
+      },
+      "name": "trade_batch_amend",
+      "service": "trade"
+    },
+    {
+      "dangerous": true,
+      "description": "Cancel up to 20 orders in a single request",
+      "input_schema": {
+        "properties": {
+          "category": {
+            "description": "Asset category",
+            "enum": [
+              "linear",
+              "spot",
+              "inverse",
+              "option"
+            ],
+            "type": "string"
+          },
+          "orders": {
+            "description": "JSON array of cancel objects (each needs orderId or orderLinkId)",
+            "type": "string"
+          }
+        },
+        "required": [
+          "category",
+          "orders"
+        ],
+        "type": "object"
+      },
+      "name": "trade_batch_cancel",
+      "service": "trade"
+    },
+    {
+      "dangerous": false,
+      "description": "List open positions",
+      "input_schema": {
+        "properties": {
+          "base_coin": {
+            "description": "Base coin filter",
+            "type": "string"
+          },
+          "category": {
+            "description": "Asset category",
+            "enum": [
+              "linear",
+              "spot",
+              "inverse",
+              "option"
+            ],
+            "type": "string"
+          },
+          "cursor": {
+            "description": "Pagination cursor",
+            "type": "string"
+          },
+          "limit": {
+            "description": "Page size (default 20, max 200)",
+            "type": "integer"
+          },
+          "settle_coin": {
+            "description": "Settle coin filter",
+            "type": "string"
+          },
+          "symbol": {
+            "description": "Symbol filter",
+            "type": "string"
+          }
+        },
+        "required": [
+          "category"
+        ],
+        "type": "object"
+      },
+      "name": "position_list",
+      "service": "position"
+    },
+    {
+      "dangerous": true,
+      "description": "Set leverage for a position",
+      "input_schema": {
+        "properties": {
+          "buy_leverage": {
+            "description": "Buy/long leverage multiplier",
+            "type": "number"
+          },
+          "category": {
+            "description": "Asset category",
+            "enum": [
+              "linear",
+              "spot",
+              "inverse",
+              "option"
+            ],
+            "type": "string"
+          },
+          "sell_leverage": {
+            "description": "Sell/short leverage multiplier",
+            "type": "number"
+          },
+          "symbol": {
+            "description": "Symbol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "category",
+          "symbol",
+          "buy_leverage",
+          "sell_leverage"
+        ],
+        "type": "object"
+      },
+      "name": "position_set_leverage",
+      "service": "position"
+    },
+    {
+      "dangerous": true,
+      "description": "Set take-profit and/or stop-loss on a position",
+      "input_schema": {
+        "properties": {
+          "category": {
+            "description": "Asset category",
+            "enum": [
+              "linear",
+              "spot",
+              "inverse",
+              "option"
+            ],
+            "type": "string"
+          },
+          "position_idx": {
+            "description": "0=one-way, 1=buy-side hedge, 2=sell-side hedge",
+            "type": "integer"
+          },
+          "stop_loss": {
+            "description": "Stop-loss price",
+            "type": "string"
+          },
+          "symbol": {
+            "description": "Symbol",
+            "type": "string"
+          },
+          "take_profit": {
+            "description": "Take-profit price",
+            "type": "string"
+          },
+          "trailing_stop": {
+            "description": "Trailing stop distance",
+            "type": "string"
+          }
+        },
+        "required": [
+          "category",
+          "symbol"
+        ],
+        "type": "object"
+      },
+      "name": "position_set_tpsl",
+      "service": "position"
+    },
+    {
+      "dangerous": false,
+      "description": "Get closed P&L history",
+      "input_schema": {
+        "properties": {
+          "category": {
+            "description": "Asset category",
+            "enum": [
+              "linear",
+              "spot",
+              "inverse",
+              "option"
+            ],
+            "type": "string"
+          },
+          "cursor": {
+            "description": "Pagination cursor",
+            "type": "string"
+          },
+          "end": {
+            "description": "End time in milliseconds",
+            "type": "integer"
+          },
+          "limit": {
+            "description": "Page size (default 50, max 100)",
+            "type": "integer"
+          },
+          "start": {
+            "description": "Start time in milliseconds",
+            "type": "integer"
+          },
+          "symbol": {
+            "description": "Symbol filter",
+            "type": "string"
+          }
+        },
+        "required": [
+          "category"
+        ],
+        "type": "object"
+      },
+      "name": "position_closed_pnl",
+      "service": "position"
+    },
+    {
+      "dangerous": true,
+      "description": "Switch position mode (one-way vs hedge mode)",
+      "input_schema": {
+        "properties": {
+          "category": {
+            "description": "Asset category",
+            "enum": [
+              "linear",
+              "spot",
+              "inverse",
+              "option"
+            ],
+            "type": "string"
+          },
+          "coin": {
+            "description": "Coin (for no-symbol mode switch)",
+            "type": "string"
+          },
+          "mode": {
+            "description": "0 = one-way mode, 3 = hedge mode",
+            "type": "integer"
+          },
+          "symbol": {
+            "description": "Symbol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "category",
+          "mode"
+        ],
+        "type": "object"
+      },
+      "name": "position_switch_mode",
+      "service": "position"
+    },
+    {
+      "dangerous": true,
+      "description": "Manually add margin to a position",
+      "input_schema": {
+        "properties": {
+          "category": {
+            "description": "Asset category",
+            "enum": [
+              "linear",
+              "spot",
+              "inverse",
+              "option"
+            ],
+            "type": "string"
+          },
+          "margin": {
+            "description": "Margin amount to add",
+            "type": "string"
+          },
+          "position_idx": {
+            "description": "0=one-way, 1=buy-hedge, 2=sell-hedge",
+            "type": "integer"
+          },
+          "symbol": {
+            "description": "Symbol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "category",
+          "symbol",
+          "margin"
+        ],
+        "type": "object"
+      },
+      "name": "position_add_margin",
+      "service": "position"
+    },
+    {
+      "dangerous": true,
+      "description": "EMERGENCY: Cancel all orders and close all positions in a category",
+      "input_schema": {
+        "properties": {
+          "category": {
+            "description": "Asset category",
+            "enum": [
+              "linear",
+              "spot",
+              "inverse",
+              "option"
+            ],
+            "type": "string"
+          },
+          "symbol": {
+            "description": "Specific symbol to flatten (optional)",
+            "type": "string"
+          }
+        },
+        "required": [
+          "category"
+        ],
+        "type": "object"
+      },
+      "name": "position_flatten",
+      "service": "position"
+    },
+    {
+      "dangerous": false,
+      "description": "Get coin information (deposit/withdraw status, chain info)",
+      "input_schema": {
+        "properties": {
+          "coin": {
+            "description": "Coin name, e.g. BTC",
+            "type": "string"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "asset_coin_info",
+      "service": "asset"
+    },
+    {
+      "dangerous": false,
+      "description": "Get asset balance for an account type",
+      "input_schema": {
+        "properties": {
+          "account_type": {
+            "description": "Account type",
+            "enum": [
+              "SPOT",
+              "UNIFIED",
+              "CONTRACT",
+              "FUND",
+              "OPTION"
+            ],
+            "type": "string"
+          },
+          "coin": {
+            "description": "Coin filter, e.g. USDT",
+            "type": "string"
+          }
+        },
+        "required": [
+          "account_type"
+        ],
+        "type": "object"
+      },
+      "name": "asset_balance",
+      "service": "asset"
+    },
+    {
+      "dangerous": false,
+      "description": "Get all asset balances across all account types",
+      "input_schema": {
+        "properties": {
+          "account_type": {
+            "description": "Account type",
+            "enum": [
+              "SPOT",
+              "UNIFIED",
+              "CONTRACT",
+              "FUND"
+            ],
+            "type": "string"
+          },
+          "coin": {
+            "description": "Coin filter",
+            "type": "string"
+          },
+          "member_id": {
+            "description": "Sub-account UID",
+            "type": "string"
+          },
+          "with_bonus": {
+            "description": "Include bonus assets",
+            "type": "boolean"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "asset_all_balance",
+      "service": "asset"
+    },
+    {
+      "dangerous": false,
+      "description": "Get transferable amount between account types",
+      "input_schema": {
+        "properties": {
+          "coin": {
+            "description": "Coin to check",
+            "type": "string"
+          },
+          "from_account_type": {
+            "description": "Source account type",
+            "type": "string"
+          },
+          "to_account_type": {
+            "description": "Destination account type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "from_account_type",
+          "to_account_type",
+          "coin"
+        ],
+        "type": "object"
+      },
+      "name": "asset_transferable",
+      "service": "asset"
+    },
+    {
+      "dangerous": false,
+      "description": "Get deposit address for a coin/chain",
+      "input_schema": {
+        "properties": {
+          "chain_type": {
+            "description": "Chain, e.g. ETH",
+            "type": "string"
+          },
+          "coin": {
+            "description": "Coin, e.g. USDT",
+            "type": "string"
+          }
+        },
+        "required": [
+          "coin"
+        ],
+        "type": "object"
+      },
+      "name": "asset_deposit_address",
+      "service": "asset"
+    },
+    {
+      "dangerous": false,
+      "description": "Get deposit history",
+      "input_schema": {
+        "properties": {
+          "coin": {
+            "description": "Coin filter",
+            "type": "string"
+          },
+          "cursor": {
+            "description": "Pagination cursor",
+            "type": "string"
+          },
+          "end": {
+            "description": "End time in milliseconds",
+            "type": "integer"
+          },
+          "limit": {
+            "description": "Page size (default 50, max 50)",
+            "type": "integer"
+          },
+          "start": {
+            "description": "Start time in milliseconds",
+            "type": "integer"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "asset_deposit_history",
+      "service": "asset"
+    },
+    {
+      "dangerous": false,
+      "description": "Get withdrawal history",
+      "input_schema": {
+        "properties": {
+          "coin": {
+            "description": "Coin filter",
+            "type": "string"
+          },
+          "cursor": {
+            "description": "Pagination cursor",
+            "type": "string"
+          },
+          "end": {
+            "description": "End time in milliseconds",
+            "type": "integer"
+          },
+          "limit": {
+            "description": "Page size (default 50, max 50)",
+            "type": "integer"
+          },
+          "start": {
+            "description": "Start time in milliseconds",
+            "type": "integer"
+          },
+          "withdraw_id": {
+            "description": "Specific withdrawal ID",
+            "type": "string"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "asset_withdraw_history",
+      "service": "asset"
+    },
+    {
+      "dangerous": true,
+      "description": "Transfer assets between account types",
+      "input_schema": {
+        "properties": {
+          "amount": {
+            "description": "Amount to transfer",
+            "type": "string"
+          },
+          "coin": {
+            "description": "Coin to transfer, e.g. USDT",
+            "type": "string"
+          },
+          "from_account_type": {
+            "description": "Source account",
+            "enum": [
+              "SPOT",
+              "UNIFIED",
+              "CONTRACT",
+              "FUND"
+            ],
+            "type": "string"
+          },
+          "to_account_type": {
+            "description": "Destination account",
+            "enum": [
+              "SPOT",
+              "UNIFIED",
+              "CONTRACT",
+              "FUND"
+            ],
+            "type": "string"
+          },
+          "transfer_id": {
+            "description": "Client transfer ID (optional UUID)",
+            "type": "string"
+          }
+        },
+        "required": [
+          "coin",
+          "amount",
+          "from_account_type",
+          "to_account_type"
+        ],
+        "type": "object"
+      },
+      "name": "asset_transfer",
+      "service": "asset"
+    },
+    {
+      "dangerous": true,
+      "description": "Submit a withdrawal request",
+      "input_schema": {
+        "properties": {
+          "account_type": {
+            "description": "Source account",
+            "enum": [
+              "SPOT",
+              "UNIFIED",
+              "FUND"
+            ],
+            "type": "string"
+          },
+          "address": {
+            "description": "Destination wallet address",
+            "type": "string"
+          },
+          "amount": {
+            "description": "Amount to withdraw",
+            "type": "string"
+          },
+          "chain": {
+            "description": "Blockchain network, e.g. ETH",
+            "type": "string"
+          },
+          "coin": {
+            "description": "Coin to withdraw, e.g. USDT",
+            "type": "string"
+          },
+          "tag": {
+            "description": "Memo/tag (required for some chains)",
+            "type": "string"
+          },
+          "timestamp": {
+            "description": "Request timestamp in milliseconds",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "coin",
+          "chain",
+          "address",
+          "amount",
+          "timestamp"
+        ],
+        "type": "object"
+      },
+      "name": "asset_withdraw",
+      "service": "asset"
+    },
+    {
+      "dangerous": false,
+      "description": "Get internal transfer history",
+      "input_schema": {
+        "properties": {
+          "coin": {
+            "description": "Coin filter",
+            "type": "string"
+          },
+          "cursor": {
+            "description": "Pagination cursor",
+            "type": "string"
+          },
+          "end": {
+            "description": "End time in milliseconds",
+            "type": "integer"
+          },
+          "limit": {
+            "description": "Page size (default 20, max 50)",
+            "type": "integer"
+          },
+          "start": {
+            "description": "Start time in milliseconds",
+            "type": "integer"
+          },
+          "transfer_id": {
+            "description": "Specific transfer ID",
+            "type": "string"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "asset_transfer_history",
+      "service": "asset"
+    },
+    {
+      "dangerous": false,
+      "description": "Get available withdrawal networks and fees for a coin",
+      "input_schema": {
+        "properties": {
+          "coin": {
+            "description": "Coin filter, e.g. USDT",
+            "type": "string"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "asset_withdrawal_methods",
+      "service": "asset"
+    },
+    {
+      "dangerous": false,
+      "description": "Get coin and chain metadata for funding operations",
+      "input_schema": {
+        "properties": {
+          "coin": {
+            "description": "Coin filter, e.g. USDT",
+            "type": "string"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "funding_coin_info",
+      "service": "funding"
+    },
+    {
+      "dangerous": false,
+      "description": "Get funding balance by account type",
+      "input_schema": {
+        "properties": {
+          "account_type": {
+            "description": "Account type",
+            "enum": [
+              "SPOT",
+              "UNIFIED",
+              "CONTRACT",
+              "FUND",
+              "OPTION"
+            ],
+            "type": "string"
+          },
+          "coin": {
+            "description": "Coin filter, e.g. USDT",
+            "type": "string"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "funding_balance",
+      "service": "funding"
+    },
+    {
+      "dangerous": false,
+      "description": "Get balances across account types",
+      "input_schema": {
+        "properties": {
+          "account_type": {
+            "description": "Account type, e.g. UNIFIED",
+            "type": "string"
+          },
+          "coin": {
+            "description": "Coin filter, e.g. USDT",
+            "type": "string"
+          },
+          "member_id": {
+            "description": "Optional member/subaccount ID",
+            "type": "string"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "funding_all_balance",
+      "service": "funding"
+    },
+    {
+      "dangerous": false,
+      "description": "Get a single funding coin balance",
+      "input_schema": {
+        "properties": {
+          "account_type": {
+            "description": "Account type, e.g. UNIFIED",
+            "type": "string"
+          },
+          "coin": {
+            "description": "Coin symbol, e.g. USDT",
+            "type": "string"
+          },
+          "member_id": {
+            "description": "Optional member/subaccount ID",
+            "type": "string"
+          },
+          "with_bonus": {
+            "description": "Include bonus balances",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "coin"
+        ],
+        "type": "object"
+      },
+      "name": "funding_account_balance",
+      "service": "funding"
+    },
+    {
+      "dangerous": false,
+      "description": "List coins transferable between wallet types",
+      "input_schema": {
+        "properties": {
+          "from_account_type": {
+            "description": "Source account type",
+            "type": "string"
+          },
+          "to_account_type": {
+            "description": "Destination account type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "from_account_type",
+          "to_account_type"
+        ],
+        "type": "object"
+      },
+      "name": "funding_transferable",
+      "service": "funding"
+    },
+    {
+      "dangerous": true,
+      "description": "Transfer funds between wallet types on the same UID",
+      "input_schema": {
+        "properties": {
+          "amount": {
+            "description": "Amount to transfer",
+            "type": "string"
+          },
+          "coin": {
+            "description": "Coin to transfer, e.g. USDT",
+            "type": "string"
+          },
+          "from_account_type": {
+            "description": "Source account",
+            "enum": [
+              "SPOT",
+              "UNIFIED",
+              "CONTRACT",
+              "FUND"
+            ],
+            "type": "string"
+          },
+          "to_account_type": {
+            "description": "Destination account",
+            "enum": [
+              "SPOT",
+              "UNIFIED",
+              "CONTRACT",
+              "FUND"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "coin",
+          "amount",
+          "from_account_type",
+          "to_account_type"
+        ],
+        "type": "object"
+      },
+      "name": "funding_transfer",
+      "service": "funding"
+    },
+    {
+      "dangerous": false,
+      "description": "Get internal transfer history",
+      "input_schema": {
+        "properties": {
+          "coin": {
+            "description": "Coin filter",
+            "type": "string"
+          },
+          "cursor": {
+            "description": "Pagination cursor",
+            "type": "string"
+          },
+          "end": {
+            "description": "End time in milliseconds",
+            "type": "integer"
+          },
+          "limit": {
+            "description": "Page size",
+            "type": "integer"
+          },
+          "start": {
+            "description": "Start time in milliseconds",
+            "type": "integer"
+          },
+          "status": {
+            "description": "Transfer status filter",
+            "type": "string"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "funding_transfer_history",
+      "service": "funding"
+    },
+    {
+      "dangerous": true,
+      "description": "Transfer funds across UIDs using universal transfer",
+      "input_schema": {
+        "properties": {
+          "amount": {
+            "description": "Amount to transfer",
+            "type": "string"
+          },
+          "coin": {
+            "description": "Coin to transfer, e.g. USDT",
+            "type": "string"
+          },
+          "from_account_type": {
+            "description": "Source account type",
+            "type": "string"
+          },
+          "from_member_id": {
+            "description": "Source member ID",
+            "type": "string"
+          },
+          "to_account_type": {
+            "description": "Destination account type",
+            "type": "string"
+          },
+          "to_member_id": {
+            "description": "Destination member ID",
+            "type": "string"
+          }
+        },
+        "required": [
+          "coin",
+          "amount",
+          "from_member_id",
+          "to_member_id",
+          "from_account_type",
+          "to_account_type"
+        ],
+        "type": "object"
+      },
+      "name": "funding_sub_transfer",
+      "service": "funding"
+    },
+    {
+      "dangerous": false,
+      "description": "Get universal transfer history",
+      "input_schema": {
+        "properties": {
+          "coin": {
+            "description": "Coin filter",
+            "type": "string"
+          },
+          "cursor": {
+            "description": "Pagination cursor",
+            "type": "string"
+          },
+          "end": {
+            "description": "End time in milliseconds",
+            "type": "integer"
+          },
+          "limit": {
+            "description": "Page size",
+            "type": "integer"
+          },
+          "start": {
+            "description": "Start time in milliseconds",
+            "type": "integer"
+          },
+          "status": {
+            "description": "Transfer status filter",
+            "type": "string"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "funding_sub_transfer_history",
+      "service": "funding"
+    },
+    {
+      "dangerous": false,
+      "description": "Get deposit address for a coin and optional chain",
+      "input_schema": {
+        "properties": {
+          "chain_type": {
+            "description": "Chain/network, e.g. BTC",
+            "type": "string"
+          },
+          "coin": {
+            "description": "Coin, e.g. BTC",
+            "type": "string"
+          }
+        },
+        "required": [
+          "coin"
+        ],
+        "type": "object"
+      },
+      "name": "funding_deposit_address",
+      "service": "funding"
+    },
+    {
+      "dangerous": false,
+      "description": "Get deposit history",
+      "input_schema": {
+        "properties": {
+          "coin": {
+            "description": "Coin filter",
+            "type": "string"
+          },
+          "cursor": {
+            "description": "Pagination cursor",
+            "type": "string"
+          },
+          "end": {
+            "description": "End time in milliseconds",
+            "type": "integer"
+          },
+          "limit": {
+            "description": "Page size",
+            "type": "integer"
+          },
+          "start": {
+            "description": "Start time in milliseconds",
+            "type": "integer"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "funding_deposit_history",
+      "service": "funding"
+    },
+    {
+      "dangerous": true,
+      "description": "Withdraw funds to an external address",
+      "input_schema": {
+        "properties": {
+          "account_type": {
+            "description": "Source account type, e.g. UNIFIED",
+            "type": "string"
+          },
+          "address": {
+            "description": "Destination address",
+            "type": "string"
+          },
+          "amount": {
+            "description": "Amount to withdraw",
+            "type": "string"
+          },
+          "chain": {
+            "description": "Chain/network, e.g. TRX",
+            "type": "string"
+          },
+          "coin": {
+            "description": "Coin, e.g. USDT",
+            "type": "string"
+          },
+          "tag": {
+            "description": "Memo/tag when required by the chain",
+            "type": "string"
+          }
+        },
+        "required": [
+          "coin",
+          "chain",
+          "address",
+          "amount"
+        ],
+        "type": "object"
+      },
+      "name": "funding_withdraw",
+      "service": "funding"
+    },
+    {
+      "dangerous": false,
+      "description": "Get withdrawal history",
+      "input_schema": {
+        "properties": {
+          "coin": {
+            "description": "Coin filter",
+            "type": "string"
+          },
+          "cursor": {
+            "description": "Pagination cursor",
+            "type": "string"
+          },
+          "end": {
+            "description": "End time in milliseconds",
+            "type": "integer"
+          },
+          "limit": {
+            "description": "Page size",
+            "type": "integer"
+          },
+          "start": {
+            "description": "Start time in milliseconds",
+            "type": "integer"
+          },
+          "withdraw_id": {
+            "description": "Specific withdrawal ID",
+            "type": "string"
+          },
+          "withdraw_type": {
+            "description": "Withdrawal type filter",
+            "type": "integer"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "funding_withdraw_history",
+      "service": "funding"
+    },
+    {
+      "dangerous": true,
+      "description": "Cancel a pending withdrawal request",
+      "input_schema": {
+        "properties": {
+          "id": {
+            "description": "Withdrawal request ID",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object"
+      },
+      "name": "funding_cancel_withdraw",
+      "service": "funding"
+    },
+    {
+      "dangerous": false,
+      "description": "List coins available for conversion and their supported pairs",
+      "input_schema": {
+        "properties": {
+          "account_type": {
+            "description": "Account type",
+            "enum": [
+              "UNIFIED",
+              "SPOT",
+              "CONTRACT",
+              "FUND"
+            ],
+            "type": "string"
+          },
+          "coin": {
+            "description": "Filter by coin name, e.g. BTC",
+            "type": "string"
+          },
+          "side": {
+            "description": "0 = all, 1 = from-coin list, 2 = to-coin list",
+            "type": "integer"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "convert_coins",
+      "service": "convert"
+    },
+    {
+      "dangerous": true,
+      "description": "Request a conversion quote. Returns a quoteTxId needed to execute.",
+      "input_schema": {
+        "properties": {
+          "account_type": {
+            "description": "Account type performing the conversion",
+            "enum": [
+              "UNIFIED",
+              "SPOT",
+              "CONTRACT",
+              "FUND"
+            ],
+            "type": "string"
+          },
+          "dry_run": {
+            "description": "Preview the request without calling the API",
+            "type": "boolean"
+          },
+          "from_amount": {
+            "description": "Amount of from-coin to convert (mutually exclusive with to_amount)",
+            "type": "string"
+          },
+          "from_coin": {
+            "description": "Coin to convert from, e.g. BTC",
+            "type": "string"
+          },
+          "to_amount": {
+            "description": "Desired amount of to-coin (mutually exclusive with from_amount)",
+            "type": "string"
+          },
+          "to_coin": {
+            "description": "Coin to convert to, e.g. USDT",
+            "type": "string"
+          }
+        },
+        "required": [
+          "from_coin",
+          "to_coin"
+        ],
+        "type": "object"
+      },
+      "name": "convert_quote",
+      "service": "convert"
+    },
+    {
+      "dangerous": true,
+      "description": "Execute a previously obtained conversion quote. Irreversible.",
+      "input_schema": {
+        "properties": {
+          "quote_tx_id": {
+            "description": "Quote transaction ID from convert_quote",
+            "type": "string"
+          }
+        },
+        "required": [
+          "quote_tx_id"
+        ],
+        "type": "object"
+      },
+      "name": "convert_execute",
+      "service": "convert"
+    },
+    {
+      "dangerous": false,
+      "description": "Check the status of a conversion by quoteTxId",
+      "input_schema": {
+        "properties": {
+          "account_type": {
+            "description": "Account type",
+            "enum": [
+              "UNIFIED",
+              "SPOT",
+              "CONTRACT",
+              "FUND"
+            ],
+            "type": "string"
+          },
+          "quote_tx_id": {
+            "description": "Quote transaction ID to check",
+            "type": "string"
+          }
+        },
+        "required": [
+          "quote_tx_id"
+        ],
+        "type": "object"
+      },
+      "name": "convert_status",
+      "service": "convert"
+    },
+    {
+      "dangerous": false,
+      "description": "Get coin conversion history",
+      "input_schema": {
+        "properties": {
+          "account_type": {
+            "description": "Account type",
+            "enum": [
+              "UNIFIED",
+              "SPOT",
+              "CONTRACT",
+              "FUND"
+            ],
+            "type": "string"
+          },
+          "coin": {
+            "description": "Filter by coin, e.g. USDT",
+            "type": "string"
+          },
+          "end": {
+            "description": "End time in milliseconds",
+            "type": "integer"
+          },
+          "index": {
+            "description": "Page index (0-based)",
+            "type": "integer"
+          },
+          "limit": {
+            "description": "Page size (default 20, max 100)",
+            "type": "integer"
+          },
+          "start": {
+            "description": "Start time in milliseconds",
+            "type": "integer"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "convert_history",
+      "service": "convert"
+    },
+    {
+      "dangerous": false,
+      "description": "Get spot margin VIP borrow and leverage data",
+      "input_schema": {
+        "properties": {
+          "currency": {
+            "description": "Coin filter, e.g. BTC",
+            "type": "string"
+          },
+          "vip_level": {
+            "description": "VIP level label, e.g. No VIP",
+            "type": "string"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "margin_vip_data",
+      "service": "margin"
+    },
+    {
+      "dangerous": false,
+      "description": "Get current unified account spot margin state and leverage",
+      "input_schema": {
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "name": "margin_status",
+      "service": "margin"
+    },
+    {
+      "dangerous": true,
+      "description": "Enable or disable unified account spot margin trading",
+      "input_schema": {
+        "properties": {
+          "mode": {
+            "description": "Desired mode",
+            "enum": [
+              "on",
+              "off"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "mode"
+        ],
+        "type": "object"
+      },
+      "name": "margin_toggle",
+      "service": "margin"
+    },
+    {
+      "dangerous": true,
+      "description": "Set unified account spot margin leverage",
+      "input_schema": {
+        "properties": {
+          "currency": {
+            "description": "Optional coin-specific leverage setting",
+            "type": "string"
+          },
+          "leverage": {
+            "description": "Leverage, typically 2-10",
+            "type": "string"
+          }
+        },
+        "required": [
+          "leverage"
+        ],
+        "type": "object"
+      },
+      "name": "margin_set_leverage",
+      "service": "margin"
+    },
+    {
+      "dangerous": false,
+      "description": "Get account transaction log history",
+      "input_schema": {
+        "properties": {
+          "account_type": {
+            "description": "Account type, e.g. UNIFIED",
+            "type": "string"
+          },
+          "base_coin": {
+            "description": "Base coin filter",
+            "type": "string"
+          },
+          "category": {
+            "description": "Asset category",
+            "enum": [
+              "linear",
+              "spot",
+              "inverse",
+              "option"
+            ],
+            "type": "string"
+          },
+          "currency": {
+            "description": "Settlement currency, e.g. USDT",
+            "type": "string"
+          },
+          "cursor": {
+            "description": "Pagination cursor",
+            "type": "string"
+          },
+          "end": {
+            "description": "End time in milliseconds",
+            "type": "integer"
+          },
+          "limit": {
+            "description": "Page size",
+            "type": "integer"
+          },
+          "start": {
+            "description": "Start time in milliseconds",
+            "type": "integer"
+          },
+          "tx_type": {
+            "description": "Transaction type filter",
+            "type": "string"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "reports_transactions",
+      "service": "reports"
+    },
+    {
+      "dangerous": false,
+      "description": "Get borrow history",
+      "input_schema": {
+        "properties": {
+          "currency": {
+            "description": "Coin filter",
+            "type": "string"
+          },
+          "cursor": {
+            "description": "Pagination cursor",
+            "type": "string"
+          },
+          "end": {
+            "description": "End time in milliseconds",
+            "type": "integer"
+          },
+          "limit": {
+            "description": "Page size",
+            "type": "integer"
+          },
+          "start": {
+            "description": "Start time in milliseconds",
+            "type": "integer"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "reports_borrow_history",
+      "service": "reports"
+    },
+    {
+      "dangerous": false,
+      "description": "Get order history",
+      "input_schema": {
+        "properties": {
+          "category": {
+            "description": "Asset category",
+            "enum": [
+              "linear",
+              "spot",
+              "inverse",
+              "option"
+            ],
+            "type": "string"
+          },
+          "cursor": {
+            "description": "Pagination cursor",
+            "type": "string"
+          },
+          "end": {
+            "description": "End time in milliseconds",
+            "type": "integer"
+          },
+          "limit": {
+            "description": "Page size",
+            "type": "integer"
+          },
+          "order_id": {
+            "description": "Specific order ID",
+            "type": "string"
+          },
+          "order_status": {
+            "description": "Order status filter",
+            "type": "string"
+          },
+          "start": {
+            "description": "Start time in milliseconds",
+            "type": "integer"
+          },
+          "symbol": {
+            "description": "Symbol filter",
+            "type": "string"
+          }
+        },
+        "required": [
+          "category"
+        ],
+        "type": "object"
+      },
+      "name": "reports_orders",
+      "service": "reports"
+    },
+    {
+      "dangerous": false,
+      "description": "Get execution/fill history",
+      "input_schema": {
+        "properties": {
+          "category": {
+            "description": "Asset category",
+            "enum": [
+              "linear",
+              "spot",
+              "inverse",
+              "option"
+            ],
+            "type": "string"
+          },
+          "cursor": {
+            "description": "Pagination cursor",
+            "type": "string"
+          },
+          "end": {
+            "description": "End time in milliseconds",
+            "type": "integer"
+          },
+          "exec_type": {
+            "description": "Execution type filter",
+            "type": "string"
+          },
+          "limit": {
+            "description": "Page size",
+            "type": "integer"
+          },
+          "order_id": {
+            "description": "Order ID filter",
+            "type": "string"
+          },
+          "start": {
+            "description": "Start time in milliseconds",
+            "type": "integer"
+          },
+          "symbol": {
+            "description": "Symbol filter",
+            "type": "string"
+          }
+        },
+        "required": [
+          "category"
+        ],
+        "type": "object"
+      },
+      "name": "reports_fills",
+      "service": "reports"
+    },
+    {
+      "dangerous": false,
+      "description": "Get closed P&L history",
+      "input_schema": {
+        "properties": {
+          "category": {
+            "description": "Asset category",
+            "enum": [
+              "linear",
+              "spot",
+              "inverse",
+              "option"
+            ],
+            "type": "string"
+          },
+          "cursor": {
+            "description": "Pagination cursor",
+            "type": "string"
+          },
+          "end": {
+            "description": "End time in milliseconds",
+            "type": "integer"
+          },
+          "limit": {
+            "description": "Page size",
+            "type": "integer"
+          },
+          "start": {
+            "description": "Start time in milliseconds",
+            "type": "integer"
+          },
+          "symbol": {
+            "description": "Symbol filter",
+            "type": "string"
+          }
+        },
+        "required": [
+          "category"
+        ],
+        "type": "object"
+      },
+      "name": "reports_closed_pnl",
+      "service": "reports"
+    },
+    {
+      "dangerous": false,
+      "description": "Get position move history",
+      "input_schema": {
+        "properties": {
+          "category": {
+            "description": "Asset category",
+            "enum": [
+              "linear",
+              "spot",
+              "inverse",
+              "option"
+            ],
+            "type": "string"
+          },
+          "cursor": {
+            "description": "Pagination cursor",
+            "type": "string"
+          },
+          "end": {
+            "description": "End time in milliseconds",
+            "type": "integer"
+          },
+          "limit": {
+            "description": "Page size",
+            "type": "integer"
+          },
+          "start": {
+            "description": "Start time in milliseconds",
+            "type": "integer"
+          },
+          "symbol": {
+            "description": "Symbol filter",
+            "type": "string"
+          }
+        },
+        "required": [
+          "category"
+        ],
+        "type": "object"
+      },
+      "name": "reports_moves",
+      "service": "reports"
+    },
+    {
+      "dangerous": false,
+      "description": "Get deposit history",
+      "input_schema": {
+        "properties": {
+          "coin": {
+            "description": "Coin filter",
+            "type": "string"
+          },
+          "cursor": {
+            "description": "Pagination cursor",
+            "type": "string"
+          },
+          "end": {
+            "description": "End time in milliseconds",
+            "type": "integer"
+          },
+          "limit": {
+            "description": "Page size",
+            "type": "integer"
+          },
+          "start": {
+            "description": "Start time in milliseconds",
+            "type": "integer"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "reports_deposits",
+      "service": "reports"
+    },
+    {
+      "dangerous": false,
+      "description": "Get withdrawal history",
+      "input_schema": {
+        "properties": {
+          "coin": {
+            "description": "Coin filter",
+            "type": "string"
+          },
+          "cursor": {
+            "description": "Pagination cursor",
+            "type": "string"
+          },
+          "end": {
+            "description": "End time in milliseconds",
+            "type": "integer"
+          },
+          "limit": {
+            "description": "Page size",
+            "type": "integer"
+          },
+          "start": {
+            "description": "Start time in milliseconds",
+            "type": "integer"
+          },
+          "withdraw_id": {
+            "description": "Specific withdrawal ID",
+            "type": "string"
+          },
+          "withdraw_type": {
+            "description": "Withdrawal type filter",
+            "type": "integer"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "reports_withdrawals",
+      "service": "reports"
+    },
+    {
+      "dangerous": false,
+      "description": "Get internal transfer history",
+      "input_schema": {
+        "properties": {
+          "coin": {
+            "description": "Coin filter",
+            "type": "string"
+          },
+          "cursor": {
+            "description": "Pagination cursor",
+            "type": "string"
+          },
+          "end": {
+            "description": "End time in milliseconds",
+            "type": "integer"
+          },
+          "limit": {
+            "description": "Page size",
+            "type": "integer"
+          },
+          "start": {
+            "description": "Start time in milliseconds",
+            "type": "integer"
+          },
+          "status": {
+            "description": "Transfer status filter",
+            "type": "string"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "reports_transfers",
+      "service": "reports"
+    },
+    {
+      "dangerous": false,
+      "description": "Get universal transfer history",
+      "input_schema": {
+        "properties": {
+          "coin": {
+            "description": "Coin filter",
+            "type": "string"
+          },
+          "cursor": {
+            "description": "Pagination cursor",
+            "type": "string"
+          },
+          "end": {
+            "description": "End time in milliseconds",
+            "type": "integer"
+          },
+          "limit": {
+            "description": "Page size",
+            "type": "integer"
+          },
+          "start": {
+            "description": "Start time in milliseconds",
+            "type": "integer"
+          },
+          "status": {
+            "description": "Transfer status filter",
+            "type": "string"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "reports_sub_transfers",
+      "service": "reports"
+    },
+    {
+      "dangerous": false,
+      "description": "List subaccounts for the master account",
+      "input_schema": {
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "name": "subaccount_list",
+      "service": "subaccount"
+    },
+    {
+      "dangerous": false,
+      "description": "Paginated list of all subaccounts",
+      "input_schema": {
+        "properties": {
+          "next_cursor": {
+            "description": "Pagination cursor",
+            "type": "string"
+          },
+          "page_size": {
+            "description": "Page size",
+            "type": "integer"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "subaccount_list_all",
+      "service": "subaccount"
+    },
+    {
+      "dangerous": false,
+      "description": "List API keys for a subaccount",
+      "input_schema": {
+        "properties": {
+          "cursor": {
+            "description": "Pagination cursor",
+            "type": "string"
+          },
+          "limit": {
+            "description": "Page size",
+            "type": "integer"
+          },
+          "sub_member_id": {
+            "description": "Subaccount member ID",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sub_member_id"
+        ],
+        "type": "object"
+      },
+      "name": "subaccount_api_keys",
+      "service": "subaccount"
+    },
+    {
+      "dangerous": false,
+      "description": "List wallet types for the master account or selected subaccounts",
+      "input_schema": {
+        "properties": {
+          "member_ids": {
+            "description": "Comma-separated subaccount member IDs",
+            "type": "string"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "subaccount_wallet_types",
+      "service": "subaccount"
+    },
+    {
+      "dangerous": true,
+      "description": "Create a new subaccount",
+      "input_schema": {
+        "properties": {
+          "member_type": {
+            "description": "Member type: 1 normal, 6 custodial",
+            "type": "integer"
+          },
+          "password": {
+            "description": "Optional password",
+            "type": "string"
+          },
+          "quick_login": {
+            "description": "Enable quick login",
+            "type": "boolean"
+          },
+          "username": {
+            "description": "Subaccount username",
+            "type": "string"
+          }
+        },
+        "required": [
+          "username"
+        ],
+        "type": "object"
+      },
+      "name": "subaccount_create",
+      "service": "subaccount"
+    },
+    {
+      "dangerous": true,
+      "description": "Delete a subaccount",
+      "input_schema": {
+        "properties": {
+          "sub_member_id": {
+            "description": "Subaccount member ID",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sub_member_id"
+        ],
+        "type": "object"
+      },
+      "name": "subaccount_delete",
+      "service": "subaccount"
+    },
+    {
+      "dangerous": true,
+      "description": "Freeze a subaccount (Master account only)",
+      "input_schema": {
+        "properties": {
+          "sub_member_id": {
+            "description": "Subaccount member ID",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sub_member_id"
+        ],
+        "type": "object"
+      },
+      "name": "subaccount_freeze",
+      "service": "subaccount"
+    },
+    {
+      "dangerous": true,
+      "description": "Unfreeze a subaccount (Master account only)",
+      "input_schema": {
+        "properties": {
+          "sub_member_id": {
+            "description": "Subaccount member ID",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sub_member_id"
+        ],
+        "type": "object"
+      },
+      "name": "subaccount_unfreeze",
+      "service": "subaccount"
+    },
+    {
+      "dangerous": false,
+      "description": "Get futures instrument metadata",
+      "input_schema": {
+        "properties": {
+          "base_coin": {
+            "description": "Base coin filter",
+            "type": "string"
+          },
+          "category": {
+            "description": "Futures category",
+            "enum": [
+              "linear",
+              "inverse"
+            ],
+            "type": "string"
+          },
+          "cursor": {
+            "description": "Pagination cursor",
+            "type": "string"
+          },
+          "limit": {
+            "description": "Page size",
+            "type": "integer"
+          },
+          "status": {
+            "description": "Status filter",
+            "type": "string"
+          },
+          "symbol": {
+            "description": "Specific symbol",
+            "type": "string"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "futures_instruments",
+      "service": "futures"
+    },
+    {
+      "dangerous": false,
+      "description": "Get futures tickers / 24h stats",
+      "input_schema": {
+        "properties": {
+          "base_coin": {
+            "description": "Base coin filter",
+            "type": "string"
+          },
+          "category": {
+            "description": "Futures category",
+            "enum": [
+              "linear",
+              "inverse"
+            ],
+            "type": "string"
+          },
+          "symbol": {
+            "description": "Specific symbol",
+            "type": "string"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "futures_tickers",
+      "service": "futures"
+    },
+    {
+      "dangerous": false,
+      "description": "Get futures order book depth",
+      "input_schema": {
+        "properties": {
+          "category": {
+            "description": "Futures category",
+            "enum": [
+              "linear",
+              "inverse"
+            ],
+            "type": "string"
+          },
+          "limit": {
+            "description": "Depth limit",
+            "type": "integer"
+          },
+          "symbol": {
+            "description": "Symbol, e.g. BTCUSDT",
+            "type": "string"
+          }
+        },
+        "required": [
+          "symbol"
+        ],
+        "type": "object"
+      },
+      "name": "futures_orderbook",
+      "service": "futures"
+    },
+    {
+      "dangerous": false,
+      "description": "Get futures funding rate history",
+      "input_schema": {
+        "properties": {
+          "category": {
+            "description": "Futures category",
+            "enum": [
+              "linear",
+              "inverse"
+            ],
+            "type": "string"
+          },
+          "end": {
+            "description": "End time in milliseconds",
+            "type": "integer"
+          },
+          "limit": {
+            "description": "Page size",
+            "type": "integer"
+          },
+          "start": {
+            "description": "Start time in milliseconds",
+            "type": "integer"
+          },
+          "symbol": {
+            "description": "Symbol, e.g. BTCUSDT",
+            "type": "string"
+          }
+        },
+        "required": [
+          "symbol"
+        ],
+        "type": "object"
+      },
+      "name": "futures_funding_rate",
+      "service": "futures"
+    },
+    {
+      "dangerous": false,
+      "description": "Get ADL risk level for a symbol",
+      "input_schema": {
+        "properties": {
+          "category": {
+            "description": "Futures category",
+            "enum": [
+              "linear",
+              "inverse"
+            ],
+            "type": "string"
+          },
+          "symbol": {
+            "description": "Specific symbol (optional)",
+            "type": "string"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "futures_adl_alert",
+      "service": "futures"
+    },
+    {
+      "dangerous": false,
+      "description": "Get risk limit info for a symbol",
+      "input_schema": {
+        "properties": {
+          "category": {
+            "description": "Futures category",
+            "enum": [
+              "linear",
+              "inverse"
+            ],
+            "type": "string"
+          },
+          "symbol": {
+            "description": "Specific symbol (optional)",
+            "type": "string"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "futures_risk_limit",
+      "service": "futures"
+    },
+    {
+      "dangerous": false,
+      "description": "Get futures open interest history",
+      "input_schema": {
+        "properties": {
+          "category": {
+            "description": "Futures category",
+            "enum": [
+              "linear",
+              "inverse"
+            ],
+            "type": "string"
+          },
+          "cursor": {
+            "description": "Pagination cursor",
+            "type": "string"
+          },
+          "end": {
+            "description": "End time in milliseconds",
+            "type": "integer"
+          },
+          "interval_time": {
+            "description": "Interval",
+            "enum": [
+              "5min",
+              "15min",
+              "30min",
+              "1h",
+              "4h",
+              "1d"
+            ],
+            "type": "string"
+          },
+          "limit": {
+            "description": "Page size",
+            "type": "integer"
+          },
+          "start": {
+            "description": "Start time in milliseconds",
+            "type": "integer"
+          },
+          "symbol": {
+            "description": "Symbol, e.g. BTCUSDT",
+            "type": "string"
+          }
+        },
+        "required": [
+          "symbol",
+          "interval_time"
+        ],
+        "type": "object"
+      },
+      "name": "futures_open_interest",
+      "service": "futures"
+    },
+    {
+      "dangerous": false,
+      "description": "List open futures positions",
+      "input_schema": {
+        "properties": {
+          "base_coin": {
+            "description": "Base coin filter",
+            "type": "string"
+          },
+          "category": {
+            "description": "Futures category",
+            "enum": [
+              "linear",
+              "inverse"
+            ],
+            "type": "string"
+          },
+          "cursor": {
+            "description": "Pagination cursor",
+            "type": "string"
+          },
+          "limit": {
+            "description": "Page size",
+            "type": "integer"
+          },
+          "settle_coin": {
+            "description": "Settle coin filter",
+            "type": "string"
+          },
+          "symbol": {
+            "description": "Symbol filter",
+            "type": "string"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "futures_positions",
+      "service": "futures"
+    },
+    {
+      "dangerous": false,
+      "description": "List open futures orders",
+      "input_schema": {
+        "properties": {
+          "base_coin": {
+            "description": "Base coin filter",
+            "type": "string"
+          },
+          "category": {
+            "description": "Futures category",
+            "enum": [
+              "linear",
+              "inverse"
+            ],
+            "type": "string"
+          },
+          "cursor": {
+            "description": "Pagination cursor",
+            "type": "string"
+          },
+          "limit": {
+            "description": "Page size",
+            "type": "integer"
+          },
+          "order_id": {
+            "description": "Specific order ID",
+            "type": "string"
+          },
+          "order_link_id": {
+            "description": "Specific client order ID",
+            "type": "string"
+          },
+          "settle_coin": {
+            "description": "Settle coin filter",
+            "type": "string"
+          },
+          "symbol": {
+            "description": "Symbol filter",
+            "type": "string"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "futures_open_orders",
+      "service": "futures"
+    },
+    {
+      "dangerous": false,
+      "description": "Get futures order history",
+      "input_schema": {
+        "properties": {
+          "category": {
+            "description": "Futures category",
+            "enum": [
+              "linear",
+              "inverse"
+            ],
+            "type": "string"
+          },
+          "cursor": {
+            "description": "Pagination cursor",
+            "type": "string"
+          },
+          "end": {
+            "description": "End time in milliseconds",
+            "type": "integer"
+          },
+          "limit": {
+            "description": "Page size",
+            "type": "integer"
+          },
+          "order_id": {
+            "description": "Specific order ID",
+            "type": "string"
+          },
+          "order_status": {
+            "description": "Order status filter",
+            "type": "string"
+          },
+          "start": {
+            "description": "Start time in milliseconds",
+            "type": "integer"
+          },
+          "symbol": {
+            "description": "Symbol filter",
+            "type": "string"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "futures_history",
+      "service": "futures"
+    },
+    {
+      "dangerous": false,
+      "description": "Get futures execution/fill history",
+      "input_schema": {
+        "properties": {
+          "category": {
+            "description": "Futures category",
+            "enum": [
+              "linear",
+              "inverse"
+            ],
+            "type": "string"
+          },
+          "cursor": {
+            "description": "Pagination cursor",
+            "type": "string"
+          },
+          "end": {
+            "description": "End time in milliseconds",
+            "type": "integer"
+          },
+          "exec_type": {
+            "description": "Execution type filter",
+            "type": "string"
+          },
+          "limit": {
+            "description": "Page size",
+            "type": "integer"
+          },
+          "order_id": {
+            "description": "Order ID filter",
+            "type": "string"
+          },
+          "start": {
+            "description": "Start time in milliseconds",
+            "type": "integer"
+          },
+          "symbol": {
+            "description": "Symbol filter",
+            "type": "string"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "futures_fills",
+      "service": "futures"
+    },
+    {
+      "dangerous": true,
+      "description": "Place a futures buy order",
+      "input_schema": {
+        "properties": {
+          "category": {
+            "description": "Futures category",
+            "enum": [
+              "linear",
+              "inverse"
+            ],
+            "type": "string"
+          },
+          "order_link_id": {
+            "description": "Client order ID",
+            "type": "string"
+          },
+          "order_type": {
+            "description": "Order type",
+            "enum": [
+              "Limit",
+              "Market"
+            ],
+            "type": "string"
+          },
+          "position_idx": {
+            "description": "Position index",
+            "type": "integer"
+          },
+          "price": {
+            "description": "Limit price (omit for market order)",
+            "type": "string"
+          },
+          "qty": {
+            "description": "Order quantity",
+            "type": "string"
+          },
+          "reduce_only": {
+            "description": "Reduce-only order",
+            "type": "boolean"
+          },
+          "stop_loss": {
+            "description": "Stop-loss price",
+            "type": "string"
+          },
+          "symbol": {
+            "description": "Trading pair, e.g. BTCUSDT",
+            "type": "string"
+          },
+          "take_profit": {
+            "description": "Take-profit price",
+            "type": "string"
+          },
+          "time_in_force": {
+            "description": "Time in force",
+            "enum": [
+              "GTC",
+              "IOC",
+              "FOK",
+              "PostOnly"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "symbol",
+          "qty"
+        ],
+        "type": "object"
+      },
+      "name": "futures_buy",
+      "service": "futures"
+    },
+    {
+      "dangerous": true,
+      "description": "Place a futures sell order",
+      "input_schema": {
+        "properties": {
+          "category": {
+            "description": "Futures category",
+            "enum": [
+              "linear",
+              "inverse"
+            ],
+            "type": "string"
+          },
+          "order_link_id": {
+            "description": "Client order ID",
+            "type": "string"
+          },
+          "order_type": {
+            "description": "Order type",
+            "enum": [
+              "Limit",
+              "Market"
+            ],
+            "type": "string"
+          },
+          "position_idx": {
+            "description": "Position index",
+            "type": "integer"
+          },
+          "price": {
+            "description": "Limit price (omit for market order)",
+            "type": "string"
+          },
+          "qty": {
+            "description": "Order quantity",
+            "type": "string"
+          },
+          "reduce_only": {
+            "description": "Reduce-only order",
+            "type": "boolean"
+          },
+          "stop_loss": {
+            "description": "Stop-loss price",
+            "type": "string"
+          },
+          "symbol": {
+            "description": "Trading pair, e.g. BTCUSDT",
+            "type": "string"
+          },
+          "take_profit": {
+            "description": "Take-profit price",
+            "type": "string"
+          },
+          "time_in_force": {
+            "description": "Time in force",
+            "enum": [
+              "GTC",
+              "IOC",
+              "FOK",
+              "PostOnly"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "symbol",
+          "qty"
+        ],
+        "type": "object"
+      },
+      "name": "futures_sell",
+      "service": "futures"
+    },
+    {
+      "dangerous": true,
+      "description": "Cancel a futures order",
+      "input_schema": {
+        "properties": {
+          "category": {
+            "description": "Futures category",
+            "enum": [
+              "linear",
+              "inverse"
+            ],
+            "type": "string"
+          },
+          "order_id": {
+            "description": "Specific order ID",
+            "type": "string"
+          },
+          "order_link_id": {
+            "description": "Specific client order ID",
+            "type": "string"
+          },
+          "symbol": {
+            "description": "Symbol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "symbol"
+        ],
+        "type": "object"
+      },
+      "name": "futures_cancel",
+      "service": "futures"
+    },
+    {
+      "dangerous": true,
+      "description": "Cancel all open futures orders for a symbol or category",
+      "input_schema": {
+        "properties": {
+          "base_coin": {
+            "description": "Base coin filter",
+            "type": "string"
+          },
+          "category": {
+            "description": "Futures category",
+            "enum": [
+              "linear",
+              "inverse"
+            ],
+            "type": "string"
+          },
+          "settle_coin": {
+            "description": "Settle coin filter",
+            "type": "string"
+          },
+          "symbol": {
+            "description": "Symbol filter",
+            "type": "string"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "futures_cancel_all",
+      "service": "futures"
+    },
+    {
+      "dangerous": true,
+      "description": "Set futures leverage",
+      "input_schema": {
+        "properties": {
+          "buy_leverage": {
+            "description": "Buy/long leverage multiplier",
+            "type": "number"
+          },
+          "category": {
+            "description": "Futures category",
+            "enum": [
+              "linear",
+              "inverse"
+            ],
+            "type": "string"
+          },
+          "sell_leverage": {
+            "description": "Sell/short leverage multiplier",
+            "type": "number"
+          },
+          "symbol": {
+            "description": "Symbol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "symbol",
+          "buy_leverage",
+          "sell_leverage"
+        ],
+        "type": "object"
+      },
+      "name": "futures_set_leverage",
+      "service": "futures"
+    },
+    {
+      "dangerous": false,
+      "description": "Initialise a paper trading account with a configurable fee/slippage model. Use --force to overwrite an existing journal.",
+      "input_schema": {
+        "properties": {
+          "force": {
+            "description": "Overwrite existing journal without error",
+            "type": "boolean"
+          },
+          "maker_fee_bps": {
+            "description": "Maker fee basis points for limit fills (default: 1 = 0.01%)",
+            "type": "integer"
+          },
+          "settle_coin": {
+            "description": "Settlement currency (default: USDT)",
+            "type": "string"
+          },
+          "slippage_bps": {
+            "description": "One-way market order slippage in bps (default: 5 = 0.05%)",
+            "type": "integer"
+          },
+          "taker_fee_bps": {
+            "description": "Taker fee basis points for market fills (default: 6 = 0.06%)",
+            "type": "integer"
+          },
+          "usdt": {
+            "description": "Starting balance in settle-coin (default 10000)",
+            "type": "number"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "paper_init",
+      "service": "paper"
+    },
+    {
+      "dangerous": false,
+      "description": "Place a paper buy order at market or limit price",
+      "input_schema": {
+        "properties": {
+          "category": {
+            "description": "Asset category",
+            "enum": [
+              "linear",
+              "spot",
+              "inverse",
+              "option"
+            ],
+            "type": "string"
+          },
+          "price": {
+            "description": "Limit price (omit for market fill)",
+            "type": "number"
+          },
+          "qty": {
+            "description": "Quantity to buy",
+            "type": "number"
+          },
+          "symbol": {
+            "description": "Symbol, e.g. BTCUSDT",
+            "type": "string"
+          }
+        },
+        "required": [
+          "symbol",
+          "qty"
+        ],
+        "type": "object"
+      },
+      "name": "paper_buy",
+      "service": "paper"
+    },
+    {
+      "dangerous": false,
+      "description": "Place a paper sell order at market or limit price",
+      "input_schema": {
+        "properties": {
+          "category": {
+            "description": "Asset category",
+            "enum": [
+              "linear",
+              "spot",
+              "inverse",
+              "option"
+            ],
+            "type": "string"
+          },
+          "price": {
+            "description": "Limit price (omit for market fill)",
+            "type": "number"
+          },
+          "qty": {
+            "description": "Quantity to sell",
+            "type": "number"
+          },
+          "symbol": {
+            "description": "Symbol, e.g. BTCUSDT",
+            "type": "string"
+          }
+        },
+        "required": [
+          "symbol",
+          "qty"
+        ],
+        "type": "object"
+      },
+      "name": "paper_sell",
+      "service": "paper"
+    },
+    {
+      "dangerous": false,
+      "description": "Show paper trading account summary: balance, positions, P&L",
+      "input_schema": {
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "name": "paper_status",
+      "service": "paper"
+    },
+    {
+      "dangerous": false,
+      "description": "Show paper trading USDT balance",
+      "input_schema": {
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "name": "paper_balance",
+      "service": "paper"
+    },
+    {
+      "dangerous": false,
+      "description": "List open paper trading positions",
+      "input_schema": {
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "name": "paper_positions",
+      "service": "paper"
+    },
+    {
+      "dangerous": false,
+      "description": "List pending paper limit orders (checks for fills first)",
+      "input_schema": {
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "name": "paper_orders",
+      "service": "paper"
+    },
+    {
+      "dangerous": false,
+      "description": "Cancel a specific pending paper limit order",
+      "input_schema": {
+        "properties": {
+          "order_id": {
+            "description": "Order ID to cancel",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "order_id"
+        ],
+        "type": "object"
+      },
+      "name": "paper_cancel",
+      "service": "paper"
+    },
+    {
+      "dangerous": false,
+      "description": "Cancel all pending paper limit orders",
+      "input_schema": {
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "name": "paper_cancel_all",
+      "service": "paper"
+    },
+    {
+      "dangerous": false,
+      "description": "Show paper trading filled trade history (includes fee per trade)",
+      "input_schema": {
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "name": "paper_history",
+      "service": "paper"
+    },
+    {
+      "dangerous": false,
+      "description": "Show cancelled paper limit order history",
+      "input_schema": {
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "name": "paper_cancelled",
+      "service": "paper"
+    },
+    {
+      "dangerous": false,
+      "description": "Reset paper trading account (wipe all positions and history)",
+      "input_schema": {
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "name": "paper_reset",
+      "service": "paper"
+    },
+    {
+      "dangerous": false,
+      "description": "Initialize a futures paper trading account with starting collateral. No auth required. Use --force to overwrite.",
+      "input_schema": {
+        "properties": {
+          "balance": {
+            "description": "Starting collateral (default: 10000)",
+            "type": "number"
+          },
+          "currency": {
+            "description": "Collateral currency (default: USDT)",
+            "type": "string"
+          },
+          "fee_rate": {
+            "description": "Taker fee rate as decimal (default: 0.00055)",
+            "type": "number"
+          },
+          "force": {
+            "description": "Overwrite existing account",
+            "type": "boolean"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "futures_paper_init",
+      "service": "futures-paper"
+    },
+    {
+      "dangerous": false,
+      "description": "Reset futures paper account to initial state. Wipes all positions, orders, and fill history.",
+      "input_schema": {
+        "properties": {
+          "balance": {
+            "description": "New starting collateral (default: keep current)",
+            "type": "number"
+          },
+          "currency": {
+            "description": "New collateral currency (default: keep current)",
+            "type": "string"
+          },
+          "fee_rate": {
+            "description": "New fee rate (default: keep current)",
+            "type": "number"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "futures_paper_reset",
+      "service": "futures-paper"
+    },
+    {
+      "dangerous": false,
+      "description": "Show futures paper collateral balance and margin summary.",
+      "input_schema": {
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "name": "futures_paper_balance",
+      "service": "futures-paper"
+    },
+    {
+      "dangerous": false,
+      "description": "Show full futures paper account summary: equity, PnL, positions, margin usage.",
+      "input_schema": {
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "name": "futures_paper_status",
+      "service": "futures-paper"
+    },
+    {
+      "dangerous": false,
+      "description": "Place a futures paper long (buy) order. Supports market, limit, post, stop, take-profit, ioc, trailing-stop, fok order types.",
+      "input_schema": {
+        "properties": {
+          "category": {
+            "description": "Asset category (default: linear)",
+            "type": "string"
+          },
+          "client_order_id": {
+            "description": "Client order ID",
+            "type": "string"
+          },
+          "leverage": {
+            "description": "Leverage override (1–100)",
+            "type": "string"
+          },
+          "price": {
+            "description": "Limit price (required for limit/post/ioc/fok)",
+            "type": "string"
+          },
+          "reduce_only": {
+            "description": "Reduce-only flag",
+            "type": "boolean"
+          },
+          "size": {
+            "description": "Order size in base asset",
+            "type": "string"
+          },
+          "stop_price": {
+            "description": "Stop/trigger price (required for stop/take-profit/trailing-stop)",
+            "type": "string"
+          },
+          "symbol": {
+            "description": "Futures symbol, e.g. BTCUSDT",
+            "type": "string"
+          },
+          "trailing_stop_deviation_unit": {
+            "description": "Trailing stop unit: percent or quote_currency",
+            "type": "string"
+          },
+          "trailing_stop_max_deviation": {
+            "description": "Trailing stop max deviation",
+            "type": "string"
+          },
+          "trigger_signal": {
+            "description": "Trigger signal: mark, index, or last",
+            "type": "string"
+          },
+          "type": {
+            "description": "Order type: limit, market, post, stop, take-profit, ioc, trailing-stop, fok (default: limit)",
+            "type": "string"
+          }
+        },
+        "required": [
+          "symbol",
+          "size"
+        ],
+        "type": "object"
+      },
+      "name": "futures_paper_buy",
+      "service": "futures-paper"
+    },
+    {
+      "dangerous": false,
+      "description": "Place a futures paper short (sell) order. Supports all 8 order types.",
+      "input_schema": {
+        "properties": {
+          "category": {
+            "description": "Asset category (default: linear)",
+            "type": "string"
+          },
+          "client_order_id": {
+            "description": "Client order ID",
+            "type": "string"
+          },
+          "leverage": {
+            "description": "Leverage override (1–100)",
+            "type": "string"
+          },
+          "price": {
+            "description": "Limit price",
+            "type": "string"
+          },
+          "reduce_only": {
+            "description": "Reduce-only flag",
+            "type": "boolean"
+          },
+          "size": {
+            "description": "Order size in base asset",
+            "type": "string"
+          },
+          "stop_price": {
+            "description": "Stop/trigger price",
+            "type": "string"
+          },
+          "symbol": {
+            "description": "Futures symbol, e.g. BTCUSDT",
+            "type": "string"
+          },
+          "trailing_stop_deviation_unit": {
+            "description": "Trailing stop unit: percent or quote_currency",
+            "type": "string"
+          },
+          "trailing_stop_max_deviation": {
+            "description": "Trailing stop max deviation",
+            "type": "string"
+          },
+          "trigger_signal": {
+            "description": "Trigger signal: mark, index, or last",
+            "type": "string"
+          },
+          "type": {
+            "description": "Order type: limit, market, post, stop, take-profit, ioc, trailing-stop, fok (default: limit)",
+            "type": "string"
+          }
+        },
+        "required": [
+          "symbol",
+          "size"
+        ],
+        "type": "object"
+      },
+      "name": "futures_paper_sell",
+      "service": "futures-paper"
+    },
+    {
+      "dangerous": false,
+      "description": "Show open futures paper orders. Reconciles against current market prices first.",
+      "input_schema": {
+        "properties": {
+          "category": {
+            "description": "Asset category (default: linear)",
+            "type": "string"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "futures_paper_orders",
+      "service": "futures-paper"
+    },
+    {
+      "dangerous": false,
+      "description": "Get the status of a specific open futures paper order by ID.",
+      "input_schema": {
+        "properties": {
+          "order_id": {
+            "description": "Order ID to query",
+            "type": "string"
+          }
+        },
+        "required": [
+          "order_id"
+        ],
+        "type": "object"
+      },
+      "name": "futures_paper_order_status",
+      "service": "futures-paper"
+    },
+    {
+      "dangerous": false,
+      "description": "Edit a resting futures paper order (size, price, or stop_price).",
+      "input_schema": {
+        "properties": {
+          "order_id": {
+            "description": "Order ID to edit",
+            "type": "string"
+          },
+          "price": {
+            "description": "New limit price",
+            "type": "string"
+          },
+          "size": {
+            "description": "New size",
+            "type": "string"
+          },
+          "stop_price": {
+            "description": "New stop price",
+            "type": "string"
+          }
+        },
+        "required": [
+          "order_id"
+        ],
+        "type": "object"
+      },
+      "name": "futures_paper_edit_order",
+      "service": "futures-paper"
+    },
+    {
+      "dangerous": false,
+      "description": "Cancel a specific open futures paper order.",
+      "input_schema": {
+        "properties": {
+          "cli_ord_id": {
+            "description": "Client order ID",
+            "type": "string"
+          },
+          "order_id": {
+            "description": "Exchange order ID",
+            "type": "string"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "futures_paper_cancel",
+      "service": "futures-paper"
+    },
+    {
+      "dangerous": false,
+      "description": "Cancel all open futures paper orders, optionally filtered by symbol.",
+      "input_schema": {
+        "properties": {
+          "symbol": {
+            "description": "Filter by symbol (optional)",
+            "type": "string"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "futures_paper_cancel_all",
+      "service": "futures-paper"
+    },
+    {
+      "dangerous": false,
+      "description": "Place a batch of futures paper orders from a JSON array string.",
+      "input_schema": {
+        "properties": {
+          "orders_json": {
+            "description": "JSON array of order objects, or @path to JSON file",
+            "type": "string"
+          }
+        },
+        "required": [
+          "orders_json"
+        ],
+        "type": "object"
+      },
+      "name": "futures_paper_batch_order",
+      "service": "futures-paper"
+    },
+    {
+      "dangerous": false,
+      "description": "Show open futures paper positions with unrealized PnL and liquidation prices.",
+      "input_schema": {
+        "properties": {
+          "category": {
+            "description": "Asset category (default: linear)",
+            "type": "string"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "futures_paper_positions",
+      "service": "futures-paper"
+    },
+    {
+      "dangerous": false,
+      "description": "Show futures paper fill history.",
+      "input_schema": {
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "name": "futures_paper_fills",
+      "service": "futures-paper"
+    },
+    {
+      "dangerous": false,
+      "description": "Show futures paper account history (realized PnL events, funding payments, liquidations).",
+      "input_schema": {
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "name": "futures_paper_history",
+      "service": "futures-paper"
+    },
+    {
+      "dangerous": false,
+      "description": "Get current leverage preferences for futures paper trading.",
+      "input_schema": {
+        "properties": {
+          "symbol": {
+            "description": "Filter by symbol (optional)",
+            "type": "string"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "futures_paper_leverage",
+      "service": "futures-paper"
+    },
+    {
+      "dangerous": false,
+      "description": "Set leverage preference for a symbol in futures paper trading.",
+      "input_schema": {
+        "properties": {
+          "leverage": {
+            "description": "Leverage value (1–100)",
+            "type": "string"
+          },
+          "symbol": {
+            "description": "Futures symbol, e.g. BTCUSDT",
+            "type": "string"
+          }
+        },
+        "required": [
+          "symbol",
+          "leverage"
+        ],
+        "type": "object"
+      },
+      "name": "futures_paper_set_leverage",
+      "service": "futures-paper"
+    },
+    {
+      "dangerous": false,
+      "description": "Test that the configured API credentials are valid",
+      "input_schema": {
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "name": "auth_test",
+      "service": "auth"
+    },
+    {
+      "dangerous": false,
+      "description": "Show the current credential source and masked API key",
+      "input_schema": {
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "name": "auth_show",
+      "service": "auth"
+    },
+    {
+      "dangerous": false,
+      "description": "Show active permissions and info for the current API key",
+      "input_schema": {
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "name": "auth_permissions",
+      "service": "auth"
+    },
+    {
+      "dangerous": false,
+      "description": "Stream all private notifications (orders, positions, executions, wallet)",
+      "input_schema": {
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "name": "ws_notifications",
+      "service": "ws"
+    }
+  ],
+  "transport": "stdio",
+  "valid_services": [
+    "market",
+    "account",
+    "trade",
+    "position",
+    "asset",
+    "funding",
+    "convert",
+    "reports",
+    "subaccount",
+    "futures",
+    "paper",
+    "futures-paper",
+    "auth",
+    "ws"
+  ]
+}

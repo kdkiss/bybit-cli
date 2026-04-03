@@ -18,6 +18,7 @@ pub const VALID_SERVICES: &[&str] = &[
     "paper",
     "futures-paper",
     "auth",
+    "ws",
 ];
 
 pub const DEFAULT_SERVICES: &str = "market,account,paper,futures-paper";

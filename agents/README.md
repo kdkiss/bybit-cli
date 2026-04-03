@@ -10,7 +10,8 @@ This directory contains machine-readable artifacts for AI agents integrating wit
 
 | File | Purpose |
 |------|---------|
-| `tool-catalog.json` | Canonical agent/MCP tool catalog with parameters, auth requirements, safety flags, and examples |
+| `tool-catalog.json` | Canonical CLI/agent command catalog with parameters, auth requirements, safety flags, and examples |
+| `mcp-tool-catalog.json` | Runtime MCP tool catalog generated from the live stdio registry |
 | `error-catalog.json` | All error types with ret-codes, retry guidance, and remediation steps |
 | `examples/README.md` | Curated shell-script examples for read-only, paper, and state-changing workflows |
 | `../gemini-extension.json` | Gemini CLI extension manifest |
@@ -81,13 +82,26 @@ See `error-catalog.json` for the full error taxonomy and remediation steps.
 > Available via `bybit mcp`. Use `bybit mcp -s all` for the full MCP-visible tool set.
 > Dangerous tools remain visible in guarded mode and require `acknowledged=true` unless started with `--allow-dangerous` for autonomous mode.
 
+Use `mcp-tool-catalog.json` for the runtime MCP surface and `tool-catalog.json` for the broader CLI/agent command catalog.
+
 The default service set is `market,account,paper,futures-paper`.
 
 Persisted local state is shared across CLI and MCP usage: saved credentials, the spot paper journal, the futures paper state, shell history, and the anonymous instance ID survive across tool calls and server restarts until reset or deleted.
 
 ## Configuration
 
-Credentials are resolved in priority order:
+Preferred secret input methods:
+1. `--api-secret-stdin` or `--api-secret-file` with `--api-key` for local/manual runs
+2. `BYBIT_API_KEY` / `BYBIT_API_SECRET` for injected automation
+3. Platform config file for interactive local use
+
+Examples:
+```bash
+printf '%s\n' 'your-secret' | bybit --api-key your-key --api-secret-stdin auth test
+bybit --api-key your-key --api-secret-file ~/.config/bybit/api-secret.txt auth test
+```
+
+The CLI resolves credentials in priority order:
 1. CLI flags (`--api-key`, `--api-secret`)
 2. Environment variables (`BYBIT_API_KEY`, `BYBIT_API_SECRET`)
 3. Platform config file (`~/.config/bybit/config.toml` on Linux, `~/Library/Application Support/bybit/config.toml` on macOS, `%APPDATA%\\bybit\\config.toml` on Windows)
@@ -95,3 +109,4 @@ Credentials are resolved in priority order:
 Run `bybit setup` to configure interactively.
 
 For local development, `bybit-cli` also loads `.env` from the current working directory or any parent directory. Already-exported environment variables keep precedence.
+Avoid `--api-secret` on shared systems because it can appear in process listings.

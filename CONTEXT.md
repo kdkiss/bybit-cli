@@ -43,6 +43,13 @@ Route on `error`, not `message`. The `message` field is not stable.
 ## Authentication
 
 ```bash
+printf '%s\n' 'your-secret' | bybit --api-key your-key --api-secret-stdin auth test
+bybit --api-key your-key --api-secret-file ~/.config/bybit/api-secret.txt auth test
+```
+
+For injected automation, environment variables remain the preferred non-interactive option:
+
+```bash
 export BYBIT_API_KEY="your-key"
 export BYBIT_API_SECRET="your-secret"
 ```
@@ -50,6 +57,7 @@ export BYBIT_API_SECRET="your-secret"
 Credential resolution order: CLI flags > environment variables > platform config file (for example `~/.config/bybit/config.toml` on Linux)
 
 For local development, `bybit-cli` also loads `.env` from the current working directory or any parent directory. Already-exported environment variables keep precedence.
+Avoid `--api-secret` on shared systems because it can appear in process listings.
 
 Public market data, spot paper trading, and futures paper trading require no credentials.
 
@@ -158,8 +166,10 @@ Saved credentials, the spot paper journal, the futures paper state, shell histor
 ## Full documentation
 
 - Commands: `bybit --help`, `bybit <group> --help`
-- Agent/MCP tool catalog: `agents/tool-catalog.json`
+- CLI/agent command catalog: `agents/tool-catalog.json`
+- Runtime MCP tool catalog: `agents/mcp-tool-catalog.json`
 - Error catalog: `agents/error-catalog.json`
 - Skills: `skills/INDEX.md`
 - Integration guide: `AGENTS.md`
+- Kraken migration notes: `KRAKEN_COMPAT.md`
 - API reference: https://bybit-exchange.github.io/docs/v5/intro

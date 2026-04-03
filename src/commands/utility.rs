@@ -170,8 +170,42 @@ fn build_setup_config(
 
 #[cfg(test)]
 mod tests {
+    use std::ffi::OsString;
+    use std::sync::{Mutex, OnceLock};
+
+    use tempfile::TempDir;
+
     use super::build_setup_config;
     use crate::config::{config_path, Config};
+
+    fn env_lock() -> std::sync::MutexGuard<'static, ()> {
+        static LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+        LOCK.get_or_init(|| Mutex::new(()))
+            .lock()
+            .unwrap_or_else(|err| err.into_inner())
+    }
+
+    struct EnvReset {
+        previous: Option<OsString>,
+    }
+
+    impl EnvReset {
+        fn capture(name: &'static str) -> Self {
+            Self {
+                previous: std::env::var_os(name),
+            }
+        }
+    }
+
+    impl Drop for EnvReset {
+        fn drop(&mut self) {
+            if let Some(value) = self.previous.take() {
+                std::env::set_var("BYBIT_CONFIG_DIR", value);
+            } else {
+                std::env::remove_var("BYBIT_CONFIG_DIR");
+            }
+        }
+    }
 
     #[test]
     fn build_setup_config_rejects_empty_api_key() {
@@ -202,10 +236,14 @@ mod tests {
     }
 
     #[test]
-    fn config_path_ends_with_bybit_config_toml() {
+    fn config_path_uses_override_dir_and_config_filename() {
+        let _env_lock = env_lock();
+        let _env_reset = EnvReset::capture("BYBIT_CONFIG_DIR");
+        let temp = TempDir::new().expect("temp dir should be created");
+        std::env::set_var("BYBIT_CONFIG_DIR", temp.path());
+
         let path = config_path().expect("config path should resolve");
-        let rendered = path.display().to_string();
-        assert!(rendered.contains("bybit"));
-        assert!(rendered.ends_with("config.toml"));
+        assert_eq!(path, temp.path().join("config.toml"));
+        assert_eq!(path.file_name().and_then(|name| name.to_str()), Some("config.toml"));
     }
 }

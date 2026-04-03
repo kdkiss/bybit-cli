@@ -37,6 +37,11 @@ Required headers on private endpoints:
 2. Environment variables: `BYBIT_API_KEY`, `BYBIT_API_SECRET`
 3. Platform config file: for example `~/.config/bybit/config.toml` on Linux, `~/Library/Application Support/bybit/config.toml` on macOS, or `%APPDATA%\\bybit\\config.toml` on Windows
 
+Preferred secret input methods for local or shared systems:
+- `--api-secret-stdin` with `--api-key`
+- `--api-secret-file` with `--api-key`
+- Avoid `--api-secret` unless process-list exposure is acceptable
+
 Public market data commands require no authentication.
 
 ---
@@ -145,6 +150,8 @@ bybit mcp -s all
 bybit mcp -s all --allow-dangerous
 ```
 
+Use `agents/mcp-tool-catalog.json` for the runtime MCP surface and `agents/tool-catalog.json` for the broader CLI/agent command catalog.
+
 Persisted local state is shared with normal CLI usage: saved credentials, the spot paper journal, the futures paper state, shell history, and the anonymous instance ID persist across MCP tool calls and server restarts until reset or deleted.
 
 ---
@@ -181,6 +188,7 @@ recv_window = 5000
 File is saved with `0600` permissions. Secrets are never logged or printed.
 
 For local development, `bybit-cli` also loads `.env` from the current working directory or any parent directory. Already-exported environment variables keep precedence.
+When you need to pass secrets directly, prefer `--api-secret-stdin` or `--api-secret-file` over `--api-secret`.
 
 ---
 

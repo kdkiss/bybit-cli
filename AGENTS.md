@@ -19,7 +19,8 @@ This document describes how AI agents and LLM-based tools can integrate with `by
 
 | File | Purpose |
 |------|---------|
-| `agents/tool-catalog.json` | Canonical agent/MCP tool catalog with parameters, auth requirements, and examples |
+| `agents/tool-catalog.json` | Canonical CLI/agent command catalog with parameters, auth requirements, and examples |
+| `agents/mcp-tool-catalog.json` | Runtime MCP tool catalog generated from the live stdio registry |
 | `agents/error-catalog.json` | Error taxonomy with ret-codes and remediation guidance |
 | `CLAUDE.md` | Context and safety rules for Claude-based agents |
 
@@ -74,7 +75,7 @@ Before placing real orders, agents should:
 1. **Verify credentials**: `bybit auth test`
 2. **Check balance**: `bybit account balance -o json`
 3. **Dry-run the order**: `bybit trade buy ... --validate`
-4. **Get current price**: `bybit market tickers --symbol <SYM> -o json`
+4. **Get current price**: `bybit market tickers --category linear --symbol <SYM> -o json`
 5. **Confirm with user** before using `-y` on withdrawal/transfer commands
 
 For strategy testing, prefer `bybit paper ...` for spot flows and `bybit futures paper ...` for perpetual futures flows before touching live orders.
@@ -90,19 +91,35 @@ bybit mcp -s all --allow-dangerous
 bybit mcp -s market,account,paper,futures-paper
 ```
 
-This exposes Bybit command groups as structured MCP tools over stdio. In guarded mode, dangerous tools stay visible but require `acknowledged=true` per call unless the server is started with `--allow-dangerous` for autonomous mode.
+This exposes Bybit command groups as structured MCP tools over stdio. In guarded mode, dangerous tools stay visible but require `acknowledged=true` per call unless the server is started with `--allow-dangerous` for autonomous mode. Load `agents/mcp-tool-catalog.json` for the runtime MCP surface and `agents/tool-catalog.json` for the broader CLI/agent command catalog.
 
 Persisted local state is shared across normal CLI and MCP usage: saved credentials, the spot paper journal, the futures paper state, shell history, and the anonymous instance ID survive across tool calls and server restarts until reset or deleted.
 
 ## Credential Handling
 
-Agents should never hardcode credentials. Resolution order:
+Agents should never hardcode credentials.
+
+Preferred secret input methods:
+
+1. `--api-secret-stdin` or `--api-secret-file` with `--api-key` for local/manual runs
+2. `BYBIT_API_KEY` / `BYBIT_API_SECRET` environment variables for injected automation
+3. Platform config file for interactive local use
+
+Examples:
+
+```bash
+printf '%s\n' 'your-secret' | bybit --api-key your-key --api-secret-stdin auth test
+bybit --api-key your-key --api-secret-file ~/.config/bybit/api-secret.txt auth test
+```
+
+The CLI resolves credentials in this order:
 
 1. `--api-key` / `--api-secret` CLI flags
 2. `BYBIT_API_KEY` / `BYBIT_API_SECRET` environment variables
 3. Platform config file (for example `~/.config/bybit/config.toml` on Linux, `~/Library/Application Support/bybit/config.toml` on macOS, or `%APPDATA%\\bybit\\config.toml` on Windows)
 
 For automated agents, use environment variables injected at runtime.
+Avoid `--api-secret` on shared systems because it can appear in process listings.
 
 For local development, `bybit-cli` also loads `.env` from the current working directory or any parent directory. Already-exported shell variables keep precedence.
 

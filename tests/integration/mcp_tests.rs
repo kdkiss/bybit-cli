@@ -97,6 +97,20 @@ fn mcp_service_filter_lists_new_namespace_tools() {
 }
 
 #[test]
+fn mcp_ws_service_lists_ws_tools() {
+    Command::cargo_bin("bybit")
+        .unwrap()
+        .args(["mcp", "-s", "ws"])
+        .write_stdin(mcp_session(
+            r#"{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}"#,
+        ))
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(r#""ws_notifications""#))
+        .stdout(predicate::str::contains(r#""market_server_time""#).not());
+}
+
+#[test]
 fn mcp_guarded_dangerous_call_requires_acknowledged() {
     Command::cargo_bin("bybit")
         .unwrap()
