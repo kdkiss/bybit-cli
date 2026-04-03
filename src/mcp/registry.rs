@@ -3,8 +3,8 @@
 use serde_json::json;
 use serde_json::Value;
 
-use super::{DEFAULT_SERVICES, VALID_SERVICES};
 use super::schema::{bool_prop, enum_prop, int_prop, num_prop, object_schema, str_prop};
+use super::{DEFAULT_SERVICES, VALID_SERVICES};
 
 // ---------------------------------------------------------------------------
 // Tool descriptor

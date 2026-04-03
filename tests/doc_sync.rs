@@ -139,8 +139,11 @@ fn extract_documented_commands(
         let mut search_from = 0;
         while let Some(offset) = line[search_from..].find("bybit ") {
             let start = search_from + offset + "bybit ".len();
-            let candidate =
-                normalize_documented_command(&line[start..], inventory_commands, inventory_prefixes);
+            let candidate = normalize_documented_command(
+                &line[start..],
+                inventory_commands,
+                inventory_prefixes,
+            );
             commands.extend(candidate.documented);
             unresolved.extend(candidate.unresolved);
             search_from = start;
